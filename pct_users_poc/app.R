@@ -12,6 +12,7 @@ library(lubridate)
 # Function to read parquet dataset
 read_parquet_data <- function(
   s3_path = "s3://posit-dsp-chronicle/daily/v2/connect_users"
+  # s3_path = "/Users/marktucker/work/chronicle-data/posit-it/2025-08/daily/v2/connect_users"
 ) {
   tryCatch(
     {
@@ -47,20 +48,20 @@ process_daily_metrics <- function(data) {
   daily_metrics <- data %>%
     group_by(date) %>%
     summarise(
-      # Get list of usernames for debugging
-      usernames = list(sort(unique(username[as.Date(created_at) <= date]))),
-      total_users = n_distinct(username[as.Date(created_at) <= date]),
+      # Get list of ids for debugging
+      ids = list(sort(unique(id[as.Date(created_at) <= date]))),
+      total_users = n_distinct(id[as.Date(created_at) <= date]),
       active_users = n_distinct(
-        username[
+        id[
           !is.na(last_active_at) &
             as.Date(last_active_at) >= date - 30
         ]
       ),
       users_active_today = n_distinct(
-        username[as.Date(last_active_at) == date]
+        id[as.Date(last_active_at) == date]
       ),
       publishers = n_distinct(
-        username[
+        id[
           user_role %in% c("publisher", "admin") & as.Date(created_at) <= date
         ]
       ),
@@ -77,26 +78,25 @@ process_daily_metrics <- function(data) {
   return(daily_metrics)
 }
 
-# Function to process user list
-process_user_list <- function(data) {
-  # Get latest date
-  latest_date <- max(data$date)
+# Function to process user list for a specific date
+process_user_list <- function(data, target_date) {
+  message("Processing user list for date: ", target_date)
 
-  message("User list latest date: ", latest_date)
-
-  # Filter to users who existed on the latest date
+  # Get state of users on the target date
   users <- data %>%
-    filter(date == latest_date) %>%
-    filter(as.Date(created_at) <= latest_date) %>%
-    # Get latest state within that day
-    group_by(username) %>%
+    # Only look at records for the target date
+    filter(date == target_date) %>%
+    filter(!locked) %>%
+    # Only include users created by target date
+    filter(as.Date(created_at) <= target_date) %>%
+    # Get the latest state for each user on that date
+    group_by(id) %>%
     slice_max(timestamp, n = 1) %>%
     ungroup() %>%
+    # Sort by most recently active
     arrange(desc(last_active_at))
 
   message("User list count: ", nrow(users))
-  message("User list usernames: ", n_distinct(users$username))
-
   return(users)
 }
 
@@ -119,7 +119,7 @@ ui <- page_sidebar(
       "metrics",
       "Select Metrics",
       choices = c(
-        "Total Users2" = "total_users",
+        "Total Users" = "total_users",
         "Daily Users" = "active_users",
         "Publishers" = "publishers"
       ),
@@ -189,10 +189,10 @@ server <- function(input, output, session) {
     process_daily_metrics(raw_data())
   })
 
-  # Process data for user list
+  # Process data for user list using the end date from date range
   user_list_data <- reactive({
-    req(raw_data())
-    process_user_list(raw_data())
+    req(raw_data(), input$date_range)
+    process_user_list(raw_data(), input$date_range[2])
   })
 
   # Filtered data based on date range
