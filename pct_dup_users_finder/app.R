@@ -33,6 +33,7 @@ server <- function(input, output, session) {
     {
       # Read data using Arrow and deduplicate by id (keeping most recent record)
       df <- open_dataset("s3://posit-dsp-chronicle/daily/v2/connect_users") |>
+        filter(!locked) |>
         select(id, username, email, created_at) |>
         arrange(desc(created_at)) |>
         distinct(id, .keep_all = TRUE) |>
