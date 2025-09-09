@@ -54,9 +54,16 @@ server <- function(input, output, session) {
         ) |>
         select(id, username, email, created_at, locked) |>
         collect() |>
-        # Keep only the most recent record per user
+        # First check if any record for an ID is locked
+        group_by(id) |>
+        mutate(ever_locked = any(locked)) |>
+        ungroup() |>
+        # Filter out any users who were ever locked
+        filter(!ever_locked) |>
+        # Now keep most recent record for remaining users
         arrange(desc(created_at)) |>
-        distinct(id, .keep_all = TRUE)
+        distinct(id, .keep_all = TRUE) |>
+        select(-ever_locked) # Clean up temporary column
 
       # Ensure required columns exist
       required_cols <- c("id", "username", "email")
@@ -78,27 +85,24 @@ server <- function(input, output, session) {
     req(users_data())
     df <- users_data()
 
-    # First filter to just unlocked users
-    unlocked_df <- df |> filter(!locked)
-
     if (input$dupType == "username") {
-      dups <- unlocked_df |>
+      dups <- df |>
         group_by(username) |>
         filter(n() > 1) |>
         arrange(username)
     } else if (input$dupType == "email") {
-      dups <- unlocked_df |>
+      dups <- df |>
         group_by(email) |>
         filter(n() > 1) |>
         arrange(email)
     } else {
       # both
-      dups <- unlocked_df |>
+      dups <- df |>
         group_by(username) |>
         filter(n() > 1) |>
         ungroup() |>
         bind_rows(
-          unlocked_df |>
+          df |>
             group_by(email) |>
             filter(n() > 1)
         ) |>
@@ -127,7 +131,7 @@ server <- function(input, output, session) {
   output$summary <- renderText({
     req(duplicates(), users_data())
     dups <- duplicates()
-    total <- nrow(filter(users_data(), !locked))
+    total <- nrow(users_data())
     dup_count <- nrow(dups)
 
     paste0(
