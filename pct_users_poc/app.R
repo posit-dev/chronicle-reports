@@ -22,7 +22,6 @@ read_parquet_data <- function(
         partitioning = c("Year", "Month", "Day"),
         hive_style = FALSE
       ) %>%
-        filter(!locked) %>%
         mutate(date = as.Date(timestamp)) %>%
         collect()
 
@@ -46,23 +45,32 @@ get_latest_user_state <- function(data) {
 process_daily_metrics <- function(data) {
   # Calculate daily metrics including cumulative totals
   daily_metrics <- data %>%
+    # First get latest state per user per date
+    group_by(date, id) %>%
+    slice_max(timestamp, n = 1) %>%
+    ungroup() %>%
+    # Then calculate metrics only using latest states
     group_by(date) %>%
     summarise(
       # Get list of ids for debugging
-      ids = list(sort(unique(id[as.Date(created_at) <= date]))),
-      total_users = n_distinct(id[as.Date(created_at) <= date]),
+      ids = list(sort(unique(id[as.Date(created_at) <= date & !locked]))),
+      total_users = n_distinct(id[as.Date(created_at) <= date & !locked]),
       active_users = n_distinct(
         id[
           !is.na(last_active_at) &
-            as.Date(last_active_at) >= date - 30
+            as.Date(last_active_at) >= date - 30 &
+            !locked
         ]
       ),
       users_active_today = n_distinct(
-        id[as.Date(last_active_at) == date]
+        id[as.Date(last_active_at) == date & !locked]
       ),
       publishers = n_distinct(
         id[
-          user_role %in% c("publisher", "admin") & as.Date(created_at) <= date
+          user_role %in%
+            c("publisher", "admin") &
+            as.Date(created_at) <= date &
+            !locked
         ]
       ),
       .groups = "drop"
@@ -86,13 +94,14 @@ process_user_list <- function(data, target_date) {
   users <- data %>%
     # Only look at records for the target date
     filter(date == target_date) %>%
-    filter(!locked) %>%
     # Only include users created by target date
     filter(as.Date(created_at) <= target_date) %>%
     # Get the latest state for each user on that date
     group_by(id) %>%
     slice_max(timestamp, n = 1) %>%
     ungroup() %>%
+    # Filter locked users after getting latest state
+    filter(!locked) %>%
     # Sort by most recently active
     arrange(desc(last_active_at))
 
