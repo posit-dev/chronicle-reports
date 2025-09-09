@@ -31,13 +31,32 @@ server <- function(input, output, session) {
   users_data <- eventReactive(
     input$refresh,
     {
-      # Read data using Arrow and deduplicate by id (keeping most recent record)
-      df <- open_dataset("s3://posit-dsp-chronicle/daily/v2/connect_users") |>
-        select(id, username, email, created_at, locked) |>
-        arrange(desc(created_at)) |>
-        distinct(id, .keep_all = TRUE) |>
+      # First find the latest partition
+      ds <- open_dataset(
+        "s3://posit-dsp-chronicle/daily/v2/connect_users",
+        partitioning = c("Year", "Month", "Day")
+      )
+
+      # Get latest date from partitions
+      latest <- ds |>
+        select(Year, Month, Day) |>
         collect() |>
-        filter(!locked) # Filter locked users after getting latest state
+        mutate(date = as.Date(paste(Year, Month, Day, sep = "-"))) |>
+        pull(date) |>
+        max()
+
+      # Only read data from latest partition
+      df <- ds |>
+        filter(
+          Year == year(latest),
+          Month == month(latest),
+          Day == day(latest)
+        ) |>
+        select(id, username, email, created_at, locked) |>
+        collect() |>
+        # Keep only the most recent record per user
+        arrange(desc(created_at)) |>
+        distinct(id, .keep_all = TRUE)
 
       # Ensure required columns exist
       required_cols <- c("id", "username", "email")
@@ -59,24 +78,27 @@ server <- function(input, output, session) {
     req(users_data())
     df <- users_data()
 
+    # First filter to just unlocked users
+    unlocked_df <- df |> filter(!locked)
+
     if (input$dupType == "username") {
-      dups <- df |>
+      dups <- unlocked_df |>
         group_by(username) |>
         filter(n() > 1) |>
         arrange(username)
     } else if (input$dupType == "email") {
-      dups <- df |>
+      dups <- unlocked_df |>
         group_by(email) |>
         filter(n() > 1) |>
         arrange(email)
     } else {
       # both
-      dups <- df |>
+      dups <- unlocked_df |>
         group_by(username) |>
         filter(n() > 1) |>
         ungroup() |>
         bind_rows(
-          df |>
+          unlocked_df |>
             group_by(email) |>
             filter(n() > 1)
         ) |>
@@ -105,7 +127,7 @@ server <- function(input, output, session) {
   output$summary <- renderText({
     req(duplicates(), users_data())
     dups <- duplicates()
-    total <- nrow(users_data())
+    total <- nrow(filter(users_data(), !locked))
     dup_count <- nrow(dups)
 
     paste0(
