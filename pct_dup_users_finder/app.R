@@ -33,11 +33,11 @@ server <- function(input, output, session) {
     {
       # Read data using Arrow and deduplicate by id (keeping most recent record)
       df <- open_dataset("s3://posit-dsp-chronicle/daily/v2/connect_users") |>
-        filter(!locked) |>
-        select(id, username, email, created_at) |>
+        select(id, username, email, created_at, locked) |>
         arrange(desc(created_at)) |>
         distinct(id, .keep_all = TRUE) |>
-        collect()
+        collect() |>
+        filter(!locked) # Filter locked users after getting latest state
 
       # Ensure required columns exist
       required_cols <- c("id", "username", "email")
