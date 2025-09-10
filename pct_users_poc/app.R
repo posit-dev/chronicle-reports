@@ -9,11 +9,14 @@ library(tidyr)
 library(lubridate)
 
 
+# Example: CHRONICLE_BASE_PATH=s3://posit-dsp-chronicle
+
 # Function to read parquet dataset
 read_parquet_data <- function(
-  s3_path = "s3://posit-dsp-chronicle/daily/v2/connect_users"
-  # s3_path = "/Users/marktucker/work/chronicle-data/posit-it/2025-08/daily/v2/connect_users"
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
 ) {
+  s3_path <- paste0(base_path, "/daily/v2/connect_users")
+
   tryCatch(
     {
       data <- open_dataset(
