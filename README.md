@@ -41,12 +41,12 @@ A Shiny application to identify and manage duplicate user accounts in Posit Conn
 
 #### Setting the base path
 
-The reports use the default base path for Chronicle data (`/var/lib/posit-chronicle/data`). If your Chronicle data is stored in a different location, you can set the `CHRONICLE_DATA_PATH` environment variable in Posit Connect:
+The reports use the default base path for Chronicle data (`/var/lib/posit-chronicle/data`). If your Chronicle data is stored in a different location, you can set the `CHRONICLE_BASE_PATH` environment variable in Posit Connect:
 
 1. Open the report you just deployed in Posit Connect.
 2. Navigate to "Settings" --> "Vars".
 3. Add a new environment variable:
-   - Name: `CHRONICLE_DATA_PATH`
+   - Name: `CHRONICLE_BASE_PATH`
    - Value: The path to your Chronicle data directory (e.g., `/custom/path/to/chronicle/data` or `s3://chronicle-bucket-name`)
 
 See the [Posit Connect documentation](https://docs.posit.co/connect/user/content-settings/#content-vars) for more details on setting environment variables.
