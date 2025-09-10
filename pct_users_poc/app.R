@@ -52,6 +52,10 @@ process_daily_metrics <- function(data) {
     group_by(date, id) %>%
     slice_max(timestamp, n = 1) %>%
     ungroup() %>%
+    # Filter out users inactive for more than a year from the reference date
+    filter(
+      is.na(last_active_at) | as.Date(last_active_at) >= date - 365
+    ) %>%
     # Then calculate metrics only using latest states
     group_by(date) %>%
     summarise(
@@ -105,6 +109,10 @@ process_user_list <- function(data, target_date) {
     ungroup() %>%
     # Filter locked users after getting latest state
     filter(!locked) %>%
+    # Filter out users inactive for more than a year
+    filter(
+      is.na(last_active_at) | as.Date(last_active_at) >= target_date - 365
+    ) %>%
     # Sort by most recently active
     arrange(desc(last_active_at))
 
