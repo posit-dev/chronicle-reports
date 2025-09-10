@@ -131,7 +131,7 @@ ui <- page_sidebar(
     dateRangeInput(
       "date_range",
       "Select Date Range",
-      start = Sys.Date() - 30,
+      start = Sys.Date() - 90,
       end = Sys.Date()
     ),
     br(),
