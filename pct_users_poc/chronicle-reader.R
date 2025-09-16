@@ -84,19 +84,31 @@ chr_latest_window <- function(
 chr_list_metrics <- function(base_path, frequency = c("daily", "hourly")) {
   frequency = match.arg(frequency)
   prefix <- glue::glue("{frequency}/v2/")
-  s3_client <- paws::s3()
-  result <- s3_client$list_objects_v2(
-    base_path,
-    Prefix = prefix,
-    Delimiter = "/"
-  )
-  m <-
-    result$CommonPrefixes |>
-    purrr::map(unlist) |>
-    purrr::map_chr("Prefix") |>
-    stringr::str_replace_all(prefix, "") |>
-    stringr::str_replace("/$", "")
 
+  if (startsWith(base_path, "s3://")) {
+    bucket_name <- sub("s3://", "", base_path)
+    s3_client <- paws::s3()
+    result <- s3_client$list_objects_v2(
+      bucket_name,
+      Prefix = prefix,
+      Delimiter = "/"
+    )
+    m <-
+      result$CommonPrefixes |>
+      purrr::map(unlist) |>
+      purrr::map_chr("Prefix") |>
+      stringr::str_replace_all(prefix, "") |>
+      stringr::str_replace("/$", "")
+  } else {
+    # Local filesystem
+    full_path <- file.path(base_path, prefix)
+    if (dir.exists(full_path)) {
+      dirs <- list.dirs(full_path, recursive = FALSE, full.names = FALSE)
+      m <- dirs
+    } else {
+      m <- character(0)
+    }
+  }
   tibble(metric = m, frequency = frequency) |>
     mutate(
       product = case_when(
