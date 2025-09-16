@@ -3,6 +3,7 @@ library(bslib)
 library(dplyr)
 library(DT)
 library(arrow)
+library(lubridate)
 
 ui <- page_fluid(
   title = "Duplicate Users Finder",
@@ -31,9 +32,14 @@ server <- function(input, output, session) {
   users_data <- eventReactive(
     input$refresh,
     {
+      base_path = Sys.getenv(
+        "CHRONICLE_BASE_PATH",
+        "/var/lib/posit-chronicle/data"
+      )
+
       # First find the latest partition
       ds <- open_dataset(
-        "s3://posit-dsp-chronicle/daily/v2/connect_users",
+        paste0(base_path, "/daily/v2/connect_users"),
         partitioning = c("Year", "Month", "Day")
       )
 

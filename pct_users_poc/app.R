@@ -53,7 +53,7 @@ process_daily_metrics <- function(data) {
     ungroup() |>
     # Filter out users inactive for more than a year from the reference date
     filter(
-      is.na(last_active_at) | as.Date(last_active_at) >= date - 365
+      is.na(last_active_at) | as.Date(last_active_at) >= date - dyears(1)
     ) |>
     # Then calculate metrics only using latest states
     group_by(date) |>
