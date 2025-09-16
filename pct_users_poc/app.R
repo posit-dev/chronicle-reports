@@ -7,7 +7,7 @@ library(DT)
 library(tidyr)
 library(lubridate)
 
-source("../utils/chronicle-reader.R")
+source("./chronicle-reader.R")
 
 # Color constants
 COLORS <- list(
