@@ -13,152 +13,225 @@ library(ggplot2)
 library(scales)
 library(tidyr)
 
+source("./chronicle-reader.R")
+
 # base_path <- "/Users/marktucker/work/chronicle-data/posit-it/2025-09"
 base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
 
-# Load data from Chronicle Connect files
-load_data <- function() {
-  # Try to load visit data using arrow dataset
-  visits_base_path <- file.path(base_path, "daily/v2/connect_content_visits")
-  visits_data <- NULL
+load_data <- function(
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
+) {
+  tryCatch(
+    {
+      visits_dataset <- chr_get_metric_data(
+        "connect_content_visits",
+        base_path,
+        "daily"
+      ) |>
+        mutate(date = as.Date(timestamp)) |>
+        collect()
 
-  if (dir.exists(visits_base_path)) {
-    tryCatch(
-      {
-        visits_dataset <- open_dataset(
-          visits_base_path,
-          hive_style = FALSE,
-          partitioning = c("Year", "Month", "Day"),
-          format = "parquet"
-        )
+      visits_data <- visits_dataset %>%
+        collect() %>%
+        # Create date column from partition columns if they exist
+        mutate(
+          date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
+            as.Date(paste(
+              Year,
+              sprintf("%02d", Month),
+              sprintf("%02d", Day),
+              sep = "-"
+            ))
+          } else if ("timestamp" %in% colnames(.)) {
+            as.Date(timestamp)
+          } else {
+            # If we can't determine the date, this is an error condition
+            NA_Date_
+          }
+        ) %>%
+        # Deduplicate visits based on timestamp, content_guid, and user_guid
+        # This removes double-counting from multiple hosts reporting the same visit
+        distinct(timestamp, content_guid, user_guid, .keep_all = TRUE)
 
-        visits_data <- visits_dataset %>%
-          collect() %>%
-          # Create date column from partition columns if they exist
-          mutate(
-            date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
-              as.Date(paste(
-                Year,
-                sprintf("%02d", Month),
-                sprintf("%02d", Day),
-                sep = "-"
-              ))
-            } else if ("timestamp" %in% colnames(.)) {
-              as.Date(timestamp)
-            } else {
-              # If we can't determine the date, this is an error condition
-              NA_Date_
-            }
-          ) %>%
-          # Deduplicate visits based on timestamp, content_guid, and user_guid
-          # This removes double-counting from multiple hosts reporting the same visit
-          distinct(timestamp, content_guid, user_guid, .keep_all = TRUE)
-      },
-      error = function(e) {
-        message("Failed to load visits data: ", e$message)
-        visits_data <- NULL
-      }
-    )
-  }
-
-  # Try to load content metadata using arrow dataset
-  content_base_path <- file.path(base_path, "daily/v2/connect_contents")
-  content_data <- NULL
-
-  if (dir.exists(content_base_path)) {
-    tryCatch(
-      {
-        content_dataset <- open_dataset(
-          content_base_path,
-          hive_style = FALSE,
-          partitioning = c("Year", "Month", "Day"),
-          format = "parquet"
-        )
-        content_data <- content_dataset %>%
-          collect() %>%
-          # Add date column for content data as well if needed
-          mutate(
-            date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
-              as.Date(paste(
-                Year,
-                sprintf("%02d", Month),
-                sprintf("%02d", Day),
-                sep = "-"
-              ))
-            } else if ("timestamp" %in% colnames(.)) {
-              as.Date(timestamp)
-            } else {
-              # Content metadata might not need a date column
-              NA_Date_
-            }
-          ) %>%
-          # Deduplicate content metadata records as well
-          distinct()
-      },
-      error = function(e) {
-        message("Failed to load content metadata: ", e$message)
-        content_data <- NULL
-      }
-    )
-  }
-
-  # If we have both datasets, try to join them
-  if (
-    !is.null(visits_data) &&
-      !is.null(content_data) &&
-      nrow(visits_data) > 0 &&
-      nrow(content_data) > 0
-  ) {
-    # Check what columns are available in content_data
-    content_cols <- colnames(content_data)
-
-    # Try to find guid and title columns with different possible names
-    guid_col <- NULL
-    title_col <- NULL
-
-    if ("content_guid" %in% content_cols) {
-      guid_col <- "content_guid"
-    } else if ("guid" %in% content_cols) {
-      guid_col <- "guid"
-    } else if ("id" %in% content_cols) {
-      guid_col <- "id"
-    }
-
-    if ("title" %in% content_cols) {
-      title_col <- "title"
-    } else if ("name" %in% content_cols) {
-      title_col <- "name"
-    }
-
-    # Only proceed if we found both columns
-    if (!is.null(guid_col) && !is.null(title_col)) {
-      tryCatch(
-        {
-          # Get unique content metadata
-          content_metadata <- content_data %>%
-            select(all_of(c(guid_col, title_col))) %>%
-            distinct() %>%
-            filter(!is.na(.data[[guid_col]])) %>%
-            rename(content_guid = all_of(guid_col), title = all_of(title_col))
-
-          # Join visits with content metadata
-          all_data <- visits_data %>%
-            left_join(content_metadata, by = "content_guid")
-
-          return(all_data)
-        },
-        error = function(e) {
-          # If joining fails, just return visits data
-          message("Failed to join content metadata: ", e$message)
-          return(visits_data)
-        }
+      content_dataset <- chr_get_metric_data(
+        "connect_contents",
+        base_path,
+        "daily"
       )
-    }
-  }
 
-  # Return just visits data if content metadata isn't available
-  return(visits_data)
+      content_data <- content_dataset %>%
+        collect() %>%
+        # Add date column for content data as well if needed
+        mutate(
+          date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
+            as.Date(paste(
+              Year,
+              sprintf("%02d", Month),
+              sprintf("%02d", Day),
+              sep = "-"
+            ))
+          } else if ("timestamp" %in% colnames(.)) {
+            as.Date(timestamp)
+          } else {
+            # Content metadata might not need a date column
+            NA_Date_
+          }
+        ) %>%
+        # Deduplicate content metadata records as well
+        distinct()
+
+      return(visits_data)
+    },
+    error = function(e) {
+      stop("Error reading parquet files from S3: ", e$message)
+    }
+  )
 }
+
+# # Load data from Chronicle Connect files
+# load_data <- function() {
+#   # Try to load visit data using arrow dataset
+#   visits_base_path <- file.path(base_path, "/daily/v2/connect_content_visits")
+#   visits_data <- NULL
+
+#   if (dir.exists(visits_base_path)) {
+#     tryCatch(
+#       {
+#         print(con = stdout(), visits_base_path)
+#         visits_dataset <- open_dataset(
+#           visits_base_path,
+#           hive_style = FALSE,
+#           partitioning = c("Year", "Month", "Day"),
+#           format = "parquet"
+#         )
+
+#         visits_data <- visits_dataset %>%
+#           collect() %>%
+#           # Create date column from partition columns if they exist
+#           mutate(
+#             date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
+#               as.Date(paste(
+#                 Year,
+#                 sprintf("%02d", Month),
+#                 sprintf("%02d", Day),
+#                 sep = "-"
+#               ))
+#             } else if ("timestamp" %in% colnames(.)) {
+#               as.Date(timestamp)
+#             } else {
+#               # If we can't determine the date, this is an error condition
+#               NA_Date_
+#             }
+#           ) %>%
+#           # Deduplicate visits based on timestamp, content_guid, and user_guid
+#           # This removes double-counting from multiple hosts reporting the same visit
+#           distinct(timestamp, content_guid, user_guid, .keep_all = TRUE)
+#       },
+#       error = function(e) {
+#         message("Failed to load visits data: ", e$message)
+#         visits_data <- NULL
+#       }
+#     )
+#   }
+
+#   # Try to load content metadata using arrow dataset
+#   content_base_path <- file.path(base_path, "/daily/v2/connect_contents")
+#   content_data <- NULL
+
+#   if (dir.exists(content_base_path)) {
+#     tryCatch(
+#       {
+#         content_dataset <- open_dataset(
+#           content_base_path,
+#           hive_style = FALSE,
+#           partitioning = c("Year", "Month", "Day"),
+#           format = "parquet"
+#         )
+#         content_data <- content_dataset %>%
+#           collect() %>%
+#           # Add date column for content data as well if needed
+#           mutate(
+#             date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
+#               as.Date(paste(
+#                 Year,
+#                 sprintf("%02d", Month),
+#                 sprintf("%02d", Day),
+#                 sep = "-"
+#               ))
+#             } else if ("timestamp" %in% colnames(.)) {
+#               as.Date(timestamp)
+#             } else {
+#               # Content metadata might not need a date column
+#               NA_Date_
+#             }
+#           ) %>%
+#           # Deduplicate content metadata records as well
+#           distinct()
+#       },
+#       error = function(e) {
+#         message("Failed to load content metadata: ", e$message)
+#         content_data <- NULL
+#       }
+#     )
+#   }
+
+#   # If we have both datasets, try to join them
+#   if (
+#     !is.null(visits_data) &&
+#       !is.null(content_data) &&
+#       nrow(visits_data) > 0 &&
+#       nrow(content_data) > 0
+#   ) {
+#     # Check what columns are available in content_data
+#     content_cols <- colnames(content_data)
+
+#     # Try to find guid and title columns with different possible names
+#     guid_col <- NULL
+#     title_col <- NULL
+
+#     if ("content_guid" %in% content_cols) {
+#       guid_col <- "content_guid"
+#     } else if ("guid" %in% content_cols) {
+#       guid_col <- "guid"
+#     } else if ("id" %in% content_cols) {
+#       guid_col <- "id"
+#     }
+
+#     if ("title" %in% content_cols) {
+#       title_col <- "title"
+#     } else if ("name" %in% content_cols) {
+#       title_col <- "name"
+#     }
+
+#     # Only proceed if we found both columns
+#     if (!is.null(guid_col) && !is.null(title_col)) {
+#       tryCatch(
+#         {
+#           # Get unique content metadata
+#           content_metadata <- content_data %>%
+#             select(all_of(c(guid_col, title_col))) %>%
+#             distinct() %>%
+#             filter(!is.na(.data[[guid_col]])) %>%
+#             rename(content_guid = all_of(guid_col), title = all_of(title_col))
+
+#           # Join visits with content metadata
+#           all_data <- visits_data %>%
+#             left_join(content_metadata, by = "content_guid")
+
+#           return(all_data)
+#         },
+#         error = function(e) {
+#           # If joining fails, just return visits data
+#           message("Failed to join content metadata: ", e$message)
+#           return(visits_data)
+#         }
+#       )
+#     }
+#   }
+
+#   # Return just visits data if content metadata isn't available
+#   return(visits_data)
+# }
 
 # Initialize as loading state
 data <- NULL
@@ -218,8 +291,9 @@ server <- function(input, output, session) {
         h5("No Data Found"),
         p("Chronicle Connect data files could not be found or loaded."),
         p(
-          "Expected location: posit-it/2025-09/daily/v2/connect_content_visits/"
+          "Expected location:"
         ),
+        p(base_path),
         p("Please ensure the data files are in the correct location.")
       )
     }
