@@ -23,6 +23,7 @@ load_data <- function(
 ) {
   tryCatch(
     {
+      # Load visits data
       visits_dataset <- chr_get_metric_data(
         "connect_content_visits",
         base_path,
@@ -32,7 +33,6 @@ load_data <- function(
         collect()
 
       visits_data <- visits_dataset %>%
-        collect() %>%
         # Create date column from partition columns if they exist
         mutate(
           date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
@@ -53,6 +53,7 @@ load_data <- function(
         # This removes double-counting from multiple hosts reporting the same visit
         distinct(timestamp, content_guid, user_guid, .keep_all = TRUE)
 
+      # Load content metadata
       content_dataset <- chr_get_metric_data(
         "connect_contents",
         base_path,
@@ -61,24 +62,62 @@ load_data <- function(
 
       content_data <- content_dataset %>%
         collect() %>%
-        # Add date column for content data as well if needed
-        mutate(
-          date = if (all(c("Year", "Month", "Day") %in% colnames(.))) {
-            as.Date(paste(
-              Year,
-              sprintf("%02d", Month),
-              sprintf("%02d", Day),
-              sep = "-"
-            ))
-          } else if ("timestamp" %in% colnames(.)) {
-            as.Date(timestamp)
-          } else {
-            # Content metadata might not need a date column
-            NA_Date_
-          }
-        ) %>%
-        # Deduplicate content metadata records as well
+        # Deduplicate content metadata records
         distinct()
+
+      # Join visits with content metadata to get titles
+      if (!is.null(content_data) && nrow(content_data) > 0) {
+        # Check what columns are available in content_data
+        content_cols <- colnames(content_data)
+
+        # Try to find guid and title columns with different possible names
+        guid_col <- NULL
+        title_col <- NULL
+
+        if ("content_guid" %in% content_cols) {
+          guid_col <- "content_guid"
+        } else if ("guid" %in% content_cols) {
+          guid_col <- "guid"
+        } else if ("id" %in% content_cols) {
+          guid_col <- "id"
+        }
+
+        if ("title" %in% content_cols) {
+          title_col <- "title"
+        } else if ("name" %in% content_cols) {
+          title_col <- "name"
+        }
+
+        # Only proceed if we found both columns
+        if (!is.null(guid_col) && !is.null(title_col)) {
+          tryCatch(
+            {
+              # Get unique content metadata, taking the most recent entry for each guid
+              content_metadata <- content_data %>%
+                select(all_of(c(guid_col, title_col))) %>%
+                filter(!is.na(.data[[guid_col]])) %>%
+                rename(
+                  content_guid = all_of(guid_col),
+                  title = all_of(title_col)
+                ) %>%
+                # Remove duplicates by keeping only distinct combinations
+                distinct(content_guid, .keep_all = TRUE)
+
+              # Join visits with content metadata
+              visits_data <- visits_data %>%
+                left_join(
+                  content_metadata,
+                  by = "content_guid",
+                  relationship = "many-to-one"
+                )
+            },
+            error = function(e) {
+              # If joining fails, continue with just visits data
+              message("Failed to join content metadata: ", e$message)
+            }
+          )
+        }
+      }
 
       return(visits_data)
     },
@@ -400,13 +439,20 @@ server <- function(input, output, session) {
   output$date_range_ui <- renderUI({
     req(values$has_data, values$data)
 
+    # Get the date range from data
+    max_date <- max(values$data$date, na.rm = TRUE)
+    min_date <- min(values$data$date, na.rm = TRUE)
+
+    # Default to 30 days before max date, but not earlier than min date
+    default_start <- max(max_date - 30, min_date)
+
     dateRangeInput(
       "date_range",
       "Date Range:",
-      start = min(values$data$date, na.rm = TRUE),
-      end = max(values$data$date, na.rm = TRUE),
-      min = min(values$data$date, na.rm = TRUE),
-      max = max(values$data$date, na.rm = TRUE)
+      start = default_start,
+      end = max_date,
+      min = min_date,
+      max = max_date
     )
   })
 
