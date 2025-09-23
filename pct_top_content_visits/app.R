@@ -13,7 +13,8 @@ library(ggplot2)
 library(scales)
 library(tidyr)
 
-base_path <- "/Users/marktucker/work/chronicle-data/posit-it/2025-09"
+# base_path <- "/Users/marktucker/work/chronicle-data/posit-it/2025-09"
+base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
 
 # Load data from Chronicle Connect files
 load_data <- function() {
