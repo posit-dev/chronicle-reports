@@ -121,12 +121,12 @@ server <- function(input, output, session) {
     tagList(
       card(
         card_header("Content Visits Over Time"),
-        plotlyOutput("content_distribution_plot")
+        shinycssloaders::withSpinner(plotlyOutput("content_distribution_plot"))
       ),
 
       card(
         card_header("Top Content by Visits"),
-        DT::dataTableOutput("top_content_table")
+        shinycssloaders::withSpinner(DT::dataTableOutput("top_content_table"))
       )
     )
   })
