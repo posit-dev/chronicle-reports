@@ -72,9 +72,6 @@ process_daily_metrics <- function(data) {
             !locked
         ]
       ),
-      users_active_today = n_distinct(
-        id[as.Date(last_active_at) == date & !locked]
-      ),
       .groups = "drop"
     ) |>
     arrange(date)
@@ -261,7 +258,7 @@ server <- function(input, output, session) {
       ) |>
       group_by(day_of_week) |>
       summarise(
-        avg_active_users = mean(users_active_today, na.rm = TRUE),
+        avg_active_users = mean(daily_users, na.rm = TRUE),
         .groups = "drop"
       )
 
