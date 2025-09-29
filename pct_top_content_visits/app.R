@@ -142,8 +142,7 @@ server <- function(input, output, session) {
       data_loaded(TRUE)
 
       # Load data after the timer fires
-      loaded_data <- load_data()
-      values$data <- loaded_data
+      values$data <- load_data()
     }
   })
 
@@ -212,7 +211,7 @@ server <- function(input, output, session) {
 
   # Top content table
   output$top_content_table <- DT::renderDataTable({
-    req(values$data)
+    req(filtered_data())
 
     # Get the total number of visits and days for percentage calculation
     total_visits <- nrow(filtered_data())
@@ -267,7 +266,7 @@ server <- function(input, output, session) {
 
   # Content distribution plot
   output$content_distribution_plot <- renderPlotly({
-    req(values$data)
+    req(filtered_data())
 
     # Get top content GUIDs
     top_content_guids <- filtered_data() |>
