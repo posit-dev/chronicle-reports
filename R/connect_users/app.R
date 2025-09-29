@@ -126,7 +126,6 @@ ui <- page_fluid(
       card_header("User Trends Over Time"),
       plotlyOutput("user_trend_plot")
     ),
-    # plotOutput("user_trend_plot")
 
     # Daily activity pattern chart
     card(
@@ -147,7 +146,6 @@ server <- function(input, output, session) {
         {
           data <- chr_get_metric_data("connect_users", BASE_PATH, "daily") |>
             collect()
-
           return(data)
         },
         error = function(e) {
@@ -175,6 +173,7 @@ server <- function(input, output, session) {
       slice_max(date, n = 1)
   })
 
+  # Get the latest values for each metric
   output$licensed_users_value <- renderText({
     req(latest_data())
     prettyNum(latest_data()$licensed_users, big.mark = ",")
@@ -188,7 +187,7 @@ server <- function(input, output, session) {
     prettyNum(latest_data()$publishers, big.mark = ",")
   })
 
-  # User trends over time
+  # Plot for user trends over time
   output$user_trend_plot <- renderPlotly({
     req(data())
 
@@ -251,7 +250,7 @@ server <- function(input, output, session) {
       )
   })
 
-  # Average daily activity pattern by day of week
+  # Plot the average daily activity pattern by day of week
   output$activity_pattern_plot <- renderPlot({
     req(data())
 
