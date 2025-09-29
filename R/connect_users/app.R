@@ -13,7 +13,6 @@ library(plotly)
 # UI. See https://docs.posit.co/connect/user/content-settings/#content-vars
 # for more information.
 BASE_PATH <- Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
-BASE_PATH <- "/Users/marktucker/work/chronicle-data/posit-it/2025-09"
 
 source("./chronicle-reader.R")
 
@@ -156,6 +155,7 @@ server <- function(input, output, session) {
             type = "error",
             duration = NULL
           )
+          return(NULL)
         }
       )
     })
