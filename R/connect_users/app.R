@@ -20,8 +20,6 @@ source("./chronicle-reader.R")
 # Color constants
 BRAND_COLORS <- list(
   # Brand colors
-  # TODO - set these names to match semantics??
-  DARK_GRAY = "#404041",
   BLUE = "#447099",
   GREEN = "#72994E",
   BURGUNDY = "#9A4665"
@@ -29,7 +27,6 @@ BRAND_COLORS <- list(
 
 COLORS <- list(
   # Semantic mappings
-  # TODO - use values above instead of hard-coding colors in two places
   LICENSED_USERS = BRAND_COLORS$BLUE,
   DAILY_USERS = BRAND_COLORS$GREEN,
   PUBLISHERS = BRAND_COLORS$BURGUNDY
@@ -86,7 +83,9 @@ process_daily_metrics <- function(data) {
 }
 
 
-# UI
+# ==============================================
+# Define the UI layout
+# ==============================================
 ui <- page_fluid(
   tags$head(tags$style(HTML('* {font-family: "Open Sans"};'))),
   title = "Posit Connect Users Dashboard",
@@ -137,7 +136,9 @@ ui <- page_fluid(
   )
 )
 
-
+# ==============================================
+# Define the server logic
+# ==============================================
 server <- function(input, output, session) {
   # Read data once at startup with error handling
   raw_data <- reactive({
