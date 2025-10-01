@@ -202,7 +202,7 @@ server <- function(input, output, session) {
 
     # Plot the trend of user counts over time
     p <- ggplot(plot_data, aes(x = date, y = value, color = metric)) +
-      geom_line(linewidth = 1) +
+      geom_line(linewidth = 0.5) +
       # add points with custom hover text
       geom_point(
         aes(
@@ -218,7 +218,7 @@ server <- function(input, output, session) {
             metric
           )
         ),
-        size = 1
+        size = 0.5
       ) +
       theme_minimal() +
       labs(
