@@ -29,6 +29,5 @@ chr_get_metric_data <- function(
     schema = schema,
     format = "parquet",
     partitioning = partitioning
-  ) |>
-    dplyr::mutate(date = as.Date(timestamp))
+  )
 }

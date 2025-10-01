@@ -84,7 +84,6 @@ process_daily_metrics <- function(data) {
 # Define the UI layout
 # ==============================================
 ui <- page_fluid(
-  tags$head(tags$style(HTML('* {font-family: "Open Sans"};'))),
   title = "Posit Connect Users Dashboard",
   theme = bs_theme(preset = "shiny"),
 
@@ -142,6 +141,7 @@ server <- function(input, output, session) {
       tryCatch(
         {
           data <- chr_get_metric_data("connect_users", BASE_PATH, "daily") |>
+            dplyr::mutate(date = as.Date(timestamp)) |>
             collect()
           return(data)
         },
