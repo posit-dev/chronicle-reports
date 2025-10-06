@@ -1,9 +1,12 @@
 library(testthat)
 library(dplyr)
 library(lubridate)
+library(here)
 
 # Load the function being tested
-source("../../app.R")
+withr::with_dir(here::here("connect_users"), {
+  source("app.R")
+})
 
 test_that("process_daily_metrics works with basic data", {
   # Create sample data
