@@ -63,7 +63,7 @@ process_daily_metrics <- function(data) {
     dplyr::ungroup() |>
     # Filter out users inactive for more than a year
     # Here, `date` is the date on which the metric was collected.
-    stats::filter(
+    dplyr::filter(
       is.na(last_active_at) |
         as.Date(last_active_at) >= date - lubridate::dyears(1)
     ) |>
