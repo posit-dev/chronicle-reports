@@ -54,9 +54,9 @@ COLORS <- list(
   PUBLISHERS = BRAND_COLORS$BURGUNDY
 )
 
-# Process the raw data to compute daily metrics used for historical trends
-process_daily_metrics <- function(data) {
-  daily_metrics <- data |>
+# Process the connect_users data to compute daily metrics used for historical trends
+calculate_connect_daily_user_counts <- function(data) {
+  daily_user_counts <- data |>
     # First get latest state per user per date
     dplyr::group_by(date, id) |>
     dplyr::slice_max(timestamp, n = 1) |>
@@ -99,7 +99,7 @@ process_daily_metrics <- function(data) {
     ) |>
     dplyr::arrange(date)
 
-  return(daily_metrics)
+  return(daily_user_counts)
 }
 
 
@@ -183,7 +183,7 @@ server <- function(input, output, session) {
   # Process data for metrics
   data <- shiny::reactive({
     shiny::req(raw_data())
-    process_daily_metrics(raw_data())
+    calculate_connect_daily_user_counts(raw_data())
   })
 
   # Get most recent day's data
