@@ -9,3 +9,6 @@ connect_users_app()
 \description{
 Run the Connect Users Dashboard Shiny App
 }
+\examples{
+connect_users_app()
+}
