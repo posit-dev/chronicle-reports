@@ -19,8 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       # - name: Install system dependencies
       #   run: sudo apt-get install -y cmake libcurl4-openssl-dev libfontconfig1-dev libfreetype6-dev libnode-dev libx11-dev pandoc
-      # - uses: r-lib/actions/setup-r@v2
-      # - uses: r-lib/actions/setup-r-dependencies@v2
+      - uses: r-lib/actions/setup-r@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
       #   with:
       #     extra-packages: any::rcmdcheck
       #     needs: check
