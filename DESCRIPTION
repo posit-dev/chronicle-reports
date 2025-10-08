@@ -22,7 +22,6 @@ Imports:
     lubridate,
     plotly,
     shiny,
-    stats,
     tidyr
 Suggests:
     shinytest2,
