@@ -1,0 +1,29 @@
+---
+name: CI Workflow
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "the 'git ref' or 'git ref-name' (e.g., 'refs/tags/v2023.10.0' or 'v2023.10.0')"
+        required: false
+        type: string
+
+concurrency:
+  # Only cancel in-progress runs for pull_request events, this prevents cancelling workflows against main or tags
+  # A pull_request will reuse the same group thus enabling cancelation, all others receive a unique run_id
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: read
+  packages: write
+  statuses: write
+
+jobs:
+  check-r-code:
+    uses: ./.github/workflows/R-CMD-check.yml
+    name: Check R code
+    secrets: inherit
