@@ -1,7 +1,6 @@
 library(testthat)
 library(dplyr)
 library(lubridate)
-library(here)
 
 library(chronicle.reports)
 
