@@ -301,6 +301,12 @@ server <- function(input, output, session) {
   })
 }
 
+#' Run the Connect Users Dashboard Shiny App
+#'
+#' @export
+#'
+#' @examples
+#' connect_users_app()
 connect_users_app <- function() {
   shiny::shinyApp(ui, server)
 }
