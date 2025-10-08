@@ -2,6 +2,13 @@
 
 R_CMD := "Rscript"
 
+setup:
+  @echo "Setting up R environment..."
+  brew install pre-commit
+  {{R_CMD}} -e 'if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools"); if (!requireNamespace("roxygen2", quietly = TRUE)) install.packages("roxygen2"); if (!requireNamespace("testthat", quietly = TRUE)) install.packages("testthat"); if (!requireNamespace("lintr", quietly = TRUE)) install.packages("lintr")'
+  {{R_CMD}} -e 'if (!requireNamespace("precommit", quietly = TRUE)) install.packages("precommit");'
+  {{R_CMD}} -e 'precommit::use_precommit()'
+
 run:
   @echo "Starting Shiny app..."
   {{R_CMD}} -e 'devtools::load_all(); connect_users_app()'
