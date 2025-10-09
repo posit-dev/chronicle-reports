@@ -4,7 +4,7 @@ This repository contains Shiny apps to generate reports using data from Posit Ch
 
 ## Prerequisites
 
-If you are using Posit Package Manager, refer to the documentation to [obtain an appropriate URL](https://packagemanager.posit.co/__docs__/user/get-repo-url.html) and then [configure your R environment](https://packagemanager.posit.co/__docs__/user/configure-r.html).
+If you are using Posit Package Manager, refer to the documentation to [obtain an appropriate URL](https://docs.posit.co/rspm/user/get-repo-url.html) and then [configure your R environment](https://docs.posit.co/rspm//user/configure-r.html).
 
 
 Following these steps should give you something similar to this:
