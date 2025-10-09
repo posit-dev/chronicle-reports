@@ -10,6 +10,7 @@ If you are using Posit Package Manager, refer to the documentation to [obtain an
 Following these steps should give you something similar to this:
 
 ```R
+# NOTE: Replace 'noble' with your Linux distribution (e.g., 'jammy', 'focal', etc.)
 options(repos = c(CRAN = sprintf("https://packagemanager.posit.co/cran/latest/bin/linux/noble-%s/%s", R.version["arch"], substr(getRversion(), 1, 3))))
 ```
 
