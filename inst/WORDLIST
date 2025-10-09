@@ -1,0 +1,12 @@
+args
+CMD
+cran
+devtools
+Justfile
+lintr
+pre
+precommit
+requireNamespace
+roxygen
+Rscript
+testthat
