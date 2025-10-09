@@ -25,7 +25,7 @@ pak::pak("posit-dev/chronicle-reports")
 
 You can then run the report using:
 
-```
+```R
 chronicle.reports::connect_users_app()
 ```
 
