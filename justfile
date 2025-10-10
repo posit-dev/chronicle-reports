@@ -17,7 +17,7 @@ install:
   @echo "Installing R package..."
   {{R_CMD}} -e 'devtools::install()'
 
-lint:
+lint: install
   @echo "Linting R code..."
   {{R_CMD}} -e 'if (!requireNamespace("lintr", quietly = TRUE)) install.packages("lintr"); lintr::lint_package()'
 

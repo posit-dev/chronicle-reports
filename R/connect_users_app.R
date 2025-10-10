@@ -46,18 +46,21 @@ COLORS <- list(
   PUBLISHERS = BRAND_COLORS$BURGUNDY
 )
 
-# Process the connect_users data to compute daily metrics used for historical trends
+#' Process the connect_users data to compute daily metrics used for historical trends
+#'
+#' @importFrom rlang .data
+#' @param data A data frame or tibble containing the raw connect_users data.
 calculate_connect_daily_user_counts <- function(data) {
   daily_user_counts <- data |>
     # First get latest state per user per date
-    dplyr::group_by(date, id) |>
+    dplyr::group_by(.data$date, .data$id) |>
     dplyr::slice_max(timestamp, n = 1) |>
     dplyr::ungroup() |>
     # Filter out users inactive for more than a year
     # Here, `date` is the date on which the metric was collected.
     dplyr::filter(
-      is.na(last_active_at) |
-        as.Date(last_active_at) >= date - lubridate::dyears(1)
+      is.na(.data$last_active_at) |
+        as.Date(.data$last_active_at) >= date - lubridate::dyears(1)
     ) |>
     # Then calculate daily user counts for each date
     dplyr::group_by(date) |>
@@ -65,26 +68,26 @@ calculate_connect_daily_user_counts <- function(data) {
       # Any unlocked user active in the last year (computed above) is counted
       # as a licensed user
       licensed_users = dplyr::n_distinct(id[
-        !is.na(created_at) &
-          as.Date(created_at) <= date &
-          !locked
+        !is.na(.data$created_at) &
+          as.Date(.data$created_at) <= date &
+          !.data$locked
       ]),
       # Daily users are those active on a given date
       daily_users = dplyr::n_distinct(
         id[
-          !is.na(last_active_at) &
-            as.Date(last_active_at) == date &
-            !locked
+          !is.na(.data$last_active_at) &
+            as.Date(.data$last_active_at) == date &
+            !.data$locked
         ]
       ),
       # Publishers are those with role publisher or admin
       publishers = dplyr::n_distinct(
         id[
-          !is.na(created_at) &
-            as.Date(created_at) <= date &
-            user_role %in%
+          !is.na(.data$created_at) &
+            as.Date(.data$created_at) <= date &
+            .data$user_role %in%
               c("publisher", "admin") &
-            !locked
+            !.data$locked
         ]
       ),
       .groups = "drop"
@@ -148,6 +151,7 @@ ui <- bslib::page_fluid(
 
 # ==============================================
 # Define the server logic
+#' importFrom rlang .data
 # ==============================================
 server <- function(input, output, session) {
   # Read data once at startup with error handling
@@ -206,11 +210,11 @@ server <- function(input, output, session) {
 
     # Reshape data for easier plotting
     plot_data <- data() |>
-      dplyr::select(date, licensed_users, daily_users, publishers) |>
+      dplyr::select("date", "licensed_users", "daily_users", "publishers") |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
       dplyr::mutate(
         metric = factor(
-          metric,
+          .data$metric,
           levels = c("licensed_users", "daily_users", "publishers"),
           labels = c("Licensed Users", "Daily Users", "Publishers")
         )
@@ -219,7 +223,7 @@ server <- function(input, output, session) {
     # Plot the trend of user counts over time
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = value, color = metric)
+      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       # add points with custom hover text
@@ -232,9 +236,9 @@ server <- function(input, output, session) {
           text = paste0(
             format(date, "%B %d, %Y"),
             "<br>",
-            prettyNum(value, big.mark = ","),
+            prettyNum(.data$value, big.mark = ","),
             " ",
-            metric
+            .data$metric
           )
         ),
         size = 0.5
@@ -275,15 +279,15 @@ server <- function(input, output, session) {
       dplyr::mutate(
         day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
       ) |>
-      dplyr::group_by(day_of_week) |>
+      dplyr::group_by(.data$day_of_week) |>
       dplyr::summarise(
-        avg_active_users = mean(daily_users, na.rm = TRUE),
+        avg_active_users = mean(.data$daily_users, na.rm = TRUE),
         .groups = "drop"
       )
 
     ggplot2::ggplot(
       day_summary,
-      ggplot2::aes(x = day_of_week, y = avg_active_users)
+      ggplot2::aes(x = .data$day_of_week, y = .data$avg_active_users)
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$BLUE) +
       ggplot2::theme_minimal() +
@@ -293,6 +297,7 @@ server <- function(input, output, session) {
       )
   })
 }
+
 
 #' Run the Connect Users Dashboard Shiny App
 #'

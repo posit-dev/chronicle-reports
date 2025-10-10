@@ -79,6 +79,13 @@ repos:
         language: fail
         files: '\.(Rhistory|RData|Rds|rds)$'
         # `exclude: <regex>` to allow committing specific files
+    -   id: just-linter
+        name: just-linter
+        language: system
+        entry: just lint
+        files: ^R/.*\.R
+        pass_filenames: false
+
 
 ci:
     autoupdate_schedule: monthly

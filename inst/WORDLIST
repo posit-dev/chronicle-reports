@@ -13,6 +13,7 @@ fnd
 ggplot
 github
 https
+importFrom
 Justfile
 lintr
 lubridate
@@ -22,12 +23,14 @@ plotly
 pre
 precommit
 requireNamespace
+rlang
 ROR
 roxygen
 RoxygenNote
 Rscript
 shinytest
 testthat
+tibble
 tidyr
 UI
 urbina
