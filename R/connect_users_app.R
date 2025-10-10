@@ -30,7 +30,6 @@ chr_get_metric_data <- function(
   )
 }
 
-
 # Color constants
 BRAND_COLORS <- list(
   # Brand colors
@@ -67,14 +66,14 @@ calculate_connect_daily_user_counts <- function(data) {
     dplyr::summarise(
       # Any unlocked user active in the last year (computed above) is counted
       # as a licensed user
-      licensed_users = dplyr::n_distinct(id[
+      licensed_users = dplyr::n_distinct(.data$id[
         !is.na(.data$created_at) &
           as.Date(.data$created_at) <= date &
           !.data$locked
       ]),
       # Daily users are those active on a given date
       daily_users = dplyr::n_distinct(
-        id[
+        .data$id[
           !is.na(.data$last_active_at) &
             as.Date(.data$last_active_at) == date &
             !.data$locked
@@ -82,7 +81,7 @@ calculate_connect_daily_user_counts <- function(data) {
       ),
       # Publishers are those with role publisher or admin
       publishers = dplyr::n_distinct(
-        id[
+        .data$id[
           !is.na(.data$created_at) &
             as.Date(.data$created_at) <= date &
             .data$user_role %in%
@@ -94,7 +93,8 @@ calculate_connect_daily_user_counts <- function(data) {
     ) |>
     dplyr::arrange(date)
 
-  return(daily_user_counts)
+  # Implicit return
+  daily_user_counts
 }
 
 
@@ -171,7 +171,8 @@ server <- function(input, output, session) {
             type = "error",
             duration = NULL
           )
-          return(NULL)
+          # Implicit return
+          NULL
         }
       )
     })

@@ -17,9 +17,10 @@ install:
   @echo "Installing R package..."
   {{R_CMD}} -e 'devtools::install()'
 
+# Returns non-zero exit code if linting errors are found
 lint: install
   @echo "Linting R code..."
-  {{R_CMD}} -e 'if (!requireNamespace("lintr", quietly = TRUE)) install.packages("lintr"); lintr::lint_package()'
+  {{R_CMD}} -e 'if (!requireNamespace("lintr", quietly = TRUE)) install.packages("lintr"); errors <- lintr::lint_package(); print(errors); quit(save = "no", status = length(errors))'
 
 test:
   @echo "Testing R code..."

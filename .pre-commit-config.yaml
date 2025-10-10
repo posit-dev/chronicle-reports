@@ -82,7 +82,8 @@ repos:
     -   id: just-linter
         name: just-linter
         language: system
-        entry: just lint
+        entry: just
+        args: ["lint"]
         files: ^R/.*\.R
         pass_filenames: false
 
