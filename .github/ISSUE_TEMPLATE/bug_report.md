@@ -16,6 +16,7 @@ Chronicle Agent Version:
 Chronicle Server Version: 
 Connect Version: 
 Workbench Version: 
+R Version: 
 
 **To Reproduce**
 
