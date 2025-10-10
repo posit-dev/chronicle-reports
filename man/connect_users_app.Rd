@@ -4,7 +4,19 @@
 \alias{connect_users_app}
 \title{Run the Connect Users Dashboard Shiny App}
 \usage{
-connect_users_app()
+connect_users_app(
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
+)
+}
+\arguments{
+\item{base_path}{the base path where Chronicle data files are stored.
+Defaults to the value of the \code{CHRONICLE_BASE_PATH} environment variable,
+or \code{"/var/lib/posit-chronicle/data"} if the environment variable is not set.
+This path should be accessible by the Shiny app.
+If you deploy this app to Posit Connect, you can set this environment variable
+in the Connect UI. See
+https://docs.posit.co/connect/user/content-settings/#content-vars
+for more information.}
 }
 \description{
 Run the Connect Users Dashboard Shiny App
