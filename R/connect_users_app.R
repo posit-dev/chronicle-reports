@@ -151,7 +151,6 @@ ui <- bslib::page_fluid(
 
 # ==============================================
 # Define the server logic
-#' importFrom rlang .data
 # ==============================================
 server <- function(input, output, session) {
   # Read data once at startup with error handling
