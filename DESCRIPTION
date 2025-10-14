@@ -23,6 +23,7 @@ Imports:
     glue,
     lubridate,
     plotly,
+    rlang,
     shiny,
     tidyr
 Suggests:

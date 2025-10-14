@@ -49,7 +49,6 @@ repos:
           \.github/workflows/.*|
           data/.*|
           )$
-    # -   id: lintr
     -   id: readme-rmd-rendered
     -   id: parsable-R
     -   id: no-browser-statement
@@ -79,6 +78,14 @@ repos:
         language: fail
         files: '\.(Rhistory|RData|Rds|rds)$'
         # `exclude: <regex>` to allow committing specific files
+    -   id: just-linter
+        name: just-linter
+        language: system
+        entry: just
+        args: ["lint"]
+        files: ^R/.*\.R
+        pass_filenames: false
+
 
 ci:
     autoupdate_schedule: monthly
