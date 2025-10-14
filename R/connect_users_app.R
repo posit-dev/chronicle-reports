@@ -1,25 +1,17 @@
-# The base path where Chronicle data files are stored. If you deploy this app
-# to Posit Connect, you can set this environment variable in the Connect
-# UI. See https://docs.posit.co/connect/user/content-settings/#content-vars
-# for more information.
-BASE_PATH <- Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
-
 chr_path <- function(
-  base_path,
-  metric = NULL,
-  frequency = c("daily", "hourly")
-) {
+    base_path,
+    metric = NULL,
+    frequency = c("daily", "hourly")) {
   frequency <- match.arg(frequency)
   glue::glue("{base_path}/{frequency}/v2/{metric}/")
 }
 
 chr_get_metric_data <- function(
-  metric,
-  base_path,
-  frequency = c("daily", "hourly"),
-  ymd = NULL,
-  schema = NULL
-) {
+    metric,
+    base_path,
+    frequency = c("daily", "hourly"),
+    ymd = NULL,
+    schema = NULL) {
   frequency <- match.arg(frequency)
   path <- chr_path(base_path, metric, frequency)
 
@@ -163,7 +155,8 @@ server <- function(input, output, session) {
     shiny::withProgress(message = "Loading data...", {
       tryCatch(
         {
-          data <- chr_get_metric_data("connect_users", BASE_PATH, "daily") |>
+          base_path <- shiny::getShinyOption("base_path")
+          data <- chr_get_metric_data("connect_users", base_path, "daily") |>
             dplyr::mutate(date = as.Date(timestamp)) |>
             dplyr::collect()
           return(data)
@@ -303,10 +296,26 @@ server <- function(input, output, session) {
 
 #' Run the Connect Users Dashboard Shiny App
 #'
+#' @param base_path the base path where Chronicle data files are stored.
+#'   Defaults to the value of the `CHRONICLE_BASE_PATH` environment variable,
+#'   or `"/var/lib/posit-chronicle/data"` if the environment variable is not set.
+#'   This path should be accessible by the Shiny app.
+#'   If you deploy this app to Posit Connect, you can set this environment variable
+#'   in the Connect UI. See
+#'   https://docs.posit.co/connect/user/content-settings/#content-vars
+#'   for more information.
+#'
 #' @export
 #'
 #' @examples
 #' connect_users_app()
-connect_users_app <- function() {
+connect_users_app <- function(
+    base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")) {
+  # The base path where Chronicle data files are stored. If you deploy this app
+  # to Posit Connect, you can set this environment variable in the Connect
+  # UI. See https://docs.posit.co/connect/user/content-settings/#content-vars
+  # for more information.
+  shiny::shinyOptions(base_path = base_path)
+
   shiny::shinyApp(ui, server)
 }

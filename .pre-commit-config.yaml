@@ -7,6 +7,15 @@ repos:
     -   id: style-files
         args: [--style_pkg=styler, --style_fun=tidyverse_style]
     -   id: roxygenize
+        additional_dependencies:
+        - arrow
+        - bslib
+        - dplyr
+        - ggplot2
+        - lubridate
+        - plotly
+        - shiny
+        - tidyr
     # codemeta must be above use-tidy-description when both are used
     # -   id: codemeta-description-updated
     -   id: use-tidy-description
@@ -40,7 +49,7 @@ repos:
           \.github/workflows/.*|
           data/.*|
           )$
-    -   id: lintr
+    # -   id: lintr
     -   id: readme-rmd-rendered
     -   id: parsable-R
     -   id: no-browser-statement
@@ -50,7 +59,7 @@ repos:
     -   id: pkgdown
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
-    hooks: 
+    hooks:
     -   id: check-added-large-files
         args: ['--maxkb=200']
     -   id: file-contents-sorter

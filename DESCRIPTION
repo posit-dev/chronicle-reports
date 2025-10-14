@@ -13,6 +13,8 @@ Description: A collection of reports for Posit Chronicle. You provide the
 License: MIT + file LICENSE
 URL: https://github.com/posit-dev/chronicle-reports
 BugReports: https://github.com/posit-dev/chronicle-reports/issues
+Depends:
+    R (>= 4.1.0)
 Imports:
     arrow,
     bslib,

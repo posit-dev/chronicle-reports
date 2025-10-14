@@ -4,6 +4,12 @@ This repository contains Shiny apps to generate reports using data from Posit Ch
 
 ## Prerequisites
 
+### R version
+
+These reports use Shiny, which is supported on the latest release version of R, as well as the previous four minor release versions of R. For example, if the latest release R version is 4.5, then that version is supported, as well as 4.4, 4.3, 4.2, and 4.1.
+
+### Package Manager Configuration (optional but recommended)
+
 If you are using Posit Package Manager, refer to the documentation to [obtain an appropriate URL](https://docs.posit.co/rspm/user/get-repo-url.html) and then [configure your R environment](https://docs.posit.co/rspm//user/configure-r.html).
 
 
