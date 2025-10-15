@@ -46,7 +46,9 @@ vi app.R
 ```
 
 ```R
-chronicle.reports::connect_users_app(base_path="s3://posit-dsp-chronicle")
+chronicle.reports::connect_users_app(base_path="s3://chronicle")
+# NOTE: Replace 's3://chronicle' with your own S3 bucket or storage location
+#	chronicle.reports::connect_users_app(base_path="s3://<your-bucket-name>")
 ```
 
 You can then deploy that file to Connect:
