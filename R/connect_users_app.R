@@ -140,13 +140,13 @@ ui <- bslib::page_fluid(
     # User trends chart
     bslib::card(
       bslib::card_header("User Trends Over Time"),
-      plotly::plotlyOutput("user_trend_plot")
+      shinycssloaders::withSpinner(plotly::plotlyOutput("user_trend_plot"))
     ),
 
     # Daily activity pattern chart
     bslib::card(
       bslib::card_header("Average Daily Users by Day of Week"),
-      shiny::plotOutput("activity_pattern_plot")
+      shinycssloaders::withSpinner(shiny::plotOutput("activity_pattern_plot"))
     )
   )
 )
