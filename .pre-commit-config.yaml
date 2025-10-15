@@ -13,6 +13,7 @@ repos:
         - lubridate
         - plotly
         - shiny
+        - shinycssloaders
         - tidyr
     # codemeta must be above use-tidy-description when both are used
     # -   id: codemeta-description-updated
