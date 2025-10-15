@@ -9,6 +9,7 @@ repos:
         - arrow
         - bslib
         - dplyr
+        - duckdb
         - ggplot2
         - lubridate
         - plotly

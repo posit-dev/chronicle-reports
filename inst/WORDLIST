@@ -6,9 +6,11 @@ CMD
 cph
 cran
 cre
+dbplyr
 dev
 devtools
 dplyr
+duckdb
 fnd
 ggplot
 github

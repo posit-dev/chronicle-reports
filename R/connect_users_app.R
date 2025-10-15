@@ -23,6 +23,7 @@ chr_get_metric_data <- function(
   } else {
     partitioning <- c("Year", "Month", "Day")
   }
+
   arrow::open_dataset(
     path,
     hive_style = FALSE,
@@ -54,11 +55,14 @@ COLORS <- list(
 calculate_connect_daily_user_counts <- function(data) {
   daily_user_counts <- data |>
     # First get latest state per user per date
+    arrow::to_duckdb() |>
     dplyr::group_by(.data$date, .data$id) |>
     dplyr::slice_max(timestamp, n = 1) |>
     dplyr::ungroup() |>
     # Filter out users inactive for more than a year
     # Here, `date` is the date on which the metric was collected.
+    arrow::to_arrow() |>
+    dplyr::collect() |>
     dplyr::filter(
       is.na(.data$last_active_at) |
         as.Date(.data$last_active_at) >= date - lubridate::dyears(1)
@@ -160,9 +164,9 @@ server <- function(input, output, session) {
     tryCatch(
       {
         base_path <- shiny::getShinyOption("base_path")
+
         data <- chr_get_metric_data("connect_users", base_path, "daily") |>
-          dplyr::mutate(date = as.Date(timestamp)) |>
-          dplyr::collect()
+          dplyr::mutate(date = as.Date(timestamp))
         return(data)
       },
       error = function(e) {
