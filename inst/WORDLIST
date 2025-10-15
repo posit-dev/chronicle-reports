@@ -6,6 +6,7 @@ CMD
 cph
 cran
 cre
+dbplyr
 dev
 devtools
 dplyr
