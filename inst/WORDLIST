@@ -28,6 +28,7 @@ ROR
 roxygen
 RoxygenNote
 Rscript
+shinycssloaders
 shinytest
 testthat
 tibble

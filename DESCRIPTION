@@ -25,6 +25,7 @@ Imports:
     plotly,
     rlang,
     shiny,
+    shinycssloaders,
     tidyr
 Suggests:
     shinytest2,
