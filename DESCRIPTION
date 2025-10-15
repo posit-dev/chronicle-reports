@@ -19,6 +19,7 @@ Imports:
     arrow,
     bslib,
     dplyr,
+    duckdb,
     ggplot2,
     glue,
     lubridate,

@@ -9,6 +9,7 @@ cre
 dev
 devtools
 dplyr
+duckdb
 fnd
 ggplot
 github
