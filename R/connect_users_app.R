@@ -157,26 +157,24 @@ ui <- bslib::page_fluid(
 server <- function(input, output, session) {
   # Read data once at startup with error handling
   raw_data <- shiny::reactive({
-    shiny::withProgress(message = "Loading data...", {
-      tryCatch(
-        {
-          base_path <- shiny::getShinyOption("base_path")
-          data <- chr_get_metric_data("connect_users", base_path, "daily") |>
-            dplyr::mutate(date = as.Date(timestamp)) |>
-            dplyr::collect()
-          return(data)
-        },
-        error = function(e) {
-          shiny::showNotification(
-            e$message,
-            type = "error",
-            duration = NULL
-          )
-          # Implicit return
-          NULL
-        }
-      )
-    })
+    tryCatch(
+      {
+        base_path <- shiny::getShinyOption("base_path")
+        data <- chr_get_metric_data("connect_users", base_path, "daily") |>
+          dplyr::mutate(date = as.Date(timestamp)) |>
+          dplyr::collect()
+        return(data)
+      },
+      error = function(e) {
+        shiny::showNotification(
+          e$message,
+          type = "error",
+          duration = NULL
+        )
+        # Implicit return
+        NULL
+      }
+    )
   })
 
   # Process data for metrics
