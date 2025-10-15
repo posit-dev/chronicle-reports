@@ -39,16 +39,19 @@ chronicle.reports::connect_users_app()
 
 The reports can be published to Posit Connect using the `rsconnect` package. First, create a new `app.R` file:
 
+```bash
+mkdir chronicle-connect-users-report
+cd chronicle-connect-users-report
+vi app.R
 ```
-# mkdir chronicle-connect-users-report
-# cd chronicle-connect-users-report
-# vi app.R
+
+```R
 chronicle.reports::connect_users_app(base_path="s3://posit-dsp-chronicle")
 ```
 
 You can then deploy that file to Connect:
 
-```
+```R
 # install.packages("rsconnect")
 
 # appDir should match whatever directory you are using
