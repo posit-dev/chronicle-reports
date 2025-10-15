@@ -4,8 +4,6 @@ repos:
 -   repo: https://github.com/lorenzwalthert/precommit
     rev: v0.4.3.9015
     hooks:
-    -   id: style-files
-        args: [--style_pkg=styler, --style_fun=tidyverse_style]
     -   id: roxygenize
         additional_dependencies:
         - arrow
@@ -78,6 +76,11 @@ repos:
         language: fail
         files: '\.(Rhistory|RData|Rds|rds)$'
         # `exclude: <regex>` to allow committing specific files
+    -   id: air-format
+        name: Air R Formatter
+        entry: air format --check
+        language: system
+        files: \.R$
     -   id: just-linter
         name: just-linter
         language: system

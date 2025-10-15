@@ -1,17 +1,19 @@
 chr_path <- function(
-    base_path,
-    metric = NULL,
-    frequency = c("daily", "hourly")) {
+  base_path,
+  metric = NULL,
+  frequency = c("daily", "hourly")
+) {
   frequency <- match.arg(frequency)
   glue::glue("{base_path}/{frequency}/v2/{metric}/")
 }
 
 chr_get_metric_data <- function(
-    metric,
-    base_path,
-    frequency = c("daily", "hourly"),
-    ymd = NULL,
-    schema = NULL) {
+  metric,
+  base_path,
+  frequency = c("daily", "hourly"),
+  ymd = NULL,
+  schema = NULL
+) {
   frequency <- match.arg(frequency)
   path <- chr_path(base_path, metric, frequency)
 
@@ -315,7 +317,8 @@ server <- function(input, output, session) {
 #' @examples
 #' connect_users_app()
 connect_users_app <- function(
-    base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")) {
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
+) {
   # The base path where Chronicle data files are stored. If you deploy this app
   # to Posit Connect, you can set this environment variable in the Connect
   # UI. See https://docs.posit.co/connect/user/content-settings/#content-vars
