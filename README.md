@@ -25,7 +25,7 @@ options(repos = c(CRAN = sprintf("https://packagemanager.posit.co/cran/latest/bi
 You can install the development version of `chronicle.reports` from GitHub with:
 
 ```R
-install.packages("pak")
+# install.packages("pak")
 pak::pak("posit-dev/chronicle-reports")
 ```
 
@@ -33,6 +33,31 @@ You can then run the report using:
 
 ```R
 chronicle.reports::connect_users_app()
+```
+
+## Publishing to Posit Connect
+
+The reports can be published to Posit Connect using the `rsconnect` package. First, create a new `app.R` file:
+
+```bash
+mkdir chronicle-connect-users-report
+cd chronicle-connect-users-report
+vi app.R
+```
+
+```R
+chronicle.reports::connect_users_app(base_path="s3://chronicle")
+# NOTE: Replace 's3://chronicle' with your own S3 bucket or storage location
+#	chronicle.reports::connect_users_app(base_path="s3://<your-bucket-name>")
+```
+
+You can then deploy that file to Connect:
+
+```R
+# install.packages("rsconnect")
+
+# appDir should match whatever directory you are using
+rsconnect::deployApp(appDir="chronicle-connect-users-report", appFiles=c("app.R"))
 ```
 
 ## Reports
