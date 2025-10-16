@@ -8,7 +8,9 @@ repos:
         additional_dependencies:
         - arrow
         - bslib
+        - cachem
         - dplyr
+        - dbplyr
         - duckdb
         - ggplot2
         - lubridate

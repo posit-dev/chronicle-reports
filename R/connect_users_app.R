@@ -158,6 +158,13 @@ ui <- bslib::page_fluid(
 # ==============================================
 # Define the server logic
 # ==============================================
+# Create disk cache in server function or globally
+cache <- cachem::cache_disk(
+  dir = ".cache",
+  max_size = 100 * 1024^2, # 100 MB
+  max_n = 1
+)
+
 server <- function(input, output, session) {
   # Read data once at startup with error handling
   raw_data <- shiny::reactive({
@@ -181,11 +188,12 @@ server <- function(input, output, session) {
     )
   })
 
-  # Process data for metrics
+  # Process data for metrics with caching
   data <- shiny::reactive({
     shiny::req(raw_data())
     calculate_connect_daily_user_counts(raw_data())
-  })
+  }) |>
+    cachem::bindCache(Sys.Date(), cache = cache)
 
   # Get most recent day's data
   latest_data <- shiny::reactive({
