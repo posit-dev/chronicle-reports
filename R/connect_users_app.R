@@ -114,6 +114,17 @@ ui <- bslib::page_fluid(
   # add space at top of viewport for prettier layout
   bslib::layout_columns(),
 
+  # Add refresh button at the top
+  bslib::layout_columns(
+    col_widths = c(12),
+    shiny::actionButton(
+      "refresh_cache",
+      "Refresh Data",
+      icon = shiny::icon("refresh"),
+      class = "btn-primary"
+    )
+  ),
+
   # Summary row with current values for each user metric
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
@@ -158,42 +169,41 @@ ui <- bslib::page_fluid(
 # ==============================================
 # Define the server logic
 # ==============================================
-# Create disk cache in server function or globally
 cache <- cachem::cache_disk(
   dir = ".cache",
   max_size = 100 * 1024^2, # 100 MB
   max_n = 1
 )
 
+# Global reactive value for cache busting (shared across sessions)
+global_refresh <- shiny::reactiveVal(0)
+
 server <- function(input, output, session) {
-  # Read data once at startup with error handling
-  raw_data <- shiny::reactive({
+  # Increment global refresh counter when any session clicks refresh
+  shiny::observeEvent(input$refresh_cache, {
+    global_refresh(global_refresh() + 1)
+  })
+
+  # Data reactive with global cache buster
+  data <- shiny::reactive({
+    # Include global refresh to invalidate when any session refreshes
+    global_refresh()
+
     tryCatch(
       {
         base_path <- shiny::getShinyOption("base_path")
-
-        data <- chr_get_metric_data("connect_users", base_path, "daily") |>
+        raw_data <- chr_get_metric_data("connect_users", base_path, "daily") |>
           dplyr::mutate(date = as.Date(timestamp))
-        return(data)
+
+        calculate_connect_daily_user_counts(raw_data)
       },
       error = function(e) {
-        shiny::showNotification(
-          e$message,
-          type = "error",
-          duration = NULL
-        )
-        # Implicit return
+        shiny::showNotification(e$message, type = "error", duration = NULL)
         NULL
       }
     )
-  })
-
-  # Process data for metrics with caching
-  data <- shiny::reactive({
-    shiny::req(raw_data())
-    calculate_connect_daily_user_counts(raw_data())
   }) |>
-    cachem::bindCache(Sys.Date(), cache = cache)
+    shiny::bindCache(Sys.Date(), global_refresh(), cache = cache)
 
   # Get most recent day's data
   latest_data <- shiny::reactive({
