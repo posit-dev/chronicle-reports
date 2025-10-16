@@ -14,7 +14,7 @@ test_that("calculate_connect_daily_user_counts works with basic data", {
       "2024-01-02 09:00:00",
       "2024-01-02 14:00:00"
     )),
-    id = c("user1", "user2", "user1", "user2"),
+    email = c("user1", "user2", "user1", "user2"),
     created_at = as.POSIXct(c(
       "2023-01-01 00:00:00",
       "2023-01-01 00:00:00",
@@ -54,7 +54,7 @@ test_that("calculate_connect_daily_user_counts handles locked users correctly", 
   test_data <- data.frame(
     date = as.Date("2024-01-01"),
     timestamp = as.POSIXct("2024-01-01 10:00:00"),
-    id = c("user1", "user2", "user3"),
+    email = c("user1", "user2", "user3"),
     created_at = as.POSIXct("2023-01-01 00:00:00"),
     last_active_at = as.POSIXct("2024-01-01 10:00:00"),
     locked = c(FALSE, TRUE, FALSE), # user2 is locked
@@ -75,7 +75,7 @@ test_that("calculate_connect_daily_user_counts filters out inactive users (>1 ye
   test_data <- data.frame(
     date = current_date,
     timestamp = as.POSIXct("2024-01-01 10:00:00"),
-    id = c("user1", "user2", "user3"),
+    email = c("user1", "user2", "user3"),
     created_at = as.POSIXct("2023-01-01 00:00:00"),
     last_active_at = as.POSIXct(c(
       "2024-01-01 10:00:00", # active today
@@ -97,7 +97,7 @@ test_that("calculate_connect_daily_user_counts counts publishers and admins corr
   test_data <- data.frame(
     date = as.Date("2024-01-01"),
     timestamp = as.POSIXct("2024-01-01 10:00:00"),
-    id = c("user1", "user2", "user3", "user4"),
+    email = c("user1", "user2", "user3", "user4"),
     created_at = as.POSIXct("2023-01-01 00:00:00"),
     last_active_at = as.POSIXct("2024-01-01 10:00:00"),
     locked = FALSE,
@@ -118,7 +118,7 @@ test_that("calculate_connect_daily_user_counts handles multiple timestamps per u
       "2024-01-01 10:00:00",
       "2024-01-01 15:00:00"
     )),
-    id = c("user1", "user1", "user1"), # same user, multiple entries
+    email = c("user1", "user1", "user1"), # same user, multiple entries
     created_at = as.POSIXct("2023-01-01 00:00:00"),
     last_active_at = as.POSIXct(c(
       "2024-01-01 09:00:00",
@@ -141,7 +141,7 @@ test_that("calculate_connect_daily_user_counts handles empty data", {
   test_data <- data.frame(
     date = as.Date(character(0)),
     timestamp = as.POSIXct(character(0)),
-    id = character(0),
+    email = character(0),
     created_at = as.POSIXct(character(0)),
     last_active_at = as.POSIXct(character(0)),
     locked = logical(0),
@@ -165,7 +165,7 @@ test_that("calculate_connect_daily_user_counts sorts results by date", {
       "2024-01-01 10:00:00",
       "2024-01-02 10:00:00"
     )),
-    id = c("user1", "user1", "user1"),
+    email = c("user1", "user1", "user1"),
     created_at = as.POSIXct("2023-01-01 00:00:00"),
     last_active_at = as.POSIXct(c(
       "2024-01-03 10:00:00",

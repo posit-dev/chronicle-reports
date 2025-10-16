@@ -38,7 +38,8 @@ BRAND_COLORS <- list(
   # Brand colors
   BLUE = "#447099",
   GREEN = "#72994E",
-  BURGUNDY = "#9A4665"
+  BURGUNDY = "#9A4665",
+  GRAY = "#404041"
 )
 
 COLORS <- list(
@@ -122,6 +123,13 @@ ui <- bslib::page_fluid(
       "refresh_cache",
       "Refresh Data",
       icon = shiny::icon("refresh"),
+      style = paste0(
+        "color: #fff; background-color: ",
+        BRAND_COLORS$GRAY,
+        "; border-color: ",
+        BRAND_COLORS$GRAY
+      ),
+
       class = "btn-primary"
     )
   ),
