@@ -175,20 +175,16 @@ cache <- cachem::cache_disk(
   max_n = 1
 )
 
-# Global reactive value for cache busting (shared across sessions)
-global_refresh <- shiny::reactiveVal(0)
-
 server <- function(input, output, session) {
-  # Increment global refresh counter when any session clicks refresh
+  # Kill the cache when the user clicks the refresh button so we reload data
+  # from the source parquet files
   shiny::observeEvent(input$refresh_cache, {
     cache$reset()
   })
 
-  # Data reactive with global cache buster
+  # Load and process the data, caching the result. We also bind to the
+  # refresh_cache button so that clicking it will reload the data.
   data <- shiny::reactive({
-    # Include global refresh to invalidate when any session refreshes
-    global_refresh()
-
     tryCatch(
       {
         base_path <- shiny::getShinyOption("base_path")
