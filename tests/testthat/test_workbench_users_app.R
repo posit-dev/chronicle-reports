@@ -1,7 +1,7 @@
 # tests/testthat/test_workbench_users_app.R
 library(testthat)
 library(dplyr)
-library(lubrusernameate)
+library(lubridate)
 library(chronicle.reports)
 
 test_that("calculate_workbench_daily_user_counts works with basic data", {
