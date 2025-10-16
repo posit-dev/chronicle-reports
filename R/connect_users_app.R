@@ -56,7 +56,7 @@ calculate_connect_daily_user_counts <- function(data) {
   daily_user_counts <- data |>
     # First get latest state per user per date
     arrow::to_duckdb() |>
-    dplyr::group_by(.data$date, .data$id) |>
+    dplyr::group_by(.data$date, .data$email) |>
     dplyr::slice_max(timestamp, n = 1) |>
     dplyr::ungroup() |>
     # Filter out users inactive for more than a year
@@ -72,14 +72,14 @@ calculate_connect_daily_user_counts <- function(data) {
     dplyr::summarise(
       # Any unlocked user active in the last year (computed above) is counted
       # as a licensed user
-      licensed_users = dplyr::n_distinct(.data$id[
+      licensed_users = dplyr::n_distinct(.data$email[
         !is.na(.data$created_at) &
           as.Date(.data$created_at) <= date &
           !.data$locked
       ]),
       # Daily users are those active on a given date
       daily_users = dplyr::n_distinct(
-        .data$id[
+        .data$email[
           !is.na(.data$last_active_at) &
             as.Date(.data$last_active_at) == date &
             !.data$locked
@@ -87,7 +87,7 @@ calculate_connect_daily_user_counts <- function(data) {
       ),
       # Publishers are those with role publisher or admin
       publishers = dplyr::n_distinct(
-        .data$id[
+        .data$email[
           !is.na(.data$created_at) &
             as.Date(.data$created_at) <= date &
             .data$user_role %in%
@@ -108,15 +108,16 @@ calculate_connect_daily_user_counts <- function(data) {
 # Define the UI layout
 # ==============================================
 ui <- bslib::page_fluid(
-  title = "Posit Connect Users Dashboard",
+  title = "Posit Connect Users",
   theme = bslib::bs_theme(preset = "shiny"),
 
   # add space at top of viewport for prettier layout
   bslib::layout_columns(),
 
-  # Add refresh button at the top
+  # Add title and refresh button at the top
   bslib::layout_columns(
-    col_widths = c(12),
+    col_widths = c(10, 2),
+    shiny::h1("Posit Connect Users Dashboard", class = "mb-3"),
     shiny::actionButton(
       "refresh_cache",
       "Refresh Data",
