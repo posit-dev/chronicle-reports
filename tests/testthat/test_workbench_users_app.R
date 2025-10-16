@@ -1,7 +1,7 @@
 # tests/testthat/test_workbench_users_app.R
 library(testthat)
 library(dplyr)
-library(lubridate)
+library(lubrusernameate)
 library(chronicle.reports)
 
 test_that("calculate_workbench_daily_user_counts works with basic data", {
@@ -13,7 +13,7 @@ test_that("calculate_workbench_daily_user_counts works with basic data", {
       "2024-01-02 09:00:00",
       "2024-01-02 14:00:00"
     )),
-    id = c("user1", "user2", "user1", "user2"),
+    username = c("user1", "user2", "user1", "user2"),
     created_at = as.POSIXct(rep("2023-01-01 00:00:00", 4)),
     last_active_at = as.POSIXct(c(
       "2024-01-01 10:00:00",
@@ -42,7 +42,7 @@ test_that("calculate_workbench_daily_user_counts excludes locked users", {
       "2024-01-01 11:00:00",
       "2024-01-01 12:00:00"
     )),
-    id = c("user1", "user2", "user3"),
+    username = c("user1", "user2", "user3"),
     created_at = as.POSIXct(rep("2023-01-01 00:00:00", 3)),
     last_active_at = as.POSIXct(rep("2024-01-01 10:00:00", 3)),
     status = c("Active", "Locked", "Active")
@@ -62,7 +62,7 @@ test_that("calculate_workbench_daily_user_counts filters out inactive >1 year us
       "2024-01-01 09:05:00",
       "2024-01-01 09:10:00"
     )),
-    id = c("user1", "user2", "user3"),
+    username = c("user1", "user2", "user3"),
     created_at = as.POSIXct(rep("2023-01-01 00:00:00", 3)),
     last_active_at = as.POSIXct(c(
       "2024-01-01 09:00:00", # active today
@@ -85,7 +85,7 @@ test_that("calculate_workbench_daily_user_counts uses latest timestamp per user 
       "2024-01-01 10:30:00",
       "2024-01-01 15:00:00"
     )),
-    id = c("user1", "user1", "user1"),
+    username = c("user1", "user1", "user1"),
     created_at = as.POSIXct("2023-01-01 00:00:00"),
     last_active_at = as.POSIXct(c(
       "2024-01-01 09:00:00",
@@ -104,7 +104,7 @@ test_that("calculate_workbench_daily_user_counts handles users without last_acti
   test_data <- data.frame(
     date = as.Date("2024-01-01"),
     timestamp = as.POSIXct(c("2024-01-01 09:00:00", "2024-01-01 10:00:00")),
-    id = c("user1", "user2"),
+    username = c("user1", "user2"),
     created_at = as.POSIXct(rep("2023-01-01 00:00:00", 2)),
     last_active_at = as.POSIXct(c(NA, "2024-01-01 10:00:00")),
     status = c("Active", "Active")
@@ -120,7 +120,7 @@ test_that("calculate_workbench_daily_user_counts excludes users created after da
   test_data <- data.frame(
     date = as.Date("2024-01-01"),
     timestamp = as.POSIXct(c("2024-01-01 09:00:00", "2024-01-01 09:05:00")),
-    id = c("user1", "user2"),
+    username = c("user1", "user2"),
     created_at = as.POSIXct(c("2023-12-31 00:00:00", "2024-02-01 00:00:00")),
     last_active_at = as.POSIXct(c(
       "2024-01-01 09:00:00",
@@ -138,7 +138,7 @@ test_that("calculate_workbench_daily_user_counts handles empty data", {
   test_data <- data.frame(
     date = as.Date(character(0)),
     timestamp = as.POSIXct(character(0)),
-    id = character(0),
+    username = character(0),
     created_at = as.POSIXct(character(0)),
     last_active_at = as.POSIXct(character(0)),
     status = character(0)
@@ -160,7 +160,7 @@ test_that("calculate_workbench_daily_user_counts sorts by date", {
       "2024-01-01 10:00:00",
       "2024-01-02 10:00:00"
     )),
-    id = c("user1", "user1", "user1"),
+    username = c("user1", "user1", "user1"),
     created_at = as.POSIXct("2023-01-01 00:00:00"),
     last_active_at = as.POSIXct(c(
       "2024-01-03 10:00:00",
