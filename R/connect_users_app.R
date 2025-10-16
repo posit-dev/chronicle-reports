@@ -181,7 +181,7 @@ global_refresh <- shiny::reactiveVal(0)
 server <- function(input, output, session) {
   # Increment global refresh counter when any session clicks refresh
   shiny::observeEvent(input$refresh_cache, {
-    global_refresh(global_refresh() + 1)
+    cache$reset()
   })
 
   # Data reactive with global cache buster
@@ -203,7 +203,8 @@ server <- function(input, output, session) {
       }
     )
   }) |>
-    shiny::bindCache(Sys.Date(), global_refresh(), cache = cache)
+    shiny::bindCache(Sys.Date(), cache = cache) |>
+    shiny::bindEvent(input$refresh_cache, ignoreNULL = FALSE)
 
   # Get most recent day's data
   latest_data <- shiny::reactive({
