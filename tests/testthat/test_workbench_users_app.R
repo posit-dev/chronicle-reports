@@ -53,28 +53,23 @@ test_that("calculate_workbench_daily_user_counts excludes locked users", {
   expect_equal(result$daily_users, 2)
 })
 
-test_that("calculate_workbench_daily_user_counts filters out inactive >1 year users", {
-  current_date <- as.Date("2024-01-01")
+test_that("calculate_workbench_daily_user_counts excludes Inactive users", {
   test_data <- data.frame(
-    date = current_date,
+    date = as.Date("2024-01-01"),
     timestamp = as.POSIXct(c(
-      "2024-01-01 09:00:00",
-      "2024-01-01 09:05:00",
-      "2024-01-01 09:10:00"
+      "2024-01-01 10:00:00",
+      "2024-01-01 11:00:00",
+      "2024-01-01 12:00:00"
     )),
     username = c("user1", "user2", "user3"),
     created_at = as.POSIXct(rep("2023-01-01 00:00:00", 3)),
-    last_active_at = as.POSIXct(c(
-      "2024-01-01 09:00:00", # active today
-      "2022-06-01 09:00:00", # inactive >1 year
-      "2023-06-01 09:00:00" # active within 1 year
-    )),
-    status = c("Active", "Active", "Active")
+    last_active_at = as.POSIXct(rep("2024-01-01 10:00:00", 3)),
+    status = c("Active", "Inactive", "Active")
   )
 
   result <- calculate_workbench_daily_user_counts(test_data)
-  expect_equal(result$licensed_users, 2) # user1 & user3
-  expect_equal(result$daily_users, 1) # only user1 active today
+  expect_equal(result$licensed_users, 2)
+  expect_equal(result$daily_users, 2)
 })
 
 test_that("calculate_workbench_daily_user_counts uses latest timestamp per user per day", {
