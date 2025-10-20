@@ -171,3 +171,26 @@ test_that("calculate_workbench_daily_user_counts sorts by date", {
     as.Date(c("2024-01-01", "2024-01-02", "2024-01-03"))
   )
 })
+
+test_that("calculate_workbench_daily_user_counts counts admin_users from boolean flags", {
+  test_data <- data.frame(
+    date = as.Date(rep("2024-02-01", 5)),
+    timestamp = as.POSIXct(c(
+      "2024-02-01 09:00:00",
+      "2024-02-01 09:05:00",
+      "2024-02-01 09:10:00",
+      "2024-02-01 09:15:00",
+      "2024-02-01 09:20:00"
+    )),
+    username = c("u1", "u2", "u3", "u4", "u5"),
+    created_at = as.POSIXct(rep("2023-01-01 00:00:00", 5)),
+    last_active_at = as.POSIXct(rep("2024-02-01 09:00:00", 5)),
+    status = rep("Active", 5),
+    is_admin = c(TRUE, FALSE, FALSE, TRUE, FALSE),
+    is_super_admin = c(FALSE, TRUE, FALSE, FALSE, TRUE)
+  )
+
+  result <- calculate_workbench_daily_user_counts(test_data)
+  expect_true("admin_users" %in% names(result))
+  expect_equal(result$admin_users, 4)
+})

@@ -45,7 +45,7 @@ COLORS <- list(
   # Semantic mappings
   LICENSED_USERS = BRAND_COLORS$BLUE,
   DAILY_USERS = BRAND_COLORS$GREEN,
-  MONTHLY_USERS = BRAND_COLORS$BURGUNDY
+  ADMIN_USERS = BRAND_COLORS$BURGUNDY
 )
 
 #' Process the pwb_users data to compute daily metrics used for historical trends
@@ -78,12 +78,11 @@ calculate_workbench_daily_user_counts <- function(data) {
             .data$status == "Active"
         ]
       ),
-      # Monthly users are those active in the last 30 days
-      monthly_users = dplyr::n_distinct(
+      # Admin users are admin or super admin users
+      admin_users = dplyr::n_distinct(
         .data$username[
-          !is.na(.data$last_active_at) &
-            as.Date(.data$last_active_at) >= (date - 30) &
-            .data$status == "Active"
+          .data$status == "Active" &
+            (.data$is_admin | .data$is_super_admin)
         ]
       ),
       .groups = "drop"
@@ -130,10 +129,10 @@ workbench_users_ui <- bslib::page_fluid(
       theme = bslib::value_box_theme(bg = COLORS$DAILY_USERS)
     ),
     bslib::value_box(
-      title = "Users in Last 30 Days",
+      title = "Admin Users",
       max_height = "120px",
-      value = shiny::textOutput("monthly_users_value"),
-      theme = bslib::value_box_theme(bg = COLORS$MONTHLY_USERS)
+      value = shiny::textOutput("admin_users_value"),
+      theme = bslib::value_box_theme(bg = COLORS$ADMIN_USERS)
     )
   ),
 
@@ -203,9 +202,9 @@ workbench_users_server <- function(input, output, session) {
     shiny::req(latest_data())
     prettyNum(latest_data()$daily_users, big.mark = ",")
   })
-  output$monthly_users_value <- shiny::renderText({
+  output$admin_users_value <- shiny::renderText({
     shiny::req(latest_data())
-    prettyNum(latest_data()$monthly_users, big.mark = ",")
+    prettyNum(latest_data()$admin_users, big.mark = ",")
   })
 
   # Plot for user trends over time
@@ -213,13 +212,13 @@ workbench_users_server <- function(input, output, session) {
     shiny::req(data())
 
     plot_data <- data() |>
-      dplyr::select(date, licensed_users, daily_users, monthly_users) |>
+      dplyr::select(date, licensed_users, daily_users, admin_users) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
       dplyr::mutate(
         metric = factor(
           .data$metric,
-          levels = c("licensed_users", "daily_users", "monthly_users"),
-          labels = c("Licensed Users", "Daily Users", "Last 30 Days")
+          levels = c("licensed_users", "daily_users", "admin_users"),
+          labels = c("Licensed Users", "Daily Users", "Admin Users")
         )
       )
 
@@ -250,7 +249,7 @@ workbench_users_server <- function(input, output, session) {
         values = c(
           "Licensed Users" = COLORS$LICENSED_USERS,
           "Daily Users" = COLORS$DAILY_USERS,
-          "Last 30 Days" = COLORS$MONTHLY_USERS
+          "Admin Users" = COLORS$ADMIN_USERS
         )
       )
 
