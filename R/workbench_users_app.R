@@ -250,7 +250,7 @@ workbench_users_server <- function(input, output, session) {
         values = c(
           "Licensed Users" = COLORS$LICENSED_USERS,
           "Daily Users" = COLORS$DAILY_USERS,
-          "Monthly Users" = COLORS$MONTHLY_USERS
+          "Last 30 Days" = COLORS$MONTHLY_USERS
         )
       )
 
