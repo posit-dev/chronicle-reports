@@ -286,7 +286,7 @@ workbench_users_server <- function(input, output, session) {
       ggplot2::theme_minimal() +
       ggplot2::labs(
         x = "",
-        y = "Average Number of Users",
+        y = "Average Number of Users"
       )
   })
 }
