@@ -115,7 +115,6 @@ ui <- bslib::page_sidebar(
   # Sidebar with date range input
   sidebar = bslib::sidebar(
     title = "Filters",
-    open = FALSE,
     width = "270px",
     shiny::dateRangeInput(
       "date_range",
@@ -305,7 +304,7 @@ server <- function(input, output, session) {
       ggplot2::labs(
         x = "",
         y = "Number of Users",
-        color = "Metric",
+        color = "",
       ) +
       # The line colors should match the value box colors
       ggplot2::scale_color_manual(
