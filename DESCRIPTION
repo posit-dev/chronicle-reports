@@ -18,7 +18,6 @@ Depends:
 Imports:
     arrow,
     bslib,
-    dbplyr,
     dplyr,
     duckdb,
     ggplot2,
