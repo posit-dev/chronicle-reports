@@ -106,7 +106,7 @@ test_that("calculate_workbench_daily_user_counts handles users without last_acti
   )
 
   result <- calculate_workbench_daily_user_counts(test_data)
-  # user1 counts as licensed (no last_active_at -> retained by filter), not daily
+  # user1 counts as licensed, not daily
   expect_equal(result$licensed_users, 2)
   expect_equal(result$daily_users, 1)
 })

@@ -37,13 +37,15 @@ chr_get_metric_data <- function(
 BRAND_COLORS <- list(
   # Brand colors
   BLUE = "#447099",
-  GREEN = "#72994E"
+  GREEN = "#72994E",
+  BURGUNDY = "#9A4665"
 )
 
 COLORS <- list(
   # Semantic mappings
   LICENSED_USERS = BRAND_COLORS$BLUE,
-  DAILY_USERS = BRAND_COLORS$GREEN
+  DAILY_USERS = BRAND_COLORS$GREEN,
+  MONTHLY_USERS = BRAND_COLORS$BURGUNDY
 )
 
 #' Process the pwb_users data to compute daily metrics used for historical trends
@@ -76,6 +78,14 @@ calculate_workbench_daily_user_counts <- function(data) {
             .data$status == "Active"
         ]
       ),
+      # Monthly users are those active in the last 30 days
+      monthly_users = dplyr::n_distinct(
+        .data$username[
+          !is.na(.data$last_active_at) &
+            as.Date(.data$last_active_at) >= (date - 30) &
+            .data$status == "Active"
+        ]
+      ),
       .groups = "drop"
     ) |>
     dplyr::arrange(date)
@@ -89,10 +99,20 @@ calculate_workbench_daily_user_counts <- function(data) {
 # ==============================================
 workbench_users_ui <- bslib::page_fluid(
   title = "Posit Workbench Users",
-  theme = bslib::bs_theme(preset = "shiny"),
+  theme = bslib::bs_theme(
+    preset = "shiny",
+    primary = BRAND_COLORS$BLUE,
+    "card-cap-bg" = BRAND_COLORS$BLUE,
+    "card-cap-color" = "#fff"
+  ),
 
-  # add space at top of viewport for prettier layout
-  bslib::layout_columns(),
+  # Title card to display the report name
+  bslib::layout_columns(
+    col_widths = 12,
+    bslib::card(
+      bslib::card_header("Posit Workbench Users")
+    )
+  ),
 
   # Summary row with current values for each user metric
   bslib::layout_columns(
@@ -108,6 +128,12 @@ workbench_users_ui <- bslib::page_fluid(
       max_height = "120px",
       value = shiny::textOutput("daily_users_value"),
       theme = bslib::value_box_theme(bg = COLORS$DAILY_USERS)
+    ),
+    bslib::value_box(
+      title = "Users in Last 30 Days",
+      max_height = "120px",
+      value = shiny::textOutput("monthly_users_value"),
+      theme = bslib::value_box_theme(bg = COLORS$MONTHLY_USERS)
     )
   ),
 
@@ -121,9 +147,9 @@ workbench_users_ui <- bslib::page_fluid(
       shinycssloaders::withSpinner(plotly::plotlyOutput("user_trend_plot"))
     ),
 
-    # Daily activity pattern chart
+    # Users by days of the week chart
     bslib::card(
-      bslib::card_header("Average Daily Users by Day of Week"),
+      bslib::card_header("Average Users by Day of Week"),
       shinycssloaders::withSpinner(shiny::plotOutput("activity_pattern_plot"))
     )
   )
@@ -177,36 +203,33 @@ workbench_users_server <- function(input, output, session) {
     shiny::req(latest_data())
     prettyNum(latest_data()$daily_users, big.mark = ",")
   })
+  output$monthly_users_value <- shiny::renderText({
+    shiny::req(latest_data())
+    prettyNum(latest_data()$monthly_users, big.mark = ",")
+  })
 
   # Plot for user trends over time
   output$user_trend_plot <- plotly::renderPlotly({
     shiny::req(data())
 
-    # Reshape data for easier plotting
     plot_data <- data() |>
-      dplyr::select("date", "licensed_users", "daily_users") |>
+      dplyr::select(date, licensed_users, daily_users, monthly_users) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
       dplyr::mutate(
         metric = factor(
           .data$metric,
-          levels = c("licensed_users", "daily_users"),
-          labels = c("Licensed Users", "Daily Users")
+          levels = c("licensed_users", "daily_users", "monthly_users"),
+          labels = c("Licensed Users", "Daily Users", "Last 30 Days")
         )
       )
 
-    # Plot the trend of user counts over time
     p <- ggplot2::ggplot(
       plot_data,
       ggplot2::aes(x = date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
-      # add points with custom hover text
       ggplot2::geom_point(
         ggplot2::aes(
-          # This code produces a warning about `text` being an unknown aesthetic.
-          # This is normal when using ggplotly(). The text aesthetic is not a
-          # standard ggplot2 aesthetic, but ggplotly() recognizes and uses it
-          # for hover tooltips.
           text = paste0(
             format(date, "%B %d, %Y"),
             "<br>",
@@ -221,20 +244,18 @@ workbench_users_server <- function(input, output, session) {
       ggplot2::labs(
         x = "",
         y = "Number of Users",
-        color = "Metric",
+        color = "Metric"
       ) +
-      # The line colors should match the value box colors
       ggplot2::scale_color_manual(
         values = c(
           "Licensed Users" = COLORS$LICENSED_USERS,
-          "Daily Users" = COLORS$DAILY_USERS
+          "Daily Users" = COLORS$DAILY_USERS,
+          "Monthly Users" = COLORS$MONTHLY_USERS
         )
       )
 
-    # Convert to plotly with custom hover
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
-        # make the legend look pretty
         legend = list(
           orientation = "h",
           x = 0.5,
