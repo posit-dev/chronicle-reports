@@ -107,7 +107,7 @@ calculate_connect_daily_user_counts <- function(data) {
 # ==============================================
 # Define the UI layout
 # ==============================================
-ui <- bslib::page_fluid(
+connect_users_ui <- bslib::page_fluid(
   title = "Posit Connect Users Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
 
@@ -158,7 +158,7 @@ ui <- bslib::page_fluid(
 # ==============================================
 # Define the server logic
 # ==============================================
-server <- function(input, output, session) {
+connect_users_server <- function(input, output, session) {
   # Read data once at startup with error handling
   raw_data <- shiny::reactive({
     tryCatch(
@@ -327,5 +327,5 @@ connect_users_app <- function(
   # for more information.
   shiny::shinyOptions(base_path = base_path)
 
-  shiny::shinyApp(ui, server)
+  shiny::shinyApp(connect_users_ui, connect_users_server)
 }
