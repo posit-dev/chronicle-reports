@@ -87,8 +87,8 @@ calculate_workbench_daily_user_counts <- function(data) {
 # ==============================================
 # Define the UI layout
 # ==============================================
-ui <- bslib::page_fluid(
-  title = "Posit Workbench Users Dashboard",
+workbench_users_ui <- bslib::page_fluid(
+  title = "Posit Workbench Users",
   theme = bslib::bs_theme(preset = "shiny"),
 
   # add space at top of viewport for prettier layout
@@ -132,7 +132,7 @@ ui <- bslib::page_fluid(
 # ==============================================
 # Define the server logic
 # ==============================================
-server <- function(input, output, session) {
+workbench_users_server <- function(input, output, session) {
   # Read data once at startup with error handling
   raw_data <- shiny::reactive({
     tryCatch(
@@ -295,5 +295,5 @@ workbench_users_app <- function(
   # for more information.
   shiny::shinyOptions(base_path = base_path)
 
-  shiny::shinyApp(ui, server)
+  shiny::shinyApp(workbench_users_ui, workbench_users_server)
 }
