@@ -244,7 +244,7 @@ workbench_users_server <- function(input, output, session) {
       ggplot2::labs(
         x = "",
         y = "Number of Users",
-        color = "Metric"
+        color = ""
       ) +
       ggplot2::scale_color_manual(
         values = c(
