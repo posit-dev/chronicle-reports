@@ -1,53 +1,3 @@
-chr_path <- function(
-  base_path,
-  metric = NULL,
-  frequency = c("daily", "hourly")
-) {
-  frequency <- match.arg(frequency)
-  glue::glue("{base_path}/{frequency}/v2/{metric}/")
-}
-
-chr_get_metric_data <- function(
-  metric,
-  base_path,
-  frequency = c("daily", "hourly"),
-  ymd = NULL,
-  schema = NULL
-) {
-  frequency <- match.arg(frequency)
-  path <- chr_path(base_path, metric, frequency)
-
-  if (!is.null(ymd)) {
-    path <- glue::glue("{path}{ymd[['year']]}/{ymd[['month']]}/{ymd[['day']]}/")
-    partitioning <- NULL
-  } else {
-    partitioning <- c("Year", "Month", "Day")
-  }
-
-  arrow::open_dataset(
-    path,
-    hive_style = FALSE,
-    schema = schema,
-    format = "parquet",
-    partitioning = partitioning
-  )
-}
-
-# Color constants
-BRAND_COLORS <- list(
-  # Brand colors
-  BLUE = "#447099",
-  GREEN = "#72994E",
-  BURGUNDY = "#9A4665"
-)
-
-COLORS <- list(
-  # Semantic mappings
-  LICENSED_USERS = BRAND_COLORS$BLUE,
-  DAILY_USERS = BRAND_COLORS$GREEN,
-  PUBLISHERS = BRAND_COLORS$BURGUNDY
-)
-
 #' Process the connect_users data to compute daily metrics used for historical trends
 #'
 #' @importFrom rlang .data
@@ -65,7 +15,8 @@ calculate_connect_daily_user_counts <- function(data) {
     dplyr::collect() |>
     dplyr::filter(
       is.na(.data$last_active_at) |
-        as.Date(.data$last_active_at) >= date - lubridate::dyears(1)
+        as.Date(.data$last_active_at) >=
+          date - APP_CONFIG$INACTIVE_USER_THRESHOLD
     ) |>
     # Then calculate daily user counts for each date
     dplyr::group_by(date) |>
@@ -132,19 +83,19 @@ ui <- bslib::page_sidebar(
       title = "Licensed Users",
       max_height = "120px",
       value = shiny::textOutput("licensed_users_value"),
-      theme = bslib::value_box_theme(bg = COLORS$LICENSED_USERS)
+      theme = bslib::value_box_theme(bg = CONNECT_COLORS$LICENSED_USERS)
     ),
     bslib::value_box(
       title = "Daily Users",
       max_height = "120px",
       value = shiny::textOutput("daily_users_value"),
-      theme = bslib::value_box_theme(bg = COLORS$DAILY_USERS)
+      theme = bslib::value_box_theme(bg = CONNECT_COLORS$DAILY_USERS)
     ),
     bslib::value_box(
       title = "Publishers",
       max_height = "120px",
       value = shiny::textOutput("publishers_value"),
-      theme = bslib::value_box_theme(bg = COLORS$PUBLISHERS)
+      theme = bslib::value_box_theme(bg = CONNECT_COLORS$PUBLISHERS)
     )
   ),
 
@@ -309,9 +260,9 @@ server <- function(input, output, session) {
       # The line colors should match the value box colors
       ggplot2::scale_color_manual(
         values = c(
-          "Licensed Users" = COLORS$LICENSED_USERS,
-          "Daily Users" = COLORS$DAILY_USERS,
-          "Publishers" = COLORS$PUBLISHERS
+          "Licensed Users" = CONNECT_COLORS$LICENSED_USERS,
+          "Daily Users" = CONNECT_COLORS$DAILY_USERS,
+          "Publishers" = CONNECT_COLORS$PUBLISHERS
         )
       )
 
@@ -377,7 +328,7 @@ server <- function(input, output, session) {
 #' @examples
 #' connect_users_app()
 connect_users_app <- function(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   # The base path where Chronicle data files are stored. If you deploy this app
   # to Posit Connect, you can set this environment variable in the Connect
