@@ -319,11 +319,16 @@ server <- function(input, output, session) {
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
         # make the legend look pretty
+        xaxis = list(fixedrange = TRUE), # Disable x-axis zoom/pan
+        yaxis = list(fixedrange = TRUE), # Disable y-axis zoom/pan
         legend = list(
           orientation = "h",
           x = 0.5,
           xanchor = "center"
         )
+      ) |>
+      plotly::config(
+        displayModeBar = FALSE # Hide the toolbar completely
       )
   })
 
