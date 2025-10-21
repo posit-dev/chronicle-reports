@@ -324,6 +324,15 @@ server <- function(input, output, session) {
           x = 0.5,
           xanchor = "center"
         )
+      ) |>
+      plotly::config(
+        displayModeBar = FALSE, # Hide the toolbar completely
+        scrollZoom = FALSE, # Disable scroll zoom
+        doubleClick = "reset" # Disable double-click zoom
+      ) |>
+      plotly::layout(
+        xaxis = list(fixedrange = TRUE), # Disable x-axis zoom/pan
+        yaxis = list(fixedrange = TRUE) # Disable y-axis zoom/pan
       )
   })
 
