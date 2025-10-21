@@ -316,15 +316,133 @@ server <- function(input, output, session) {
       )
 
     # Convert to plotly with custom hover
-    plotly::ggplotly(p, tooltip = "text") |>
+    plot_ly <- plotly::ggplotly(
+      p,
+      tooltip = "text",
+      source = "user_trend_plot"
+    ) |>
       plotly::layout(
         # make the legend look pretty
         legend = list(
           orientation = "h",
           x = 0.5,
           xanchor = "center"
+        ),
+        # Configure the plot to handle zoom better
+        xaxis = list(
+          autorange = TRUE,
+          rangeslider = list(visible = FALSE)
         )
-      )
+      ) |>
+      plotly::config(
+        displayModeBar = TRUE,
+        displaylogo = FALSE
+      ) |>
+      # Register the relayout event to enable zoom/brush interactions
+      plotly::event_register("plotly_relayout")
+
+    plot_ly
+  })
+
+  # Store the last known state to detect zoom resets
+  values <- shiny::reactiveValues(
+    last_range = NULL,
+    ignore_next_event = FALSE
+  )
+
+  # Observer to handle plot brush/zoom events and update date range input
+  shiny::observe({
+    event_data <- plotly::event_data(
+      "plotly_relayout",
+      source = "user_trend_plot"
+    )
+
+    if (!is.null(event_data)) {
+      # Check if this is a zoom reset (double-click to zoom out)
+      if (
+        "xaxis.autorange" %in%
+          names(event_data) &&
+          isTRUE(event_data[["xaxis.autorange"]])
+      ) {
+        # Reset to full date range
+        shiny::req(data())
+        full_range <- range(data()$date, na.rm = TRUE)
+
+        values$ignore_next_event <- TRUE
+        shiny::updateDateRangeInput(
+          session,
+          "date_range",
+          start = full_range[1],
+          end = full_range[2]
+        )
+      } else if (
+        all(c("xaxis.autorange", "yaxis.autorange") %in% names(event_data)) &&
+          isTRUE(event_data[["xaxis.autorange"]]) &&
+          isTRUE(event_data[["yaxis.autorange"]])
+      ) {
+        # Check for manual zoom reset by looking for both autorange settings
+        # Reset to full date range
+        shiny::req(data())
+        full_range <- range(data()$date, na.rm = TRUE)
+
+        values$ignore_next_event <- TRUE
+        shiny::updateDateRangeInput(
+          session,
+          "date_range",
+          start = full_range[1],
+          end = full_range[2]
+        )
+      } else if (
+        "xaxis.range[0]" %in%
+          names(event_data) &&
+          "xaxis.range[1]" %in% names(event_data) &&
+          !values$ignore_next_event
+      ) {
+        # Handle zoom in events
+        # Extract the new date range from the plot
+        new_start <- as.Date(
+          event_data[["xaxis.range[0]"]],
+          origin = "1970-01-01"
+        )
+        new_end <- as.Date(
+          event_data[["xaxis.range[1]"]],
+          origin = "1970-01-01"
+        )
+
+        # Only update if the dates are valid and represent a zoom-in (smaller range)
+        if (
+          !is.na(new_start) &&
+            !is.na(new_end) &&
+            (new_start != input$date_range[1] || new_end != input$date_range[2])
+        ) {
+          shiny::req(data())
+          available_range <- range(data()$date, na.rm = TRUE)
+
+          # Check if this is a zoom-in (range is getting smaller)
+          current_range_days <- as.numeric(
+            input$date_range[2] - input$date_range[1]
+          )
+          new_range_days <- as.numeric(new_end - new_start)
+
+          # Only process zoom-in events (smaller ranges), ignore zoom-out
+          if (new_range_days < current_range_days) {
+            # Clamp the new range to available data
+            new_start <- pmax(new_start, available_range[1])
+            new_end <- pmin(new_end, available_range[2])
+
+            # Update the date range input
+            shiny::updateDateRangeInput(
+              session,
+              "date_range",
+              start = new_start,
+              end = new_end
+            )
+          }
+        }
+      } else if (values$ignore_next_event) {
+        values$ignore_next_event <- FALSE
+      }
+    }
   })
 
   # Plot the average daily activity pattern by day of week
