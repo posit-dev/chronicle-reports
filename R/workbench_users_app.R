@@ -78,7 +78,7 @@ calculate_workbench_daily_user_counts <- function(data) {
             .data$status == "Active"
         ]
       ),
-      # Admin users are admin or super admin users
+      # Admin or super admin users
       admin_users = dplyr::n_distinct(
         .data$username[
           .data$status == "Active" &
@@ -96,26 +96,27 @@ calculate_workbench_daily_user_counts <- function(data) {
 # ==============================================
 # Define the UI layout
 # ==============================================
-workbench_users_ui <- bslib::page_fluid(
-  title = "Posit Workbench Users",
-  theme = bslib::bs_theme(
-    preset = "shiny",
-    primary = BRAND_COLORS$BLUE,
-    "card-cap-bg" = BRAND_COLORS$BLUE,
-    "card-cap-color" = "#fff"
-  ),
+workbench_users_ui <- bslib::page_sidebar(
+  title = "Posit Workbench Users Dashboard",
+  theme = bslib::bs_theme(preset = "shiny"),
+  fillable = FALSE, # helps with vertical spacing
 
-  # Title card to display the report name
-  bslib::layout_columns(
-    col_widths = 12,
-    bslib::card(
-      bslib::card_header("Posit Workbench Users")
+  # Sidebar with date range input
+  sidebar = bslib::sidebar(
+    title = "Filters",
+    width = "270px",
+    shiny::dateRangeInput(
+      "date_range",
+      "Select Date Range:",
+      start = NULL, # Will be set dynamically based on data
+      end = NULL, # Will be set dynamically based on data
+      format = "yyyy-mm-dd"
     )
   ),
 
   # Summary row with current values for each user metric
   bslib::layout_columns(
-    col_widths = c(4, 4),
+    col_widths = c(4, 4, 4),
     bslib::value_box(
       title = "Licensed Users",
       max_height = "120px",
@@ -186,10 +187,36 @@ workbench_users_server <- function(input, output, session) {
     calculate_workbench_daily_user_counts(raw_data())
   })
 
+  # Set default date range when data is loaded
+  shiny::observe({
+    shiny::req(data())
+    date_range <- range(data()$date, na.rm = TRUE)
+
+    shiny::updateDateRangeInput(
+      session,
+      "date_range",
+      start = date_range[1],
+      end = date_range[2],
+      min = date_range[1],
+      max = date_range[2]
+    )
+  })
+
+  # Filter data based on selected date range
+  filtered_data <- shiny::reactive({
+    shiny::req(data(), input$date_range)
+
+    data() |>
+      dplyr::filter(
+        date >= input$date_range[1],
+        date <= input$date_range[2]
+      )
+  })
+
   # Get most recent day's data
   latest_data <- shiny::reactive({
-    shiny::req(data())
-    data() |>
+    shiny::req(filtered_data())
+    filtered_data() |>
       dplyr::slice_max(date, n = 1)
   })
 
@@ -209,9 +236,9 @@ workbench_users_server <- function(input, output, session) {
 
   # Plot for user trends over time
   output$user_trend_plot <- plotly::renderPlotly({
-    shiny::req(data())
+    shiny::req(filtered_data())
 
-    plot_data <- data() |>
+    plot_data <- filtered_data() |>
       dplyr::select(date, licensed_users, daily_users, admin_users) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
       dplyr::mutate(
@@ -265,10 +292,10 @@ workbench_users_server <- function(input, output, session) {
 
   # Plot the average daily activity pattern by day of week
   output$activity_pattern_plot <- shiny::renderPlot({
-    shiny::req(data())
+    shiny::req(filtered_data())
 
     # Calculate average users active by day of week
-    day_summary <- data() |>
+    day_summary <- filtered_data() |>
       dplyr::mutate(
         day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
       ) |>
