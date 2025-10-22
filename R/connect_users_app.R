@@ -1,3 +1,10 @@
+# Connect-specific color mappings
+COLORS <- list(
+  LICENSED_USERS = BRAND_COLORS$BLUE,
+  DAILY_USERS = BRAND_COLORS$GREEN,
+  PUBLISHERS = BRAND_COLORS$BURGUNDY
+)
+
 #' Process the connect_users data to compute daily metrics used for historical trends
 #'
 #' @importFrom rlang .data
@@ -83,19 +90,19 @@ connect_users_ui <- bslib::page_sidebar(
       title = "Licensed Users",
       max_height = "120px",
       value = shiny::textOutput("licensed_users_value"),
-      theme = bslib::value_box_theme(bg = CONNECT_COLORS$LICENSED_USERS)
+      theme = bslib::value_box_theme(bg = COLORS$LICENSED_USERS)
     ),
     bslib::value_box(
       title = "Daily Users",
       max_height = "120px",
       value = shiny::textOutput("daily_users_value"),
-      theme = bslib::value_box_theme(bg = CONNECT_COLORS$DAILY_USERS)
+      theme = bslib::value_box_theme(bg = COLORS$DAILY_USERS)
     ),
     bslib::value_box(
       title = "Publishers",
       max_height = "120px",
       value = shiny::textOutput("publishers_value"),
-      theme = bslib::value_box_theme(bg = CONNECT_COLORS$PUBLISHERS)
+      theme = bslib::value_box_theme(bg = COLORS$PUBLISHERS)
     )
   ),
 
@@ -260,9 +267,9 @@ connect_users_server <- function(input, output, session) {
       # The line colors should match the value box colors
       ggplot2::scale_color_manual(
         values = c(
-          "Licensed Users" = CONNECT_COLORS$LICENSED_USERS,
-          "Daily Users" = CONNECT_COLORS$DAILY_USERS,
-          "Publishers" = CONNECT_COLORS$PUBLISHERS
+          "Licensed Users" = COLORS$LICENSED_USERS,
+          "Daily Users" = COLORS$DAILY_USERS,
+          "Publishers" = COLORS$PUBLISHERS
         )
       )
 

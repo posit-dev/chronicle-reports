@@ -6,20 +6,6 @@ BRAND_COLORS <- list(
   GRAY = "#404041"
 )
 
-# Connect-specific color mappings
-CONNECT_COLORS <- list(
-  LICENSED_USERS = BRAND_COLORS$BLUE,
-  DAILY_USERS = BRAND_COLORS$GREEN,
-  PUBLISHERS = BRAND_COLORS$BURGUNDY
-)
-
-# Workbench-specific color mappings (for future use)
-WORKBENCH_COLORS <- list(
-  LICENSED_USERS = BRAND_COLORS$BLUE,
-  DAILY_USERS = BRAND_COLORS$GREEN,
-  SESSIONS = BRAND_COLORS$BURGUNDY
-)
-
 # Common application configuration
 APP_CONFIG <- list(
   # Users inactive for more than this period are filtered out
