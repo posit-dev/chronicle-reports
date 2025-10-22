@@ -1,49 +1,88 @@
-#' Process the connect_users data to compute daily metrics used for historical trends
+chr_path <- function(
+  base_path,
+  metric = NULL,
+  frequency = c("daily", "hourly")
+) {
+  frequency <- match.arg(frequency)
+  glue::glue("{base_path}/{frequency}/v2/{metric}/")
+}
+
+chr_get_metric_data <- function(
+  metric,
+  base_path,
+  frequency = c("daily", "hourly"),
+  ymd = NULL,
+  schema = NULL
+) {
+  frequency <- match.arg(frequency)
+  path <- chr_path(base_path, metric, frequency)
+
+  if (!is.null(ymd)) {
+    path <- glue::glue("{path}{ymd[['year']]}/{ymd[['month']]}/{ymd[['day']]}/")
+    partitioning <- NULL
+  } else {
+    partitioning <- c("Year", "Month", "Day")
+  }
+
+  arrow::open_dataset(
+    path,
+    hive_style = FALSE,
+    schema = schema,
+    format = "parquet",
+    partitioning = partitioning
+  )
+}
+
+# Color constants
+BRAND_COLORS <- list(
+  # Brand colors
+  BLUE = "#447099",
+  GREEN = "#72994E",
+  BURGUNDY = "#9A4665"
+)
+
+COLORS <- list(
+  # Semantic mappings
+  LICENSED_USERS = BRAND_COLORS$BLUE,
+  DAILY_USERS = BRAND_COLORS$GREEN,
+  ADMIN_USERS = BRAND_COLORS$BURGUNDY
+)
+
+#' Process the pwb_users data to compute daily metrics used for historical trends
 #'
 #' @importFrom rlang .data
-#' @param data A data frame or tibble containing the raw connect_users data.
-calculate_connect_daily_user_counts <- function(data) {
+#' @param data A data frame or tibble containing the raw pwb_users data.
+calculate_workbench_daily_user_counts <- function(data) {
   daily_user_counts <- data |>
     # First get latest state per user per date
     arrow::to_duckdb() |>
-    dplyr::group_by(.data$date, .data$id) |>
+    dplyr::group_by(.data$date, .data$username) |>
     dplyr::slice_max(timestamp, n = 1) |>
     dplyr::ungroup() |>
-    # Filter out users inactive for more than a year
-    # Here, `date` is the date on which the metric was collected.
     arrow::to_arrow() |>
     dplyr::collect() |>
-    dplyr::filter(
-      is.na(.data$last_active_at) |
-        as.Date(.data$last_active_at) >=
-          date - APP_CONFIG$INACTIVE_USER_THRESHOLD
-    ) |>
     # Then calculate daily user counts for each date
     dplyr::group_by(date) |>
     dplyr::summarise(
-      # Any unlocked user active in the last year (computed above) is counted
-      # as a licensed user
-      licensed_users = dplyr::n_distinct(.data$id[
+      # Any "Active" user is counted as a licensed user
+      licensed_users = dplyr::n_distinct(.data$username[
         !is.na(.data$created_at) &
           as.Date(.data$created_at) <= date &
-          !.data$locked
+          .data$status == "Active"
       ]),
       # Daily users are those active on a given date
       daily_users = dplyr::n_distinct(
-        .data$id[
+        .data$username[
           !is.na(.data$last_active_at) &
             as.Date(.data$last_active_at) == date &
-            !.data$locked
+            .data$status == "Active"
         ]
       ),
-      # Publishers are those with role publisher or admin
-      publishers = dplyr::n_distinct(
-        .data$id[
-          !is.na(.data$created_at) &
-            as.Date(.data$created_at) <= date &
-            .data$user_role %in%
-              c("publisher", "admin") &
-            !.data$locked
+      # Admin or super admin users
+      admin_users = dplyr::n_distinct(
+        .data$username[
+          .data$status == "Active" &
+            (.data$is_admin | .data$is_super_admin)
         ]
       ),
       .groups = "drop"
@@ -54,12 +93,11 @@ calculate_connect_daily_user_counts <- function(data) {
   daily_user_counts
 }
 
-
 # ==============================================
 # Define the UI layout
 # ==============================================
-connect_users_ui <- bslib::page_sidebar(
-  title = "Posit Connect Users Dashboard",
+workbench_users_ui <- bslib::page_sidebar(
+  title = "Posit Workbench Users Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE, # helps with vertical spacing
 
@@ -83,19 +121,19 @@ connect_users_ui <- bslib::page_sidebar(
       title = "Licensed Users",
       max_height = "120px",
       value = shiny::textOutput("licensed_users_value"),
-      theme = bslib::value_box_theme(bg = CONNECT_COLORS$LICENSED_USERS)
+      theme = bslib::value_box_theme(bg = COLORS$LICENSED_USERS)
     ),
     bslib::value_box(
       title = "Daily Users",
       max_height = "120px",
       value = shiny::textOutput("daily_users_value"),
-      theme = bslib::value_box_theme(bg = CONNECT_COLORS$DAILY_USERS)
+      theme = bslib::value_box_theme(bg = COLORS$DAILY_USERS)
     ),
     bslib::value_box(
-      title = "Publishers",
+      title = "Admin Users",
       max_height = "120px",
-      value = shiny::textOutput("publishers_value"),
-      theme = bslib::value_box_theme(bg = CONNECT_COLORS$PUBLISHERS)
+      value = shiny::textOutput("admin_users_value"),
+      theme = bslib::value_box_theme(bg = COLORS$ADMIN_USERS)
     )
   ),
 
@@ -109,7 +147,7 @@ connect_users_ui <- bslib::page_sidebar(
       shinycssloaders::withSpinner(plotly::plotlyOutput("user_trend_plot"))
     ),
 
-    # Daily activity pattern chart
+    # Users by days of the week chart
     bslib::card(
       bslib::card_header("Average Users by Day of Week"),
       shinycssloaders::withSpinner(shiny::plotOutput("activity_pattern_plot"))
@@ -120,14 +158,14 @@ connect_users_ui <- bslib::page_sidebar(
 # ==============================================
 # Define the server logic
 # ==============================================
-connect_users_server <- function(input, output, session) {
+workbench_users_server <- function(input, output, session) {
   # Read data once at startup with error handling
   raw_data <- shiny::reactive({
     tryCatch(
       {
         base_path <- shiny::getShinyOption("base_path")
 
-        data <- chr_get_metric_data("connect_users", base_path, "daily") |>
+        data <- chr_get_metric_data("pwb_users", base_path, "daily") |>
           dplyr::mutate(date = as.Date(timestamp))
         return(data)
       },
@@ -146,7 +184,7 @@ connect_users_server <- function(input, output, session) {
   # Process data for metrics
   data <- shiny::reactive({
     shiny::req(raw_data())
-    calculate_connect_daily_user_counts(raw_data())
+    calculate_workbench_daily_user_counts(raw_data())
   })
 
   # Set default date range when data is loaded
@@ -175,7 +213,7 @@ connect_users_server <- function(input, output, session) {
       )
   })
 
-  # Get most recent day's data from filtered data
+  # Get most recent day's data
   latest_data <- shiny::reactive({
     shiny::req(filtered_data())
     filtered_data() |>
@@ -191,56 +229,33 @@ connect_users_server <- function(input, output, session) {
     shiny::req(latest_data())
     prettyNum(latest_data()$daily_users, big.mark = ",")
   })
-  output$publishers_value <- shiny::renderText({
+  output$admin_users_value <- shiny::renderText({
     shiny::req(latest_data())
-    prettyNum(latest_data()$publishers, big.mark = ",")
+    prettyNum(latest_data()$admin_users, big.mark = ",")
   })
 
   # Plot for user trends over time
   output$user_trend_plot <- plotly::renderPlotly({
     shiny::req(filtered_data())
 
-    # Reshape data for easier plotting
     plot_data <- filtered_data() |>
-      dplyr::select("date", "licensed_users", "daily_users", "publishers") |>
-      dplyr::filter(
-        !is.na(date),
-        !is.na(.data$licensed_users) |
-          !is.na(.data$daily_users) |
-          !is.na(.data$publishers)
-      ) |>
+      dplyr::select(date, licensed_users, daily_users, admin_users) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
-      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
-      dplyr::arrange(date) |>
       dplyr::mutate(
         metric = factor(
           .data$metric,
-          levels = c("licensed_users", "daily_users", "publishers"),
-          labels = c("Licensed Users", "Daily Users", "Publishers")
+          levels = c("licensed_users", "daily_users", "admin_users"),
+          labels = c("Licensed Users", "Daily Users", "Admin Users")
         )
       )
 
-    # Validate we have data to plot
-    if (nrow(plot_data) == 0) {
-      return(
-        plotly::plotly_empty() |>
-          plotly::layout(title = "No data available for selected date range")
-      )
-    }
-
-    # Plot the trend of user counts over time
     p <- ggplot2::ggplot(
       plot_data,
       ggplot2::aes(x = date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
-      # add points with custom hover text
       ggplot2::geom_point(
         ggplot2::aes(
-          # This code produces a warning about `text` being an unknown aesthetic.
-          # This is normal when using ggplotly(). The text aesthetic is not a
-          # standard ggplot2 aesthetic, but ggplotly() recognizes and uses it
-          # for hover tooltips.
           text = paste0(
             format(date, "%B %d, %Y"),
             "<br>",
@@ -255,31 +270,23 @@ connect_users_server <- function(input, output, session) {
       ggplot2::labs(
         x = "",
         y = "Number of Users",
-        color = "",
+        color = ""
       ) +
-      # The line colors should match the value box colors
       ggplot2::scale_color_manual(
         values = c(
-          "Licensed Users" = CONNECT_COLORS$LICENSED_USERS,
-          "Daily Users" = CONNECT_COLORS$DAILY_USERS,
-          "Publishers" = CONNECT_COLORS$PUBLISHERS
+          "Licensed Users" = COLORS$LICENSED_USERS,
+          "Daily Users" = COLORS$DAILY_USERS,
+          "Admin Users" = COLORS$ADMIN_USERS
         )
       )
 
-    # Convert to plotly with custom hover
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
-        # make the legend look pretty
-        xaxis = list(fixedrange = TRUE), # Disable x-axis zoom/pan
-        yaxis = list(fixedrange = TRUE), # Disable y-axis zoom/pan
         legend = list(
           orientation = "h",
           x = 0.5,
           xanchor = "center"
         )
-      ) |>
-      plotly::config(
-        displayModeBar = FALSE # Hide the toolbar completely
       )
   })
 
@@ -306,13 +313,12 @@ connect_users_server <- function(input, output, session) {
       ggplot2::theme_minimal() +
       ggplot2::labs(
         x = "",
-        y = "Average Number of Users",
+        y = "Average Number of Users"
       )
   })
 }
 
-
-#' Run the Connect Users Dashboard Shiny App
+#' Run the Workbench Users Dashboard Shiny App
 #'
 #' @param base_path the base path where Chronicle data files are stored.
 #'   Defaults to the value of the `CHRONICLE_BASE_PATH` environment variable,
@@ -326,9 +332,9 @@ connect_users_server <- function(input, output, session) {
 #' @export
 #'
 #' @examples
-#' connect_users_app()
-connect_users_app <- function(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
+#' workbench_users_app()
+workbench_users_app <- function(
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
 ) {
   # The base path where Chronicle data files are stored. If you deploy this app
   # to Posit Connect, you can set this environment variable in the Connect
@@ -336,5 +342,5 @@ connect_users_app <- function(
   # for more information.
   shiny::shinyOptions(base_path = base_path)
 
-  shiny::shinyApp(connect_users_ui, connect_users_server)
+  shiny::shinyApp(workbench_users_ui, workbench_users_server)
 }
