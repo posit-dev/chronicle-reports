@@ -107,12 +107,23 @@ calculate_connect_daily_user_counts <- function(data) {
 # ==============================================
 # Define the UI layout
 # ==============================================
-connect_users_ui <- bslib::page_fluid(
+connect_users_ui <- bslib::page_sidebar(
   title = "Posit Connect Users Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
+  fillable = FALSE, # helps with vertical spacing
 
-  # add space at top of viewport for prettier layout
-  bslib::layout_columns(),
+  # Sidebar with date range input
+  sidebar = bslib::sidebar(
+    title = "Filters",
+    width = "270px",
+    shiny::dateRangeInput(
+      "date_range",
+      "Select Date Range:",
+      start = NULL, # Will be set dynamically based on data
+      end = NULL, # Will be set dynamically based on data
+      format = "yyyy-mm-dd"
+    )
+  ),
 
   # Summary row with current values for each user metric
   bslib::layout_columns(
@@ -187,10 +198,36 @@ connect_users_server <- function(input, output, session) {
     calculate_connect_daily_user_counts(raw_data())
   })
 
-  # Get most recent day's data
-  latest_data <- shiny::reactive({
+  # Set default date range when data is loaded
+  shiny::observe({
     shiny::req(data())
+    date_range <- range(data()$date, na.rm = TRUE)
+
+    shiny::updateDateRangeInput(
+      session,
+      "date_range",
+      start = date_range[1],
+      end = date_range[2],
+      min = date_range[1],
+      max = date_range[2]
+    )
+  })
+
+  # Filter data based on selected date range
+  filtered_data <- shiny::reactive({
+    shiny::req(data(), input$date_range)
+
     data() |>
+      dplyr::filter(
+        date >= input$date_range[1],
+        date <= input$date_range[2]
+      )
+  })
+
+  # Get most recent day's data from filtered data
+  latest_data <- shiny::reactive({
+    shiny::req(filtered_data())
+    filtered_data() |>
       dplyr::slice_max(date, n = 1)
   })
 
@@ -210,12 +247,20 @@ connect_users_server <- function(input, output, session) {
 
   # Plot for user trends over time
   output$user_trend_plot <- plotly::renderPlotly({
-    shiny::req(data())
+    shiny::req(filtered_data())
 
     # Reshape data for easier plotting
-    plot_data <- data() |>
+    plot_data <- filtered_data() |>
       dplyr::select("date", "licensed_users", "daily_users", "publishers") |>
+      dplyr::filter(
+        !is.na(date),
+        !is.na(.data$licensed_users) |
+          !is.na(.data$daily_users) |
+          !is.na(.data$publishers)
+      ) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
+      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
+      dplyr::arrange(date) |>
       dplyr::mutate(
         metric = factor(
           .data$metric,
@@ -223,6 +268,14 @@ connect_users_server <- function(input, output, session) {
           labels = c("Licensed Users", "Daily Users", "Publishers")
         )
       )
+
+    # Validate we have data to plot
+    if (nrow(plot_data) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(title = "No data available for selected date range")
+      )
+    }
 
     # Plot the trend of user counts over time
     p <- ggplot2::ggplot(
@@ -251,7 +304,7 @@ connect_users_server <- function(input, output, session) {
       ggplot2::labs(
         x = "",
         y = "Number of Users",
-        color = "Metric",
+        color = "",
       ) +
       # The line colors should match the value box colors
       ggplot2::scale_color_manual(
@@ -266,20 +319,25 @@ connect_users_server <- function(input, output, session) {
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
         # make the legend look pretty
+        xaxis = list(fixedrange = TRUE), # Disable x-axis zoom/pan
+        yaxis = list(fixedrange = TRUE), # Disable y-axis zoom/pan
         legend = list(
           orientation = "h",
           x = 0.5,
           xanchor = "center"
         )
+      ) |>
+      plotly::config(
+        displayModeBar = FALSE # Hide the toolbar completely
       )
   })
 
   # Plot the average daily activity pattern by day of week
   output$activity_pattern_plot <- shiny::renderPlot({
-    shiny::req(data())
+    shiny::req(filtered_data())
 
     # Calculate average users active by day of week
-    day_summary <- data() |>
+    day_summary <- filtered_data() |>
       dplyr::mutate(
         day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
       ) |>

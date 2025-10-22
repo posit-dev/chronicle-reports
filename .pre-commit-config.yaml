@@ -8,6 +8,7 @@ repos:
         additional_dependencies:
         - arrow
         - bslib
+        - dbplyr
         - dplyr
         - duckdb
         - ggplot2
