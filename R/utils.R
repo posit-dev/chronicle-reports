@@ -1,5 +1,7 @@
 #' Build path to Chronicle metric data
 #'
+#' @keywords internal
+#'
 #' @param base_path Base path to Chronicle data directory
 #' @param metric Name of the metric (e.g., "connect_users")
 #' @param frequency Frequency of data collection ("daily" or "hourly")
@@ -15,6 +17,8 @@ chr_path <- function(
 }
 
 #' Get Chronicle metric data from parquet files
+#'
+#' @keywords internal
 #'
 #' @param metric Name of the metric to retrieve
 #' @param base_path Base path to Chronicle data directory

@@ -29,3 +29,4 @@ Arrow dataset object
 \description{
 Get Chronicle metric data from parquet files
 }
+\keyword{internal}

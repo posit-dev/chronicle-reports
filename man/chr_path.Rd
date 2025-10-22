@@ -19,3 +19,4 @@ Character string with the full path to the metric data
 \description{
 Build path to Chronicle metric data
 }
+\keyword{internal}
