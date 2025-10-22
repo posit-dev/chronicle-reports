@@ -111,7 +111,7 @@ ui <- bslib::page_sidebar(
 
     # Daily activity pattern chart
     bslib::card(
-      bslib::card_header("Average Daily Users by Day of Week"),
+      bslib::card_header("Average Users by Day of Week"),
       shinycssloaders::withSpinner(shiny::plotOutput("activity_pattern_plot"))
     )
   )
