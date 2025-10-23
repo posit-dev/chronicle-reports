@@ -23,7 +23,7 @@ calculate_connect_daily_user_counts <- function(data) {
     dplyr::filter(
       is.na(.data$last_active_at) |
         as.Date(.data$last_active_at) >=
-          .data$date - APP_CONFIG$INACTIVE_USER_THRESHOLD
+          .data$date - as.numeric(APP_CONFIG$INACTIVE_USER_THRESHOLD, "days")
     ) |>
     # Then calculate daily user counts for each date
     dplyr::group_by(date) |>
