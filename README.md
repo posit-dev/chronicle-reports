@@ -39,6 +39,13 @@ You can then run the report using:
 chronicle.reports::connect_users_app()
 ```
 
+If your Chronicle data is in a non-default directory (i.e., not `/var/lib/posit-chronicle/data`), then you need to pass in the base path.
+
+```R
+chronicle.reports::connect_users_app("/path/to/chronicle/data")
+```
+
+
 ## Publishing to Posit Connect
 
 The reports can be published to Posit Connect using the `rsconnect` package. First, create a new `app.R` file:
@@ -50,8 +57,8 @@ vi app.R
 ```
 
 ```R
-chronicle.reports::connect_users_app(base_path="s3://chronicle")
-# NOTE: Replace 's3://chronicle' with your own S3 bucket or storage location
+chronicle.reports::connect_users_app(base_path="/path/to/chronicle/data")
+# Or point to your own S3 bucket:
 #	chronicle.reports::connect_users_app(base_path="s3://<your-bucket-name>")
 ```
 
