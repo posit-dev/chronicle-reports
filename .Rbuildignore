@@ -3,3 +3,4 @@
 ^README\.Rmd$
 ^\.Rproj\.user$
 ^\.pre-commit-config\.yaml$
+^user-examples$
