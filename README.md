@@ -2,7 +2,7 @@
 
 Chronicle helps data science managers and other stakeholders understand their organization’s use of supported professional products (Posit Connect and Posit Workbench). See [this announcement](https://posit.co/blog/chronicle-product-announcement-aug-2025/) for more details.
 
-This repository contains a few example Shiny apps to generate reports using data from Posit Chronicle. The reports are designed to provide insights into user activity, engagement, and trends over time. Beyond this reports, Chronicle also ships with a [Cookbook](https://docs.posit.co/chronicle/reports/) of additional examples. You can browse an [example cookbook report with mock data](https://pub.current.posit.team/public/example-chronicle-cookbook/).
+This repository contains a few example Shiny apps to generate reports using data from Posit Chronicle. The reports are designed to provide insights into user activity, engagement, and trends over time. Beyond these reports, Chronicle also ships with a [Cookbook](https://docs.posit.co/chronicle/reports/) of additional examples. You can browse an [example cookbook report with mock data](https://pub.current.posit.team/public/example-chronicle-cookbook/).
 
 Coming soon - live examples of these reports.
 
