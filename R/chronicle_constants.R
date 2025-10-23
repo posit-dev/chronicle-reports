@@ -8,9 +8,6 @@ BRAND_COLORS <- list(
 
 # Common application configuration
 APP_CONFIG <- list(
-  # Users inactive for more than this period are filtered out
-  INACTIVE_USER_THRESHOLD = lubridate::dyears(1),
-
   # Default Chronicle data path
   DEFAULT_BASE_PATH = "/var/lib/posit-chronicle/data"
 )
