@@ -1,48 +1,5 @@
-chr_path <- function(
-  base_path,
-  metric = NULL,
-  frequency = c("daily", "hourly")
-) {
-  frequency <- match.arg(frequency)
-  glue::glue("{base_path}/{frequency}/v2/{metric}/")
-}
-
-chr_get_metric_data <- function(
-  metric,
-  base_path,
-  frequency = c("daily", "hourly"),
-  ymd = NULL,
-  schema = NULL
-) {
-  frequency <- match.arg(frequency)
-  path <- chr_path(base_path, metric, frequency)
-
-  if (!is.null(ymd)) {
-    path <- glue::glue("{path}{ymd[['year']]}/{ymd[['month']]}/{ymd[['day']]}/")
-    partitioning <- NULL
-  } else {
-    partitioning <- c("Year", "Month", "Day")
-  }
-
-  arrow::open_dataset(
-    path,
-    hive_style = FALSE,
-    schema = schema,
-    format = "parquet",
-    partitioning = partitioning
-  )
-}
-
-# Color constants
-BRAND_COLORS <- list(
-  # Brand colors
-  BLUE = "#447099",
-  GREEN = "#72994E",
-  BURGUNDY = "#9A4665"
-)
-
+# Connect-specific color mappings
 COLORS <- list(
-  # Semantic mappings
   LICENSED_USERS = BRAND_COLORS$BLUE,
   DAILY_USERS = BRAND_COLORS$GREEN,
   PUBLISHERS = BRAND_COLORS$BURGUNDY
@@ -65,7 +22,8 @@ calculate_connect_daily_user_counts <- function(data) {
     dplyr::collect() |>
     dplyr::filter(
       is.na(.data$last_active_at) |
-        as.Date(.data$last_active_at) >= date - lubridate::dyears(1)
+        as.Date(.data$last_active_at) >=
+          date - APP_CONFIG$INACTIVE_USER_THRESHOLD
     ) |>
     # Then calculate daily user counts for each date
     dplyr::group_by(date) |>
@@ -160,7 +118,7 @@ connect_users_ui <- bslib::page_sidebar(
 
     # Daily activity pattern chart
     bslib::card(
-      bslib::card_header("Average Daily Users by Day of Week"),
+      bslib::card_header("Average Users by Day of Week"),
       shinycssloaders::withSpinner(shiny::plotOutput("activity_pattern_plot"))
     )
   )
@@ -377,7 +335,7 @@ connect_users_server <- function(input, output, session) {
 #' @examples
 #' connect_users_app()
 connect_users_app <- function(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   # The base path where Chronicle data files are stored. If you deploy this app
   # to Posit Connect, you can set this environment variable in the Connect

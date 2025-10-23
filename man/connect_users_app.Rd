@@ -5,7 +5,7 @@
 \title{Run the Connect Users Dashboard Shiny App}
 \usage{
 connect_users_app(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 )
 }
 \arguments{

@@ -1,46 +1,3 @@
-chr_path <- function(
-  base_path,
-  metric = NULL,
-  frequency = c("daily", "hourly")
-) {
-  frequency <- match.arg(frequency)
-  glue::glue("{base_path}/{frequency}/v2/{metric}/")
-}
-
-chr_get_metric_data <- function(
-  metric,
-  base_path,
-  frequency = c("daily", "hourly"),
-  ymd = NULL,
-  schema = NULL
-) {
-  frequency <- match.arg(frequency)
-  path <- chr_path(base_path, metric, frequency)
-
-  if (!is.null(ymd)) {
-    path <- glue::glue("{path}{ymd[['year']]}/{ymd[['month']]}/{ymd[['day']]}/")
-    partitioning <- NULL
-  } else {
-    partitioning <- c("Year", "Month", "Day")
-  }
-
-  arrow::open_dataset(
-    path,
-    hive_style = FALSE,
-    schema = schema,
-    format = "parquet",
-    partitioning = partitioning
-  )
-}
-
-# Color constants
-BRAND_COLORS <- list(
-  # Brand colors
-  BLUE = "#447099",
-  GREEN = "#72994E",
-  BURGUNDY = "#9A4665"
-)
-
 COLORS <- list(
   # Semantic mappings
   LICENSED_USERS = BRAND_COLORS$BLUE,
@@ -239,7 +196,7 @@ workbench_users_server <- function(input, output, session) {
     shiny::req(filtered_data())
 
     plot_data <- filtered_data() |>
-      dplyr::select(date, licensed_users, daily_users, admin_users) |>
+      dplyr::select("date", "licensed_users", "daily_users", "admin_users") |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
       dplyr::mutate(
         metric = factor(
@@ -248,6 +205,14 @@ workbench_users_server <- function(input, output, session) {
           labels = c("Licensed Users", "Daily Users", "Admin Users")
         )
       )
+
+    # Validate we have data to plot
+    if (nrow(plot_data) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(title = "No data available for selected date range")
+      )
+    }
 
     p <- ggplot2::ggplot(
       plot_data,
@@ -282,11 +247,16 @@ workbench_users_server <- function(input, output, session) {
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
+        xaxis = list(fixedrange = TRUE), # Disable x-axis zoom/pan
+        yaxis = list(fixedrange = TRUE), # Disable y-axis zoom/pan
         legend = list(
           orientation = "h",
           x = 0.5,
           xanchor = "center"
         )
+      ) |>
+      plotly::config(
+        displayModeBar = FALSE # Hide the toolbar completely
       )
   })
 
@@ -334,7 +304,7 @@ workbench_users_server <- function(input, output, session) {
 #' @examples
 #' workbench_users_app()
 workbench_users_app <- function(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", "/var/lib/posit-chronicle/data")
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   # The base path where Chronicle data files are stored. If you deploy this app
   # to Posit Connect, you can set this environment variable in the Connect
