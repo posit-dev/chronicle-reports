@@ -6,6 +6,7 @@ COLORS <- list(
 )
 
 #' Process the pwb_users data to compute daily metrics used for historical trends
+#' @noRd
 #'
 #' @importFrom rlang .data
 #' @param data A data frame or tibble containing the raw pwb_users data.
@@ -299,10 +300,12 @@ workbench_users_server <- function(input, output, session) {
 #'   https://docs.posit.co/connect/user/content-settings/#content-vars
 #'   for more information.
 #'
+#' @return A Shiny app object that can be run or deployed.
+#'
 #' @export
 #'
 #' @examples
-#' workbench_users_app()
+#' workbench_users_app(base_path = "/path/to/chronicle/data")
 workbench_users_app <- function(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {

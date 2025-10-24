@@ -1,6 +1,7 @@
 #' Build path to Chronicle metric data
 #'
 #' @keywords internal
+#' @noRd
 #'
 #' @param base_path Base path to Chronicle data directory
 #' @param metric Name of the metric (e.g., "connect_users")
@@ -19,6 +20,7 @@ chr_path <- function(
 #' Get Chronicle metric data from parquet files
 #'
 #' @keywords internal
+#' @noRd
 #'
 #' @param metric Name of the metric to retrieve
 #' @param base_path Base path to Chronicle data directory

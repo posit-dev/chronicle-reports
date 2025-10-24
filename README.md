@@ -14,7 +14,7 @@ These reports use Shiny, which is supported on the latest release version of R, 
 
 ### Package Manager Configuration (optional but recommended)
 
-If you are using Posit Package Manager, refer to the documentation to [obtain an appropriate URL](https://docs.posit.co/rspm/user/get-repo-url.html) and then [configure your R environment](https://docs.posit.co/rspm//user/configure-r.html).
+If you are using Posit Package Manager, refer to the documentation to [obtain an appropriate URL](https://docs.posit.co/rspm/user/get-repo-url.html) and then [configure your R environment](https://docs.posit.co/rspm/user/configure-r.html).
 
 
 Following these steps should give you something similar to this:

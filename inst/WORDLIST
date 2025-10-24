@@ -30,6 +30,7 @@ ROR
 roxygen
 RoxygenNote
 Rscript
+RStudio
 shinycssloaders
 shinytest
 testthat
