@@ -7,7 +7,7 @@ Authors@R: c(
     person("Posit Software, PBC", role = c("cph", "fnd"),
            comment = c(ROR = "03wc8by49"))
   )
-Description: A collection of reports for Posit Chronicle. You provide the
+Description: Run reports for Posit Chronicle. You provide the
     location of your Chronicle data and this package will generate reports
     to help you analyze and visualize your data.
 License: MIT + file LICENSE

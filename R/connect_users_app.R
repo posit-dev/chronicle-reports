@@ -9,6 +9,7 @@ COLORS <- list(
 #'
 #' @importFrom rlang .data
 #' @param data A data frame or tibble containing the raw connect_users data.
+#' @noRd
 calculate_connect_daily_user_counts <- function(data) {
   daily_user_counts <- data |>
     # First get latest state per user per date
@@ -329,10 +330,12 @@ connect_users_server <- function(input, output, session) {
 #'   https://docs.posit.co/connect/user/content-settings/#content-vars
 #'   for more information.
 #'
+#' @return A Shiny app object that can be run or deployed.
+#'
 #' @export
 #'
 #' @examples
-#' connect_users_app()
+#' connect_users_app(base_path = "/path/to/chronicle/data")
 connect_users_app <- function(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {

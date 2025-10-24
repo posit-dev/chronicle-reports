@@ -18,9 +18,12 @@ in the Connect UI. See
 https://docs.posit.co/connect/user/content-settings/#content-vars
 for more information.}
 }
+\value{
+A Shiny app object that can be run or deployed.
+}
 \description{
 Run the Connect Users Dashboard Shiny App
 }
 \examples{
-connect_users_app()
+connect_users_app(base_path = "/path/to/chronicle/data")
 }
