@@ -1,6 +1,10 @@
-# chronicle-reports
+# Chronicle Example Reports
 
-This repository contains Shiny apps to generate reports using data from Posit Chronicle. The reports are designed to provide insights into user activity, engagement, and trends over time.
+Chronicle helps data science managers and other stakeholders understand their organization’s use of supported professional products (Posit Connect and Posit Workbench). See [this announcement](https://posit.co/blog/chronicle-product-announcement-aug-2025/) for more details.
+
+This repository contains a few example Shiny apps to generate reports using data from Posit Chronicle. The reports are designed to provide insights into user activity, engagement, and trends over time. Beyond these reports, Chronicle also ships with a [Cookbook](https://docs.posit.co/chronicle/reports/) of additional examples. You can browse an [example cookbook report with mock data](https://pub.current.posit.team/public/example-chronicle-cookbook/).
+
+Coming soon - live examples of these reports.
 
 ## Prerequisites
 
@@ -35,6 +39,13 @@ You can then run the report using:
 chronicle.reports::connect_users_app()
 ```
 
+If your Chronicle data is in a non-default directory (i.e., not `/var/lib/posit-chronicle/data`), then you need to pass in the base path.
+
+```R
+chronicle.reports::connect_users_app("/path/to/chronicle/data")
+```
+
+
 ## Publishing to Posit Connect
 
 The reports can be published to Posit Connect using the `rsconnect` package. First, create a new `app.R` file:
@@ -46,8 +57,8 @@ vi app.R
 ```
 
 ```R
-chronicle.reports::connect_users_app(base_path="s3://chronicle")
-# NOTE: Replace 's3://chronicle' with your own S3 bucket or storage location
+chronicle.reports::connect_users_app(base_path="/path/to/chronicle/data")
+# Or point to your own S3 bucket:
 #	chronicle.reports::connect_users_app(base_path="s3://<your-bucket-name>")
 ```
 
@@ -58,6 +69,18 @@ You can then deploy that file to Connect:
 
 # appDir should match whatever directory you are using
 rsconnect::deployApp(appDir="chronicle-connect-users-report", appFiles=c("app.R"))
+```
+
+
+## Building your own report
+
+You can also use the source code in this repo as a starting point for building your own report. This is easiest to do using the [`devtools` package](https://devtools.r-lib.org/). You can open this repository in Positron or RStudio. Then, in the R console:
+
+```R
+library(devtools)
+
+load_all()
+connect_users_app(base_path="/path/to/chronicle/data")
 ```
 
 ## Reports
