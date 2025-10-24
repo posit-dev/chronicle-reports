@@ -71,6 +71,18 @@ You can then deploy that file to Connect:
 rsconnect::deployApp(appDir="chronicle-connect-users-report", appFiles=c("app.R"))
 ```
 
+
+## Building your own report
+
+You can also use the source code in this repo as a starting point for building your own report. This is easiest to do using the [`devtools` package](https://devtools.r-lib.org/). You can open this repository in Positron or RStudio. Then, in the R console:
+
+```R
+library(devtools)
+
+load_all()
+connect_users_app(base_path="/path/to/chronicle/data")
+```
+
 ## Reports
 
 This section describes each of the available reports in this repository.
