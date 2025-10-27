@@ -45,10 +45,16 @@ If your Chronicle data is in a non-default directory (i.e., not `/var/lib/posit-
 chronicle.reports::connect_users_app("/path/to/chronicle/data")
 ```
 
+If your Chronicle data is in S3, then you need to pass in the bucket path.
+
+```R
+chronicle.reports::connect_users_app("s3://chronicle-bucket/optional-prefix")
+```
+
 
 ## Publishing to Posit Connect
 
-The reports can be published to Posit Connect using the `rsconnect` package. First, create a new `app.R` file:
+The reports can be published to Posit Connect using the `rsconnect` package. For example, for the Connect Users report, create a new `app.R` file:
 
 ```bash
 mkdir chronicle-connect-users-report
@@ -57,9 +63,8 @@ vi app.R
 ```
 
 ```R
+# The Connect Users report:
 chronicle.reports::connect_users_app(base_path="/path/to/chronicle/data")
-# Or point to your own S3 bucket:
-#	chronicle.reports::connect_users_app(base_path="s3://<your-bucket-name>")
 ```
 
 You can then deploy that file to Connect:
@@ -71,7 +76,6 @@ You can then deploy that file to Connect:
 rsconnect::deployApp(appDir="chronicle-connect-users-report", appFiles=c("app.R"))
 ```
 
-
 ## Building your own report
 
 You can also use the source code in this repo as a starting point for building your own report. This is easiest to do using the [`devtools` package](https://devtools.r-lib.org/). You can open this repository in Positron or RStudio. Then, in the R console:
@@ -79,8 +83,14 @@ You can also use the source code in this repo as a starting point for building y
 ```R
 library(devtools)
 
+# Modify the code to fit your requirements
+
+# Re-load the code and run your app
 load_all()
 connect_users_app(base_path="/path/to/chronicle/data")
+
+# It may make sense for you to define your own report function and call
+# your_new_report_app(base_path="/path/to/chronicle/data")
 ```
 
 ## Reports
