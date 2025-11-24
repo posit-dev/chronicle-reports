@@ -5,13 +5,13 @@
 #'
 #' @param base_path Base path to Chronicle data directory
 #' @param metric Name of the metric (e.g., "connect_users")
-#' @param frequency Frequency of data collection ("daily" or "hourly")
+#' @param frequency Frequency of data collection ("daily" or "hourly" or "curated")
 #'
 #' @return Character string with the full path to the metric data
 chr_path <- function(
   base_path,
   metric = NULL,
-  frequency = c("daily", "hourly")
+  frequency = c("daily", "hourly", "curated")
 ) {
   frequency <- match.arg(frequency)
   glue::glue("{base_path}/{frequency}/v2/{metric}/")
@@ -52,5 +52,27 @@ chr_get_metric_data <- function(
     schema = schema,
     format = "parquet",
     partitioning = partitioning
+  )
+}
+
+#' Get Chronicle metric data from parquet files
+#'
+#' @keywords internal
+#' @noRd
+#'
+#' @param metric Name of the metric to retrieve
+#' @param base_path Base path to Chronicle data directory
+#'
+#' @return Arrow dataset object
+chr_get_curated_metric_data <- function(
+  metric,
+  base_path
+) {
+  path <- chr_path(base_path, metric, "curated")
+
+  arrow::open_dataset(
+    path,
+    hive_style = TRUE,
+    format = "parquet"
   )
 }
