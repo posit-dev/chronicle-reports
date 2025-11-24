@@ -219,7 +219,7 @@ connect_user_totals_server <- function(input, output, session) {
       ggplot2::labs(
         x = "",
         y = "Number of Users",
-        color = "",
+        color = ""
       ) +
       # The line colors should match the value box colors
       ggplot2::scale_color_manual(
