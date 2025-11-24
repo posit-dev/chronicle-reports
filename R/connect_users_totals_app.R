@@ -292,7 +292,7 @@ connect_user_totals_server <- function(input, output, session) {
 #' @export
 #'
 #' @examples
-#' connect_users_app(base_path = "/path/to/chronicle/data")
+#' connect_users_totals_app(base_path = "/path/to/chronicle/data")
 connect_users_totals_app <- function(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
