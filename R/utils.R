@@ -55,12 +55,12 @@ chr_get_metric_data <- function(
   )
 }
 
-#' Get Chronicle metric data from parquet files
+#' Get curated Chronicle metric data from parquet files
 #'
 #' @keywords internal
 #' @noRd
 #'
-#' @param metric Name of the metric to retrieve
+#' @param metric Name of the curated metric to retrieve
 #' @param base_path Base path to Chronicle data directory
 #'
 #' @return Arrow dataset object
