@@ -25,5 +25,5 @@ A Shiny app object that can be run or deployed.
 Run the Connect Users Dashboard Shiny App
 }
 \examples{
-connect_users_app(base_path = "/path/to/chronicle/data")
+connect_users_totals_app(base_path = "/path/to/chronicle/data")
 }
