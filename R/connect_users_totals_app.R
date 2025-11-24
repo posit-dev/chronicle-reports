@@ -10,7 +10,7 @@ COLORS <- list(
 #' @importFrom rlang .data
 #' @param data A data frame or tibble containing the raw connect_users data.
 #' @noRd
-calculate_connect_daily_user_counts <- function(data) {
+calculate_connect_totals_user_counts <- function(data) {
   daily_user_counts <- data |>
     dplyr::collect()
 
@@ -114,7 +114,7 @@ connect_user_totals_server <- function(input, output, session) {
   # Process data for metrics
   data <- shiny::reactive({
     shiny::req(raw_data())
-    calculate_connect_daily_user_counts(raw_data())
+    calculate_connect_totals_user_counts(raw_data())
   })
 
   # Set default date range when data is loaded
