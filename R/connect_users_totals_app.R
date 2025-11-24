@@ -11,11 +11,7 @@ COLORS <- list(
 #' @param data A data frame or tibble containing the raw connect_users data.
 #' @noRd
 calculate_connect_totals_user_counts <- function(data) {
-  daily_user_counts <- data |>
-    dplyr::collect()
-
-  # Implicit return
-  daily_user_counts
+  data |> dplyr::collect()
 }
 
 
