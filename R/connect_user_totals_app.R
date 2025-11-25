@@ -306,8 +306,8 @@ connect_user_totals_server <- function(input, output, session) {
 #' @export
 #'
 #' @examples
-#' connect_users_total_app(base_path = "/path/to/chronicle/data")
-connect_users_total_app <- function(
+#' connect_user_totals_app(base_path = "/path/to/chronicle/data")
+connect_user_totals_app <- function(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   # The base path where Chronicle data files are stored. If you deploy this app
