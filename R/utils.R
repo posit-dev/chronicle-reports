@@ -73,6 +73,7 @@ chr_get_curated_metric_data <- function(
   arrow::open_dataset(
     path,
     hive_style = TRUE,
+    partitioning = arrow::schema(date = arrow::date32()),
     format = "parquet"
   )
 }

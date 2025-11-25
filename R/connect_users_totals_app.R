@@ -90,8 +90,7 @@ connect_user_totals_server <- function(input, output, session) {
         data <- chr_get_curated_metric_data(
           "connect/user_totals",
           base_path
-        ) |>
-          dplyr::mutate(date = as.Date(date))
+        )
 
         return(data)
       },
