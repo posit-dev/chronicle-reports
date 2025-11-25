@@ -225,19 +225,19 @@ test_that("activity pattern plot aggregates by day of week", {
 # Tests for main app function
 # =============================================================================
 
-test_that("connect_users_totals_app returns a Shiny app object", {
-  app <- connect_users_totals_app(base_path = "/fake/path")
+test_that("connect_user_totals_app returns a Shiny app object", {
+  app <- connect_user_totals_app(base_path = "/fake/path")
 
   expect_s3_class(app, "shiny.appobj")
   # App objects have serverFuncSource, not direct ui/server
   expect_true(!is.null(app$serverFuncSource))
 })
 
-test_that("connect_users_totals_app sets shinyOptions correctly", {
+test_that("connect_user_totals_app sets shinyOptions correctly", {
   # Clear any existing options
   shinyOptions(base_path = NULL)
 
-  app <- connect_users_totals_app(base_path = "/test/path")
+  app <- connect_user_totals_app(base_path = "/test/path")
 
   # Check that base_path option was set
   expect_equal(getShinyOption("base_path"), "/test/path")
@@ -246,26 +246,26 @@ test_that("connect_users_totals_app sets shinyOptions correctly", {
   shinyOptions(base_path = NULL)
 })
 
-test_that("connect_users_totals_app uses environment variable", {
+test_that("connect_user_totals_app uses environment variable", {
   # Set environment variable
   withr::with_envvar(
     c(CHRONICLE_BASE_PATH = "/env/path"),
     {
       shinyOptions(base_path = NULL)
-      app <- connect_users_totals_app()
+      app <- connect_user_totals_app()
       expect_equal(getShinyOption("base_path"), "/env/path")
       shinyOptions(base_path = NULL)
     }
   )
 })
 
-test_that("connect_users_totals_app uses default when no env var", {
+test_that("connect_user_totals_app uses default when no env var", {
   # Ensure env var is not set
   withr::with_envvar(
     c(CHRONICLE_BASE_PATH = NA),
     {
       shinyOptions(base_path = NULL)
-      app <- connect_users_totals_app()
+      app <- connect_user_totals_app()
       # Should use APP_CONFIG$DEFAULT_BASE_PATH
       expect_equal(getShinyOption("base_path"), APP_CONFIG$DEFAULT_BASE_PATH)
       shinyOptions(base_path = NULL)
