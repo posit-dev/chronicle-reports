@@ -128,8 +128,8 @@ connect_user_totals_server <- function(input, output, session) {
       ) |>
       dplyr::collect()
 
-    date_min <- dplyr::pull(date_summary, date_summary$min_date)
-    date_max <- dplyr::pull(date_summary, date_summary$max_date)
+    date_min <- date_summary$min_date
+    date_max <- date_summary$max_date
 
     shiny::updateDateRangeInput(
       session,
