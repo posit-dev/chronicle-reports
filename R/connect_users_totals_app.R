@@ -11,7 +11,7 @@ COLORS <- list(
 #' @param data A data frame or tibble containing the raw connect_users data.
 #' @noRd
 calculate_connect_totals_user_counts <- function(data) {
-  data |> dplyr::collect()
+  data
 }
 
 
@@ -115,15 +115,29 @@ connect_user_totals_server <- function(input, output, session) {
   # Set default date range when data is loaded
   shiny::observe({
     shiny::req(data())
-    date_range <- range(data()$date, na.rm = TRUE)
+
+    d <- data()
+
+    # Get min and max dates without collecting everything
+    # Filter out NA dates first to avoid issues with min/max
+    date_summary <- d |>
+      dplyr::filter(!is.na(date)) |>
+      dplyr::summarise(
+        min_date = min(date, na.rm = TRUE),
+        max_date = max(date, na.rm = TRUE)
+      ) |>
+      dplyr::collect()
+
+    date_min <- dplyr::pull(date_summary, date_summary$min_date)
+    date_max <- dplyr::pull(date_summary, date_summary$max_date)
 
     shiny::updateDateRangeInput(
       session,
       "date_range",
-      start = date_range[1],
-      end = date_range[2],
-      min = date_range[1],
-      max = date_range[2]
+      start = date_min,
+      end = date_max,
+      min = date_min,
+      max = date_max
     )
   })
 
@@ -135,7 +149,8 @@ connect_user_totals_server <- function(input, output, session) {
       dplyr::filter(
         date >= input$date_range[1],
         date <= input$date_range[2]
-      )
+      ) |>
+      dplyr::collect()
   })
 
   # Get most recent day's data from filtered data
