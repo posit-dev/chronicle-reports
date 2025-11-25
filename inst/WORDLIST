@@ -36,7 +36,9 @@ shinytest
 testthat
 tibble
 tidyr
+tidyverse
 UI
 urbina
 Urbina
 wc
+withr
