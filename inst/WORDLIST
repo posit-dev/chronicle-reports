@@ -2,7 +2,9 @@ args
 aut
 bslib
 BugReports
+claude
 CMD
+codebase
 cph
 cran
 cre
@@ -11,6 +13,8 @@ dev
 devtools
 dplyr
 duckdb
+env
+filesystem
 fnd
 ggplot
 github
@@ -19,11 +23,14 @@ importFrom
 Justfile
 lintr
 lubridate
+magrittr
 matt
+md
 PBC
 plotly
 pre
 precommit
+README
 requireNamespace
 rlang
 ROR
