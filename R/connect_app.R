@@ -270,13 +270,13 @@ users_list_server <- function(input, output, session) {
 
     # Role filter
     if (input$users_list_role != "All") {
-      data <- data |> dplyr::filter(data$user_role == input$users_list_role)
+      data <- data |> dplyr::filter(.data$user_role == input$users_list_role)
     }
 
     # Active today filter
     if (input$users_list_active != "All") {
       active_val <- input$users_list_active == "Yes"
-      data <- data |> dplyr::filter(data$active_today == active_val)
+      data <- data |> dplyr::filter(.data$active_today == active_val)
     }
 
     # Search filter
@@ -284,8 +284,8 @@ users_list_server <- function(input, output, session) {
       search_term <- tolower(input$users_list_search)
       data <- data |>
         dplyr::filter(
-          grepl(search_term, tolower(data$username)) |
-            grepl(search_term, tolower(data$email))
+          grepl(search_term, tolower(.data$username)) |
+            grepl(search_term, tolower(.data$email))
         )
     }
 
@@ -489,11 +489,11 @@ content_list_server <- function(input, output, session) {
     data <- content_list_data()
 
     if (input$content_list_owner != "All") {
-      data <- data |> dplyr::filter(data$owner == input$content_list_owner)
+      data <- data |> dplyr::filter(.data$owner == input$content_list_owner)
     }
 
     if (input$content_list_type != "All") {
-      data <- data |> dplyr::filter(data$type == input$content_list_type)
+      data <- data |> dplyr::filter(.data$type == input$content_list_type)
     }
 
     if (nzchar(input$content_list_search)) {
@@ -722,7 +722,7 @@ shiny_apps_server <- function(input, output, session) {
       )
 
     plot_data <- data |>
-      dplyr::select(date, data$total_sessions, data$peak_concurrent) |>
+      dplyr::select(date, .data$total_sessions, .data$peak_concurrent) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
       dplyr::mutate(
         metric = factor(
