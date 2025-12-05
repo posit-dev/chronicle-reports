@@ -76,26 +76,3 @@ chr_get_curated_metric_data <- function(
     format = "parquet"
   )
 }
-
-#' Get curated Chronicle metric data from plain (non-hive-style) parquet files
-#'
-#' @keywords internal
-#' @noRd
-#'
-#' @param metric Name of the curated metric to retrieve
-#' @param base_path Base path to Chronicle data directory
-#'
-#' @return Arrow dataset object
-chr_get_curated_metric_data_plain <- function(
-  metric,
-  base_path
-) {
-  path <- chr_path(base_path, metric, "curated")
-
-  arrow::open_dataset(
-    path,
-    hive_style = FALSE,
-    partitioning = arrow::schema(date = arrow::date32()),
-    format = "parquet"
-  )
-}
