@@ -274,11 +274,21 @@ users_list_server <- function(input, output, session) {
     # Get unique environment values
     env_values <- users_list_data() |>
       dplyr::pull(environment) |>
-      unique() |>
+      unique()
+
+    # Check if there are any NAs or empty strings
+    has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+
+    # Remove NAs, empty strings, and sort
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
       sort()
 
-    # Replace NA with "(Not Set)"
-    env_values[is.na(env_values)] <- "(Not Set)"
+    # Add "(Not Set)" if there were any NAs or empty strings
+    if (has_na) {
+      env_values <- c(env_values, "(Not Set)")
+    }
 
     # Update selectInput with "All" followed by sorted environment values
     shiny::updateSelectInput(
@@ -297,7 +307,12 @@ users_list_server <- function(input, output, session) {
     # Environment filter
     if (input$users_list_environment != "All") {
       if (input$users_list_environment == "(Not Set)") {
-        data <- data |> dplyr::filter(is.na(.data$environment))
+        data <- data |>
+          dplyr::filter(
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
+          )
       } else {
         data <- data |>
           dplyr::filter(.data$environment == input$users_list_environment)
@@ -334,6 +349,15 @@ users_list_server <- function(input, output, session) {
 
     data <- filtered_users_list()
     data |>
+      dplyr::mutate(
+        environment = ifelse(
+          is.na(.data$environment) |
+            .data$environment == "" |
+            .data$environment == " ",
+          "(Not Set)",
+          .data$environment
+        )
+      ) |>
       dplyr::select(
         "username",
         "email",
