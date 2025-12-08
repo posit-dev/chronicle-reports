@@ -323,9 +323,6 @@ users_list_server <- function(input, output, session) {
     data |>
       dplyr::select(
         "username",
-        "email",
-        "first_name",
-        "last_name",
         "user_role",
         "last_active_at",
         "active_today"
