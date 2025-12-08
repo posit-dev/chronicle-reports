@@ -1,5 +1,5 @@
 # ==============================================
-# Users → Overview UI/Server
+# Users - Overview UI/Server
 # ==============================================
 
 users_overview_ui <- bslib::card(
@@ -118,7 +118,7 @@ users_overview_server <- function(input, output, session) {
   output$users_licensed_value <- shiny::renderText({
     data <- latest_users_data()
     if (is.null(data) || nrow(data) == 0) {
-      return("—")
+      return("-")
     }
     prettyNum(data$named_users, big.mark = ",")
   })
@@ -126,7 +126,7 @@ users_overview_server <- function(input, output, session) {
   output$users_daily_value <- shiny::renderText({
     data <- latest_users_data()
     if (is.null(data) || nrow(data) == 0) {
-      return("—")
+      return("-")
     }
     prettyNum(data$active_users_1day, big.mark = ",")
   })
@@ -134,7 +134,7 @@ users_overview_server <- function(input, output, session) {
   output$users_publishers_value <- shiny::renderText({
     data <- latest_users_data()
     if (is.null(data) || nrow(data) == 0) {
-      return("—")
+      return("-")
     }
     prettyNum(data$publishers, big.mark = ",")
   })
@@ -327,7 +327,7 @@ users_overview_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Users → User List UI/Server
+# Users - User List UI/Server
 # ==============================================
 
 users_list_ui <- bslib::card(
@@ -471,7 +471,7 @@ users_list_server <- function(input, output, session) {
       return(
         DT::datatable(
           data.frame(
-            " " = "Data not available — Check that Chronicle data exists at the configured path."
+            " " = "Data not available - Check that Chronicle data exists at the configured path."
           ),
           options = list(
             dom = "t",
@@ -518,7 +518,7 @@ users_list_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Content → Overview UI/Server (PLACEHOLDER)
+# Content - Overview UI/Server (PLACEHOLDER)
 # ==============================================
 
 content_overview_ui <- bslib::card(
@@ -637,7 +637,7 @@ content_overview_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Content → Content List UI/Server (PLACEHOLDER)
+# Content - Content List UI/Server (PLACEHOLDER)
 # ==============================================
 
 content_list_ui <- bslib::card(
@@ -719,7 +719,7 @@ content_list_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Usage → Overview UI/Server (PLACEHOLDER)
+# Usage - Overview UI/Server (PLACEHOLDER)
 # ==============================================
 
 usage_overview_ui <- bslib::card(
@@ -825,7 +825,7 @@ usage_overview_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Usage → Shiny Apps UI/Server (PLACEHOLDER)
+# Usage - Shiny Apps UI/Server (PLACEHOLDER)
 # ==============================================
 
 shiny_apps_ui <- bslib::card(
@@ -1006,22 +1006,22 @@ connect_app_ui <- bslib::page_navbar(
 # ==============================================
 
 connect_app_server <- function(input, output, session) {
-  # Users → Overview
+  # Users - Overview
   users_overview_server(input, output, session)
 
-  # Users → User List
+  # Users - User List
   users_list_server(input, output, session)
 
-  # Content → Overview (placeholder)
+  # Content - Overview (placeholder)
   content_overview_server(input, output, session)
 
-  # Content → Content List (placeholder)
+  # Content - Content List (placeholder)
   content_list_server(input, output, session)
 
-  # Usage → Overview (placeholder)
+  # Usage - Overview (placeholder)
   usage_overview_server(input, output, session)
 
-  # Usage → Shiny Apps (placeholder)
+  # Usage - Shiny Apps (placeholder)
   shiny_apps_server(input, output, session)
 }
 
@@ -1042,9 +1042,9 @@ connect_app_server <- function(input, output, session) {
 #' - **Usage** section: Placeholder data (awaiting curated datasets)
 #'
 #' **Navigation Structure:**
-#' - Users → Overview, User List
-#' - Content → Overview, Content List
-#' - Usage → Overview, Shiny Apps
+#' - Users --> Overview, User List
+#' - Content --> Overview, Content List
+#' - Usage --> Overview, Shiny Apps
 #'
 #' **Filter Behavior:**
 #' - Date range filters apply ONLY to trend charts
