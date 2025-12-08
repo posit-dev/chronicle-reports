@@ -335,8 +335,8 @@ users_list_server <- function(input, output, session) {
       search_term <- tolower(input$users_list_search)
       data <- data |>
         dplyr::filter(
-          grepl(search_term, tolower(.data$username)) |
-            grepl(search_term, tolower(.data$email))
+          grepl(search_term, tolower(.data$username), fixed = TRUE) |
+            grepl(search_term, tolower(.data$email), fixed = TRUE)
         )
     }
 
@@ -559,7 +559,8 @@ content_list_server <- function(input, output, session) {
 
     if (nzchar(input$content_list_search)) {
       search_term <- tolower(input$content_list_search)
-      data <- data |> dplyr::filter(grepl(search_term, tolower(title)))
+      data <- data |>
+        dplyr::filter(grepl(search_term, tolower(.data$title), fixed = TRUE))
     }
 
     data
