@@ -242,7 +242,7 @@ users_list_ui <- bslib::card(
     shiny::selectInput(
       "users_list_role",
       "Role:",
-      choices = c("All", "user", "administrator", "super_admin")
+      choices = c("All", "user", "administrator", "super_administrator")
     ),
     shiny::selectInput(
       "users_list_active",
