@@ -215,7 +215,12 @@ users_overview_server <- function(input, output, session) {
 users_list_ui <- bslib::card(
   bslib::card_header("Filters"),
   bslib::layout_columns(
-    col_widths = c(4, 4, 4),
+    col_widths = c(3, 3, 3, 3),
+    shiny::selectInput(
+      "users_list_environment",
+      "Environment:",
+      choices = c("All")
+    ),
     shiny::selectInput(
       "users_list_role",
       "Role:",
@@ -262,11 +267,42 @@ users_list_server <- function(input, output, session) {
     )
   })
 
+  # Populate environment filter dynamically
+  shiny::observe({
+    shiny::req(users_list_data())
+
+    # Get unique environment values
+    env_values <- users_list_data() |>
+      dplyr::pull(environment) |>
+      unique() |>
+      sort()
+
+    # Replace NA with "(Not Set)"
+    env_values[is.na(env_values)] <- "(Not Set)"
+
+    # Update selectInput with "All" followed by sorted environment values
+    shiny::updateSelectInput(
+      session,
+      "users_list_environment",
+      choices = c("All", env_values)
+    )
+  })
+
   # Apply filters
   filtered_users_list <- shiny::reactive({
     shiny::req(users_list_data())
 
     data <- users_list_data()
+
+    # Environment filter
+    if (input$users_list_environment != "All") {
+      if (input$users_list_environment == "(Not Set)") {
+        data <- data |> dplyr::filter(is.na(.data$environment))
+      } else {
+        data <- data |>
+          dplyr::filter(.data$environment == input$users_list_environment)
+      }
+    }
 
     # Role filter
     if (input$users_list_role != "All") {
@@ -303,6 +339,7 @@ users_list_server <- function(input, output, session) {
         "email",
         "first_name",
         "last_name",
+        "environment",
         "user_role",
         "last_active_at",
         "active_today"
