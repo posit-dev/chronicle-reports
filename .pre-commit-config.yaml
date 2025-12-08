@@ -10,6 +10,7 @@ repos:
         - bslib
         - dbplyr
         - dplyr
+        - DT
         - duckdb
         - ggplot2
         - lubridate
