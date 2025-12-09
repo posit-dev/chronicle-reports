@@ -358,39 +358,39 @@ users_overview_server <- function(input, output, session) {
 # Users → User List UI/Server
 # ==============================================
 
-users_list_ui <- bslib::card(
+user_list_ui <- bslib::card(
   bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(3, 3, 3, 3),
     shiny::selectInput(
-      "users_list_environment",
+      "user_list_environment",
       "Environment:",
       choices = c("All")
     ),
     shiny::selectInput(
-      "users_list_role",
+      "user_list_role",
       "Role:",
       choices = c("All", "user", "administrator", "super_administrator")
     ),
     shiny::selectInput(
-      "users_list_active",
+      "user_list_active",
       "Active Today:",
       choices = c("All", "Yes", "No")
     ),
     shiny::textInput(
-      "users_list_search",
+      "user_list_search",
       "Search:",
       placeholder = "Username"
     )
   ),
   shinycssloaders::withSpinner(
-    DT::dataTableOutput("users_list_table")
+    DT::dataTableOutput("user_list_table")
   )
 )
 
-users_list_server <- function(input, output, session) {
+user_list_server <- function(input, output, session) {
   # Load user_list data (snapshot at max_date)
-  users_list_data <- shiny::reactive({
+  user_list_data <- shiny::reactive({
     tryCatch(
       {
         base_path <- shiny::getShinyOption("base_path")
@@ -419,7 +419,7 @@ users_list_server <- function(input, output, session) {
 
   # Populate environment filter dynamically
   shiny::observe({
-    data <- users_list_data()
+    data <- user_list_data()
     if (is.null(data) || nrow(data) == 0) {
       return()
     }
@@ -441,21 +441,21 @@ users_list_server <- function(input, output, session) {
 
     shiny::updateSelectInput(
       session,
-      "users_list_environment",
+      "user_list_environment",
       choices = c("All", env_values)
     )
   })
 
   # Apply filters
-  filtered_users_list <- shiny::reactive({
-    data <- users_list_data()
+  filtered_user_list <- shiny::reactive({
+    data <- user_list_data()
     if (is.null(data)) {
       return(NULL)
     }
 
     # Environment filter
-    if (input$users_list_environment != "All") {
-      if (input$users_list_environment == "(Not Set)") {
+    if (input$user_list_environment != "All") {
+      if (input$user_list_environment == "(Not Set)") {
         data <- data |>
           dplyr::filter(
             is.na(.data$environment) |
@@ -464,24 +464,24 @@ users_list_server <- function(input, output, session) {
           )
       } else {
         data <- data |>
-          dplyr::filter(.data$environment == input$users_list_environment)
+          dplyr::filter(.data$environment == input$user_list_environment)
       }
     }
 
     # Role filter
-    if (input$users_list_role != "All") {
-      data <- data |> dplyr::filter(.data$role == input$users_list_role)
+    if (input$user_list_role != "All") {
+      data <- data |> dplyr::filter(.data$role == input$user_list_role)
     }
 
     # Active today filter
-    if (input$users_list_active != "All") {
-      active_val <- input$users_list_active == "Yes"
+    if (input$user_list_active != "All") {
+      active_val <- input$user_list_active == "Yes"
       data <- data |> dplyr::filter(.data$active_today == active_val)
     }
 
     # Search filter
-    if (nzchar(input$users_list_search)) {
-      search_term <- tolower(input$users_list_search)
+    if (nzchar(input$user_list_search)) {
+      search_term <- tolower(input$user_list_search)
       data <- data |>
         dplyr::filter(
           grepl(search_term, tolower(.data$username))
@@ -492,8 +492,8 @@ users_list_server <- function(input, output, session) {
   })
 
   # Render table
-  output$users_list_table <- DT::renderDataTable({
-    data <- filtered_users_list()
+  output$user_list_table <- DT::renderDataTable({
+    data <- filtered_user_list()
 
     if (is.null(data) || nrow(data) == 0) {
       return(
@@ -555,7 +555,7 @@ workbench_app_ui <- bslib::page_navbar(
   bslib::nav_menu(
     "Users",
     bslib::nav_panel("Overview", users_overview_ui),
-    bslib::nav_panel("User List", users_list_ui)
+    bslib::nav_panel("User List", user_list_ui)
   )
 )
 
@@ -568,7 +568,7 @@ workbench_app_server <- function(input, output, session) {
   users_overview_server(input, output, session)
 
   # Users → User List
-  users_list_server(input, output, session)
+  user_list_server(input, output, session)
 }
 
 # ==============================================
