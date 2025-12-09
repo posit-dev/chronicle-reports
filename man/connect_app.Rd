@@ -35,9 +35,9 @@ three main areas: Users, Content, and Usage.
 
 \strong{Navigation Structure:}
 \itemize{
-\item Users → Overview, User List
-\item Content → Overview, Content List
-\item Usage → Overview, Shiny Apps
+\item Users --> Overview, User List
+\item Content --> Overview, Content List
+\item Usage --> Overview, Shiny Apps
 }
 
 \strong{Filter Behavior:}
