@@ -16,16 +16,16 @@ test_that("chronicle_list_apps returns expected app names", {
   expect_equal(sort(apps), sort(expected_apps))
 })
 
-test_that("run_app validates app_name parameter", {
+test_that("chronicle_run_app validates app_name parameter", {
   expect_error(
-    run_app(),
+    chronicle_run_app(),
     "app_name is required"
   )
 })
 
-test_that("run_app errors on invalid app name", {
+test_that("chronicle_run_app errors on invalid app name", {
   expect_error(
-    run_app("nonexistent_app"),
+    chronicle_run_app("nonexistent_app"),
     "App 'nonexistent_app' not found"
   )
 })
