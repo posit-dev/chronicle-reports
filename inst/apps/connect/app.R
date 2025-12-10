@@ -75,7 +75,7 @@ users_overview_server <- function(input, output, session) {
   users_data <- shiny::reactive({
     tryCatch(
       {
-        chr_get_curated_metric_data("connect/user_totals", base_path)
+        chr_data("connect/user_totals", base_path)
       },
       error = function(e) {
         message("Error loading user totals: ", e$message)
@@ -389,7 +389,7 @@ users_list_server <- function(input, output, session) {
   users_list_data <- shiny::reactive({
     tryCatch(
       {
-        data <- chr_get_curated_metric_data("connect/user_list", base_path)
+        data <- chr_data("connect/user_list", base_path)
 
         # Get max_date snapshot - collect first, then filter to all users from max date
         collected_data <- data |> dplyr::collect()

@@ -110,7 +110,7 @@ server <- function(input, output, session) {
   raw_data <- shiny::reactive({
     tryCatch(
       {
-        data <- chr_get_curated_metric_data(
+        data <- chr_data(
           "connect/user_totals",
           base_path
         )

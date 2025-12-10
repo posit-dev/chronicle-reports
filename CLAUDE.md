@@ -93,7 +93,7 @@ rsconnect::deployApp(appDir="your-report-dir", appFiles=c("app.R"))
 
 ### Data Flow
 
-1. **Data Loading**: Reports use `chr_get_metric_data()` from utils.R to load Chronicle metrics
+1. **Data Loading**: Reports use `chr_data()` (for curated data) or `chr_raw_data()` (for raw data) from utils.R to load Chronicle metrics
 2. **Data Processing**: Each app has its own calculation function (e.g., `calculate_connect_daily_user_counts()`)
 3. **Reactivity**: Shiny reactive expressions handle data filtering and updates
 4. **Visualization**: Combination of plotly (interactive) and ggplot2 (static) charts
