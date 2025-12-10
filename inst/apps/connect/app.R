@@ -541,21 +541,16 @@ users_list_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Content - Overview UI/Server (PLACEHOLDER)
+# Content - Overview UI/Server
 # ==============================================
 
 content_overview_ui <- bslib::card(
-  bslib::card_header(
-    shiny::tags$div(
-      shiny::tags$span("PLACEHOLDER DATA - Content Overview"),
-      style = "color: #9A4665; font-weight: bold;"
-    )
-  ),
+  bslib::card_header("Filters"),
   shiny::dateRangeInput(
     "content_overview_date_range",
     "Date Range:",
-    start = Sys.Date() - 90,
-    end = Sys.Date(),
+    start = NULL,
+    end = NULL,
     format = "yyyy-mm-dd"
   ),
   bslib::layout_columns(
@@ -567,7 +562,7 @@ content_overview_ui <- bslib::card(
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
     ),
     bslib::value_box(
-      title = "New Content",
+      title = "Content Types",
       max_height = "120px",
       value = shiny::textOutput("content_new_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
@@ -580,76 +575,242 @@ content_overview_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Content Trends Over Time (PLACEHOLDER)"),
+    bslib::card_header("Content Trends Over Time"),
     shinycssloaders::withSpinner(plotly::plotlyOutput("content_trend_plot"))
   )
 )
 
 content_overview_server <- function(input, output, session) {
-  # Generate placeholder data
-  content_data <- shiny::reactive({
-    data.frame(
-      date = seq.Date(Sys.Date() - 90, Sys.Date(), by = "day"),
-      total_content = 450 + cumsum(sample(-2:5, 91, replace = TRUE)),
-      new_content = sample(0:5, 91, replace = TRUE),
-      updated_content = sample(0:10, 91, replace = TRUE)
+  # Load curated content totals data
+  contents_data <- shiny::reactive({
+    tryCatch(
+      {
+        # Curated daily totals for content metrics
+        chr_get_curated_metric_data("connect/content_totals", base_path)
+      },
+      error = function(e) {
+        message("Error loading contents: ", e$message)
+        NULL
+      }
+    )
+  })
+
+  # Set default date range when data loads
+  shiny::observe({
+    shiny::req(contents_data())
+
+    date_summary <- contents_data() |>
+      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::summarise(
+        min_date = min(.data$date, na.rm = TRUE),
+        max_date = max(.data$date, na.rm = TRUE)
+      ) |>
+      dplyr::collect()
+
+    shiny::updateDateRangeInput(
+      session,
+      "content_overview_date_range",
+      start = date_summary$min_date,
+      end = date_summary$max_date,
+      min = date_summary$min_date,
+      max = date_summary$max_date
+    )
+  })
+
+  # (Removed) daily_content_metrics; using curated data directly for aggregation
+
+  latest_content_metrics <- shiny::reactive({
+    # Use the curated raw data to compute latest-day aggregates by spec
+    data <- contents_data()
+    if (is.null(data)) return(NULL)
+
+    df <- data |> dplyr::collect()
+    if (!"date" %in% names(df) || nrow(df) == 0) return(NULL)
+
+    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
+    latest_df <- df |> dplyr::filter(.data$date == latest_date)
+    if (nrow(latest_df) == 0) return(NULL)
+
+    # Total content: sum of all counts for the date
+    # Prefer a canonical count column if present; otherwise sum numeric columns excluding date
+    count_cols <- intersect(c("total_content", "count", "value"), names(latest_df))
+    total_sum <- if (length(count_cols) > 0) {
+      sum(latest_df[[count_cols[1]]], na.rm = TRUE)
+    } else {
+      num_cols <- names(latest_df)[sapply(latest_df, is.numeric)]
+      num_cols <- setdiff(num_cols, c("date"))
+      if (length(num_cols) == 0) 0L else sum(as.numeric(unlist(latest_df[num_cols])), na.rm = TRUE)
+    }
+
+    # Unique content types: number of rows for the latest day
+    unique_types_count <- nrow(latest_df)
+
+    tibble::tibble(
+      date = latest_date,
+      total_content = total_sum,
+      new_content = unique_types_count,
+      updated_content = unique_types_count
     )
   })
 
   # Value boxes (latest values)
   output$content_total_value <- shiny::renderText({
-    data <- content_data()
-    prettyNum(tail(data$total_content, 1), big.mark = ",")
+    data <- latest_content_metrics()
+    if (is.null(data) || nrow(data) == 0) return("-")
+    prettyNum(data$total_content, big.mark = ",")
   })
 
   output$content_new_value <- shiny::renderText({
-    data <- content_data()
-    prettyNum(tail(data$new_content, 1), big.mark = ",")
+    data <- latest_content_metrics()
+    if (is.null(data) || nrow(data) == 0) return("-")
+    prettyNum(data$new_content, big.mark = ",")
   })
 
   output$content_updated_value <- shiny::renderText({
-    data <- content_data()
-    prettyNum(tail(data$updated_content, 1), big.mark = ",")
+    data <- latest_content_metrics()
+    if (is.null(data) || nrow(data) == 0) return("-")
+    prettyNum(data$updated_content, big.mark = ",")
   })
 
-  # Trend chart
+  # Trend chart (filtered by date range)
   output$content_trend_plot <- plotly::renderPlotly({
-    data <- content_data()
+    data <- contents_data()
 
-    # Filter by date range
-    data <- data |>
+    if (is.null(data)) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>Data not available</b>",
+                x = 0.5, y = 0.55, xref = "paper", yref = "paper",
+                showarrow = FALSE, font = list(size = 18, color = "#666666")
+              ),
+              list(
+                text = "Check that Chronicle data exists at the configured path",
+                x = 0.5, y = 0.45, xref = "paper", yref = "paper",
+                showarrow = FALSE, font = list(size = 14, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    shiny::req(input$content_overview_date_range)
+
+    df <- data |> dplyr::collect()
+
+    if (!"date" %in% names(df) || nrow(df) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE)
+          )
+      )
+    }
+
+    shiny::req(input$content_overview_date_range)
+
+    df <- df |>
       dplyr::filter(
-        date >= input$content_overview_date_range[1],
-        date <= input$content_overview_date_range[2]
+        .data$date >= input$content_overview_date_range[1],
+        .data$date <= input$content_overview_date_range[2]
       )
 
-    plot_data <- data |>
+    if (nrow(df) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+                showarrow = FALSE, font = list(size = 18, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    # Aggregate by date according to spec
+    count_cols <- intersect(c("total_content", "count", "value"), names(df))
+    total_by_date <- if (length(count_cols) > 0) {
+      df |>
+        dplyr::group_by(.data$date) |>
+        dplyr::summarise(total_content = sum(.data[[count_cols[1]]], na.rm = TRUE), .groups = "drop")
+    } else {
+      num_cols <- names(df)[sapply(df, is.numeric)]
+      num_cols <- setdiff(num_cols, c("date"))
+      df |>
+        dplyr::group_by(.data$date) |>
+        dplyr::summarise(total_content = if (length(num_cols) == 0) 0L else sum(as.numeric(dplyr::across(dplyr::all_of(num_cols))), na.rm = TRUE), .groups = "drop")
+    }
+
+    types_by_date <- df |>
+      dplyr::group_by(.data$date) |>
+      dplyr::summarise(unique_types = dplyr::n(), .groups = "drop")
+
+    plot_data <- total_by_date |>
+      dplyr::left_join(types_by_date, by = "date") |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
       dplyr::mutate(
         metric = factor(
           .data$metric,
-          levels = c("total_content", "new_content", "updated_content"),
-          labels = c("Total Content", "New Content", "Updated Content")
+          levels = c("total_content", "unique_types"),
+          labels = c("Total Content", "Unique Content Types")
         )
       )
+
+    if (nrow(plot_data) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+                showarrow = FALSE, font = list(size = 18, color = "#666666")
+              )
+            )
+          )
+      )
+    }
 
     p <- ggplot2::ggplot(
       plot_data,
       ggplot2::aes(x = date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
-      ggplot2::geom_point(size = 0.5) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          text = paste0(
+            format(date, "%B %d, %Y"),
+            "<br>",
+            prettyNum(.data$value, big.mark = ","),
+            " ",
+            .data$metric
+          )
+        ),
+        size = 0.5
+      ) +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "", y = "Content Items", color = "") +
       ggplot2::scale_color_manual(
         values = c(
           "Total Content" = BRAND_COLORS$BLUE,
-          "New Content" = BRAND_COLORS$GREEN,
+          "Content Types" = BRAND_COLORS$GREEN,
           "Updated Content" = BRAND_COLORS$BURGUNDY
         )
       )
 
-    plotly::ggplotly(p) |>
+    plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
         xaxis = list(fixedrange = TRUE),
         yaxis = list(fixedrange = TRUE),
