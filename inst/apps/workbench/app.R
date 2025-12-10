@@ -493,7 +493,7 @@ user_list_server <- function(input, output, session) {
 
     # Role filter
     if (input$user_list_role != "All") {
-      data <- data |> dplyr::filter(.data$role == input$user_list_role)
+      data <- data |> dplyr::filter(.data$user_role == input$user_list_role)
     }
 
     # Active today filter
@@ -549,7 +549,7 @@ user_list_server <- function(input, output, session) {
       ) |>
       dplyr::select(
         "username",
-        "role",
+        "user_role",
         "environment",
         "last_active_at",
         "active_today"
