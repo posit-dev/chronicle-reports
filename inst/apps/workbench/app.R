@@ -1,3 +1,28 @@
+# Posit Workbench Dashboard
+# Comprehensive dashboard providing analytics for Posit Workbench Users
+
+library(shiny)
+library(bslib)
+library(chronicle.reports)
+library(rlang)
+
+# Brand colors
+BRAND_COLORS <- list(
+  BLUE = "#447099",
+  GREEN = "#72994E",
+  BURGUNDY = "#9A4665",
+  GRAY = "#404041"
+)
+
+# Load app constants
+source("../constants.R")
+
+# Get base path from environment variable
+base_path <- Sys.getenv(
+  "CHRONICLE_BASE_PATH",
+  APP_CONFIG$DEFAULT_BASE_PATH
+)
+
 # ==============================================
 # Users → Overview UI/Server
 # ==============================================
@@ -56,7 +81,6 @@ users_overview_server <- function(input, output, session) {
   users_data <- shiny::reactive({
     tryCatch(
       {
-        base_path <- shiny::getShinyOption("base_path")
         chr_get_curated_metric_data("workbench/user_totals", base_path)
       },
       error = function(e) {
@@ -393,7 +417,6 @@ user_list_server <- function(input, output, session) {
   user_list_data <- shiny::reactive({
     tryCatch(
       {
-        base_path <- shiny::getShinyOption("base_path")
         data <- chr_get_curated_metric_data("workbench/user_list", base_path)
 
         # Get max_date snapshot - collect first, then filter to all users from max date
@@ -458,13 +481,13 @@ user_list_server <- function(input, output, session) {
       if (input$user_list_environment == "(Not Set)") {
         data <- data |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         data <- data |>
-          dplyr::filter(.data$environment == input$user_list_environment)
+          dplyr::filter(environment == input$user_list_environment)
       }
     }
 
@@ -517,11 +540,11 @@ user_list_server <- function(input, output, session) {
     data |>
       dplyr::mutate(
         environment = ifelse(
-          is.na(.data$environment) |
-            .data$environment == "" |
-            .data$environment == " ",
+          is.na(environment) |
+            environment == "" |
+            environment == " ",
           "(Not Set)",
-          .data$environment
+          environment
         )
       ) |>
       dplyr::select(
@@ -546,7 +569,7 @@ user_list_server <- function(input, output, session) {
 # Main UI (page_navbar with one dropdown)
 # ==============================================
 
-workbench_app_ui <- bslib::page_navbar(
+ui <- bslib::page_navbar(
   title = "Posit Workbench Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE,
@@ -563,7 +586,7 @@ workbench_app_ui <- bslib::page_navbar(
 # Main Server
 # ==============================================
 
-workbench_app_server <- function(input, output, session) {
+server <- function(input, output, session) {
   # Users → Overview
   users_overview_server(input, output, session)
 
@@ -571,48 +594,4 @@ workbench_app_server <- function(input, output, session) {
   user_list_server(input, output, session)
 }
 
-# ==============================================
-# Exported App Function
-# ==============================================
-
-#' Run the Posit Workbench Dashboard Shiny App
-#'
-#' This comprehensive dashboard provides analytics for Posit Workbench Users
-#'
-#' **Current Implementation Status:**
-#' - **Users** section: Fully functional with real Chronicle data
-#'   - Overview: User totals and trends from `workbench/user_totals`
-#'   - WIP User List: Detailed user list from `workbench/user_list`
-#'
-#' **Navigation Structure:**
-#' - Users → Overview, User List
-#'
-#' **Filter Behavior:**
-#' - Date range filters apply ONLY to trend charts
-#' - Value boxes always show latest (max_date) values
-#' - List tables always show max_date snapshot (ignore date filters)
-#' - Attribute filters (role, type, etc.) apply only to their specific tables
-#'
-#' @param base_path The base path where Chronicle data files are stored.
-#'   Defaults to the value of the `CHRONICLE_BASE_PATH` environment variable,
-#'   or `"/var/lib/posit-chronicle/data"` if not set.
-#'   This path should be accessible by the Shiny app.
-#'
-#' @return A Shiny app object that can be run or deployed.
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Run locally with filesystem path
-#' workbench_app("/path/to/chronicle/data")
-#'
-#' # Run with S3 path
-#' workbench_app("s3://chronicle-bucket/data")
-#' }
-workbench_app <- function(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
-) {
-  shiny::shinyOptions(base_path = base_path)
-  shiny::shinyApp(workbench_app_ui, workbench_app_server)
-}
+shinyApp(ui, server)

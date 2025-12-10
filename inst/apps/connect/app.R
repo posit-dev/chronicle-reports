@@ -1,3 +1,28 @@
+# Posit Connect Dashboard
+# Comprehensive dashboard providing analytics for Posit Connect across Users, Content, and Usage
+
+library(shiny)
+library(bslib)
+library(chronicle.reports)
+library(rlang)
+
+# Brand colors
+BRAND_COLORS <- list(
+  BLUE = "#447099",
+  GREEN = "#72994E",
+  BURGUNDY = "#9A4665",
+  GRAY = "#404041"
+)
+
+# Load app constants
+source("../constants.R")
+
+# Get base path from environment variable
+base_path <- Sys.getenv(
+  "CHRONICLE_BASE_PATH",
+  APP_CONFIG$DEFAULT_BASE_PATH
+)
+
 # ==============================================
 # Users - Overview UI/Server
 # ==============================================
@@ -50,7 +75,6 @@ users_overview_server <- function(input, output, session) {
   users_data <- shiny::reactive({
     tryCatch(
       {
-        base_path <- shiny::getShinyOption("base_path")
         chr_get_curated_metric_data("connect/user_totals", base_path)
       },
       error = function(e) {
@@ -365,7 +389,6 @@ users_list_server <- function(input, output, session) {
   users_list_data <- shiny::reactive({
     tryCatch(
       {
-        base_path <- shiny::getShinyOption("base_path")
         data <- chr_get_curated_metric_data("connect/user_list", base_path)
 
         # Get max_date snapshot - collect first, then filter to all users from max date
@@ -974,7 +997,7 @@ shiny_apps_server <- function(input, output, session) {
 # Main UI (page_navbar with three dropdowns)
 # ==============================================
 
-connect_app_ui <- bslib::page_navbar(
+ui <- bslib::page_navbar(
   title = "Posit Connect Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE,
@@ -1005,7 +1028,7 @@ connect_app_ui <- bslib::page_navbar(
 # Main Server
 # ==============================================
 
-connect_app_server <- function(input, output, session) {
+server <- function(input, output, session) {
   # Users - Overview
   users_overview_server(input, output, session)
 
@@ -1025,53 +1048,4 @@ connect_app_server <- function(input, output, session) {
   shiny_apps_server(input, output, session)
 }
 
-# ==============================================
-# Exported App Function
-# ==============================================
-
-#' Run the Posit Connect Dashboard Shiny App
-#'
-#' This comprehensive dashboard provides analytics for Posit Connect across
-#' three main areas: Users, Content, and Usage.
-#'
-#' **Current Implementation Status:**
-#' - **Users** section: Fully functional with real Chronicle data
-#'   - Overview: User totals and trends from `connect/user_totals`
-#'   - User List: Detailed user list from `connect/user_list`
-#' - **Content** section: Placeholder data (awaiting curated datasets)
-#' - **Usage** section: Placeholder data (awaiting curated datasets)
-#'
-#' **Navigation Structure:**
-#' - Users --> Overview, User List
-#' - Content --> Overview, Content List
-#' - Usage --> Overview, Shiny Apps
-#'
-#' **Filter Behavior:**
-#' - Date range filters apply ONLY to trend charts
-#' - Value boxes always show latest (max_date) values
-#' - List tables always show max_date snapshot (ignore date filters)
-#' - Attribute filters (role, type, etc.) apply only to their specific tables
-#'
-#' @param base_path The base path where Chronicle data files are stored.
-#'   Defaults to the value of the `CHRONICLE_BASE_PATH` environment variable,
-#'   or `"/var/lib/posit-chronicle/data"` if not set.
-#'   This path should be accessible by the Shiny app.
-#'
-#' @return A Shiny app object that can be run or deployed.
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Run locally with filesystem path
-#' connect_app("/path/to/chronicle/data")
-#'
-#' # Run with S3 path
-#' connect_app("s3://chronicle-bucket/data")
-#' }
-connect_app <- function(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
-) {
-  shiny::shinyOptions(base_path = base_path)
-  shiny::shinyApp(connect_app_ui, connect_app_server)
-}
+shinyApp(ui, server)
