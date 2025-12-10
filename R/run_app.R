@@ -2,7 +2,7 @@
 #'
 #' Launch one of the available Chronicle Reports Shiny dashboards. Apps are
 #' located in the package's `inst/apps/` directory and can be listed with
-#' [list_apps()].
+#' [chronicle_list_apps()].
 #'
 #' @param app_name Name of the app to run. Available apps:
 #'   \itemize{
@@ -12,7 +12,7 @@
 #'     \item `"connect"` - Comprehensive Connect Dashboard
 #'     \item `"workbench"` - Comprehensive Workbench Dashboard
 #'   }
-#'   Use [list_apps()] to see all available apps.
+#'   Use [chronicle_list_apps()] to see all available apps.
 #' @param base_path The base path where Chronicle data files are stored.
 #'   Defaults to the value of the `CHRONICLE_BASE_PATH` environment variable,
 #'   or `"/var/lib/posit-chronicle/data"` if the environment variable is not set.
@@ -29,7 +29,7 @@
 #' @examples
 #' if (interactive()) {
 #'   # List available apps
-#'   list_apps()
+#'   chronicle_list_apps()
 #'
 #'   # Run an app with default data path
 #'   run_app("connect_users")
@@ -47,7 +47,7 @@ run_app <- function(
   # Validate app_name
   if (missing(app_name)) {
     stop(
-      "app_name is required. Use list_apps() to see available apps.",
+      "app_name is required. Use chronicle_list_apps() to see available apps.",
       call. = FALSE
     )
   }
@@ -60,7 +60,7 @@ run_app <- function(
 
   # Check if app exists
   if (app_dir == "" || !dir.exists(app_dir)) {
-    available_apps <- list_apps()
+    available_apps <- chronicle_list_apps()
     stop(
       "App '",
       app_name,
@@ -101,8 +101,8 @@ run_app <- function(
 #'
 #' @examples
 #' # List all available apps
-#' list_apps()
-list_apps <- function() {
+#' chronicle_list_apps()
+chronicle_list_apps <- function() {
   apps_dir <- system.file("apps", package = "chronicle.reports")
 
   # If apps directory doesn't exist, return empty vector
@@ -118,4 +118,15 @@ list_apps <- function() {
     app_file <- file.path(apps_dir, name, "app.R")
     file.exists(app_file)
   })]
+}
+
+#' @rdname chronicle_list_apps
+#' @export
+list_apps <- function() {
+  lifecycle::deprecate_warn(
+    "0.2.0",
+    "list_apps()",
+    "chronicle_list_apps()"
+  )
+  chronicle_list_apps()
 }

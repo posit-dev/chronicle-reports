@@ -8,7 +8,7 @@
 #' @param frequency Frequency of data collection ("daily" or "hourly" or "curated")
 #'
 #' @return Character string with the full path to the metric data
-chr_path <- function(
+chronicle_path <- function(
   base_path,
   metric = NULL,
   frequency = c("daily", "hourly", "curated")
@@ -19,7 +19,7 @@ chr_path <- function(
 
 #' Load raw Chronicle data (Advanced)
 #'
-#' Loads raw Chronicle metric data. **Most users should use [chr_data()]
+#' Loads raw Chronicle metric data. **Most users should use [chronicle_data()]
 #' instead**, which provides pre-aggregated data that is faster and easier
 #' to work with.
 #'
@@ -40,17 +40,17 @@ chr_path <- function(
 #' @examples
 #' \dontrun{
 #' # Load raw daily Connect users data
-#' data <- chr_raw_data("connect_users", base_path, frequency = "daily")
+#' data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
 #'
 #' # Load hourly data for a specific date
-#' data <- chr_raw_data(
+#' data <- chronicle_raw_data(
 #'   "connect_users",
 #'   base_path,
 #'   frequency = "hourly",
 #'   ymd = list(year = 2024, month = 12, day = 10)
 #' )
 #' }
-chr_raw_data <- function(
+chronicle_raw_data <- function(
   metric,
   base_path,
   frequency = c("daily", "hourly"),
@@ -58,7 +58,7 @@ chr_raw_data <- function(
   schema = NULL
 ) {
   frequency <- match.arg(frequency)
-  path <- chr_path(base_path, metric, frequency)
+  path <- chronicle_path(base_path, metric, frequency)
 
   if (!is.null(ymd)) {
     path <- glue::glue("{path}{ymd[['year']]}/{ymd[['month']]}/{ymd[['day']]}/")
@@ -81,7 +81,7 @@ chr_raw_data <- function(
 #' Loads pre-aggregated (curated) Chronicle metric data. This is the
 #' recommended way to access Chronicle data for most use cases.
 #'
-#' For raw/unaggregated data, see [chr_raw_data()].
+#' For raw/unaggregated data, see [chronicle_raw_data()].
 #'
 #' @param metric Name of the curated metric to retrieve (e.g., "connect/user_totals")
 #' @param base_path Base path to Chronicle data directory
@@ -92,16 +92,16 @@ chr_raw_data <- function(
 #' @examples
 #' \dontrun{
 #' # Load curated Connect user totals
-#' data <- chr_data("connect/user_totals", "/var/lib/posit-chronicle/data")
+#' data <- chronicle_data("connect/user_totals", "/var/lib/posit-chronicle/data")
 #'
 #' # Load from S3
-#' data <- chr_data("connect/user_totals", "s3://chronicle-bucket/data")
+#' data <- chronicle_data("connect/user_totals", "s3://chronicle-bucket/data")
 #' }
-chr_data <- function(
+chronicle_data <- function(
   metric,
   base_path
 ) {
-  path <- chr_path(base_path, metric, "curated")
+  path <- chronicle_path(base_path, metric, "curated")
 
   arrow::open_dataset(
     path,
@@ -113,7 +113,7 @@ chr_data <- function(
 
 # Deprecated aliases for backward compatibility --------------------------------
 
-#' @rdname chr_raw_data
+#' @rdname chronicle_raw_data
 #' @export
 chr_get_metric_data <- function(
   metric,
@@ -125,12 +125,12 @@ chr_get_metric_data <- function(
   lifecycle::deprecate_warn(
     "0.2.0",
     "chr_get_metric_data()",
-    "chr_raw_data()"
+    "chronicle_raw_data()"
   )
-  chr_raw_data(metric, base_path, frequency, ymd, schema)
+  chronicle_raw_data(metric, base_path, frequency, ymd, schema)
 }
 
-#' @rdname chr_data
+#' @rdname chronicle_data
 #' @export
 chr_get_curated_metric_data <- function(
   metric,
@@ -139,7 +139,7 @@ chr_get_curated_metric_data <- function(
   lifecycle::deprecate_warn(
     "0.2.0",
     "chr_get_curated_metric_data()",
-    "chr_data()"
+    "chronicle_data()"
   )
-  chr_data(metric, base_path)
+  chronicle_data(metric, base_path)
 }

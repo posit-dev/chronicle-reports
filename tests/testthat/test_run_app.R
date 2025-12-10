@@ -1,11 +1,11 @@
-test_that("list_apps returns character vector", {
-  apps <- list_apps()
+test_that("chronicle_list_apps returns character vector", {
+  apps <- chronicle_list_apps()
   expect_type(apps, "character")
   expect_true(length(apps) > 0)
 })
 
-test_that("list_apps returns expected app names", {
-  apps <- list_apps()
+test_that("chronicle_list_apps returns expected app names", {
+  apps <- chronicle_list_apps()
   expected_apps <- c(
     "connect",
     "connect_user_totals",

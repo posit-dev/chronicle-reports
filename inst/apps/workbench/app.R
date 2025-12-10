@@ -81,7 +81,7 @@ users_overview_server <- function(input, output, session) {
   users_data <- shiny::reactive({
     tryCatch(
       {
-        chr_data("workbench/user_totals", base_path)
+        chronicle_data("workbench/user_totals", base_path)
       },
       error = function(e) {
         shiny::showNotification(
@@ -417,7 +417,7 @@ user_list_server <- function(input, output, session) {
   user_list_data <- shiny::reactive({
     tryCatch(
       {
-        data <- chr_data("workbench/user_list", base_path)
+        data <- chronicle_data("workbench/user_list", base_path)
 
         # Get max_date snapshot - collect first, then filter to all users from max date
         collected_data <- data |> dplyr::collect()

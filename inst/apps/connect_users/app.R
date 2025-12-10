@@ -157,7 +157,7 @@ server <- function(input, output, session) {
   raw_data <- shiny::reactive({
     tryCatch(
       {
-        data <- chr_raw_data("connect_users", base_path, "daily") |>
+        data <- chronicle_raw_data("connect_users", base_path, "daily") |>
           dplyr::mutate(date = as.Date(timestamp))
         return(data)
       },

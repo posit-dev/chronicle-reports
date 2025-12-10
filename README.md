@@ -26,18 +26,29 @@ options(repos = c(CRAN = sprintf("https://packagemanager.posit.co/cran/latest/bi
 
 ## Install the Chronicle Reports package
 
-You can install the development version of `chronicle.reports` from GitHub with:
+You can install the `chronicle.reports` package from GitHub with:
 
 ```R
 # install.packages("pak")
 pak::pak("posit-dev/chronicle-reports")
 ```
 
+Alternatively, you can install the development version of the package with:
+
+> [!IMPORTANT]
+> The `dev` branch may contain unstable or experimental features. Use it at your own risk.
+
+```R
+# install.packages("pak")
+pak::pak("posit-dev/chronicle-reports@dev")
+```
+
+
 You can then list available reports and run them:
 
 ```R
 # List all available reports
-chronicle.reports::list_apps()
+chronicle.reports::chronicle_list_apps()
 
 # Run a report with default data path
 chronicle.reports::run_app("connect_users")
@@ -117,7 +128,7 @@ run_app("my_custom_app", base_path="/path/to/chronicle/data")
 
 ## Reports
 
-This section describes each of the available reports in this repository. You can list all available reports with `list_apps()` and run any report with `run_app("app_name")`.
+This section describes each of the available reports in this repository. You can list all available reports with `chronicle_list_apps()` and run any report with `run_app("app_name")`.
 
 ### [Connect Users](./inst/apps/connect_users/) (`connect_users`)
 

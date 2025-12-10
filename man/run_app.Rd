@@ -18,7 +18,7 @@ run_app(
 \item \code{"connect"} - Comprehensive Connect Dashboard
 \item \code{"workbench"} - Comprehensive Workbench Dashboard
 }
-Use \code{\link[=list_apps]{list_apps()}} to see all available apps.}
+Use \code{\link[=chronicle_list_apps]{chronicle_list_apps()}} to see all available apps.}
 
 \item{base_path}{The base path where Chronicle data files are stored.
 Defaults to the value of the \code{CHRONICLE_BASE_PATH} environment variable,
@@ -35,12 +35,12 @@ This function does not return a value. It launches the Shiny app.
 \description{
 Launch one of the available Chronicle Reports Shiny dashboards. Apps are
 located in the package's \verb{inst/apps/} directory and can be listed with
-\code{\link[=list_apps]{list_apps()}}.
+\code{\link[=chronicle_list_apps]{chronicle_list_apps()}}.
 }
 \examples{
 if (interactive()) {
   # List available apps
-  list_apps()
+  chronicle_list_apps()
 
   # Run an app with default data path
   run_app("connect_users")
