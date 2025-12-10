@@ -3,5 +3,6 @@
 export(connect_app)
 export(connect_user_totals_app)
 export(connect_users_app)
+export(workbench_app)
 export(workbench_users_app)
 importFrom(rlang,.data)

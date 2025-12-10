@@ -46,7 +46,7 @@ users_overview_ui <- bslib::card(
     ),
     bslib::card(
       bslib::card_header("Average Users by Day of Week"),
-      shinycssloaders::withSpinner(shiny::plotOutput("users_dow_plot"))
+      shinycssloaders::withSpinner(plotly::plotlyOutput("users_dow_plot"))
     )
   )
 )
@@ -94,18 +94,27 @@ users_overview_server <- function(input, output, session) {
 
   # Get latest data (for value boxes - always max_date)
   latest_users_data <- shiny::reactive({
-    shiny::req(users_data())
-    users_data() |>
-      dplyr::arrange(dplyr::desc(date)) |>
+    data <- users_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    data |>
       dplyr::collect() |>
+      dplyr::arrange(dplyr::desc(date)) |>
       dplyr::slice(1)
   })
 
   # Filter data by date range (for charts only)
   filtered_users_data <- shiny::reactive({
-    shiny::req(users_data(), input$users_overview_date_range)
+    data <- users_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
 
-    users_data() |>
+    shiny::req(input$users_overview_date_range)
+
+    data |>
       dplyr::filter(
         date >= input$users_overview_date_range[1],
         date <= input$users_overview_date_range[2]
@@ -115,30 +124,72 @@ users_overview_server <- function(input, output, session) {
 
   # Value boxes (always latest data)
   output$users_licensed_value <- shiny::renderText({
-    shiny::req(latest_users_data())
-    prettyNum(latest_users_data()$named_users, big.mark = ",")
+    data <- latest_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(data$named_users, big.mark = ",")
   })
 
   output$users_daily_value <- shiny::renderText({
-    shiny::req(latest_users_data())
-    prettyNum(latest_users_data()$active_users_1day, big.mark = ",")
+    data <- latest_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(data$active_users_1day, big.mark = ",")
   })
 
   output$users_admins_value <- shiny::renderText({
-    shiny::req(latest_users_data())
-    prettyNum(latest_users_data()$administrators, big.mark = ",")
+    data <- latest_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(data$administrators, big.mark = ",")
   })
 
   output$users_super_admins_value <- shiny::renderText({
-    shiny::req(latest_users_data())
-    prettyNum(latest_users_data()$super_administrators, big.mark = ",")
+    data <- latest_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(data$super_administrators, big.mark = ",")
   })
 
   # Trend chart (filtered data)
   output$users_trend_plot <- plotly::renderPlotly({
-    shiny::req(filtered_users_data())
+    data <- filtered_users_data()
 
-    plot_data <- filtered_users_data() |>
+    if (is.null(data) || nrow(data) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>Data not available</b>",
+                x = 0.5,
+                y = 0.55,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              ),
+              list(
+                text = "Check that Chronicle data exists at the configured path",
+                x = 0.5,
+                y = 0.45,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 14, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    plot_data <- data |>
       dplyr::select(
         "date",
         "named_users",
@@ -166,7 +217,21 @@ users_overview_server <- function(input, output, session) {
     if (nrow(plot_data) == 0) {
       return(
         plotly::plotly_empty() |>
-          plotly::layout(title = "No data available for selected date range")
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              )
+            )
+          )
       )
     }
 
@@ -208,10 +273,40 @@ users_overview_server <- function(input, output, session) {
   })
 
   # Day of week chart (filtered data)
-  output$users_dow_plot <- shiny::renderPlot({
-    shiny::req(filtered_users_data())
+  output$users_dow_plot <- plotly::renderPlotly({
+    data <- filtered_users_data()
 
-    day_summary <- filtered_users_data() |>
+    if (is.null(data) || nrow(data) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>Data not available</b>",
+                x = 0.5,
+                y = 0.55,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              ),
+              list(
+                text = "Check that Chronicle data exists at the configured path",
+                x = 0.5,
+                y = 0.45,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 14, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    day_summary <- data |>
       dplyr::mutate(
         day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
       ) |>
@@ -221,13 +316,41 @@ users_overview_server <- function(input, output, session) {
         .groups = "drop"
       )
 
-    ggplot2::ggplot(
+    if (nrow(day_summary) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    p <- ggplot2::ggplot(
       day_summary,
       ggplot2::aes(x = .data$day_of_week, y = .data$avg_active_users)
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$BLUE) +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "", y = "Average Number of Users")
+
+    plotly::ggplotly(p) |>
+      plotly::layout(
+        xaxis = list(fixedrange = TRUE),
+        yaxis = list(fixedrange = TRUE)
+      ) |>
+      plotly::config(displayModeBar = FALSE)
   })
 }
 
@@ -235,44 +358,53 @@ users_overview_server <- function(input, output, session) {
 # Users → User List UI/Server
 # ==============================================
 
-users_list_ui <- bslib::card(
+user_list_ui <- bslib::card(
   bslib::card_header("Filters"),
   bslib::layout_columns(
-    col_widths = c(4, 4, 4),
+    col_widths = c(3, 3, 3, 3),
     shiny::selectInput(
-      "users_list_role",
+      "user_list_environment",
+      "Environment:",
+      choices = c("All")
+    ),
+    shiny::selectInput(
+      "user_list_role",
       "Role:",
       choices = c("All", "user", "administrator", "super_administrator")
     ),
     shiny::selectInput(
-      "users_list_active",
+      "user_list_active",
       "Active Today:",
       choices = c("All", "Yes", "No")
     ),
     shiny::textInput(
-      "users_list_search",
+      "user_list_search",
       "Search:",
-      placeholder = "Username or email"
+      placeholder = "Username"
     )
   ),
   shinycssloaders::withSpinner(
-    DT::dataTableOutput("users_list_table")
+    DT::dataTableOutput("user_list_table")
   )
 )
 
-users_list_server <- function(input, output, session) {
+user_list_server <- function(input, output, session) {
   # Load user_list data (snapshot at max_date)
-  users_list_data <- shiny::reactive({
+  user_list_data <- shiny::reactive({
     tryCatch(
       {
         base_path <- shiny::getShinyOption("base_path")
         data <- chr_get_curated_metric_data("workbench/user_list", base_path)
 
-        # Get max_date snapshot
-        data |>
-          dplyr::arrange(dplyr::desc(date)) |>
-          dplyr::collect() |>
-          dplyr::filter(date == max(date, na.rm = TRUE))
+        # Get max_date snapshot - collect first, then filter to all users from max date
+        collected_data <- data |> dplyr::collect()
+        if (nrow(collected_data) == 0) {
+          return(collected_data)
+        }
+        max_date <- max(collected_data$date, na.rm = TRUE)
+
+        collected_data |>
+          dplyr::filter(date == max_date)
       },
       error = function(e) {
         shiny::showNotification(
@@ -285,30 +417,74 @@ users_list_server <- function(input, output, session) {
     )
   })
 
-  # Apply filters
-  filtered_users_list <- shiny::reactive({
-    shiny::req(users_list_data())
+  # Populate environment filter dynamically
+  shiny::observe({
+    data <- user_list_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return()
+    }
 
-    data <- users_list_data()
+    env_values <- data |>
+      dplyr::pull(environment) |>
+      unique()
+
+    has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
+      sort()
+
+    if (has_na) {
+      env_values <- c(env_values, "(Not Set)")
+    }
+
+    shiny::updateSelectInput(
+      session,
+      "user_list_environment",
+      choices = c("All", env_values)
+    )
+  })
+
+  # Apply filters
+  filtered_user_list <- shiny::reactive({
+    data <- user_list_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    # Environment filter
+    if (input$user_list_environment != "All") {
+      if (input$user_list_environment == "(Not Set)") {
+        data <- data |>
+          dplyr::filter(
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
+          )
+      } else {
+        data <- data |>
+          dplyr::filter(.data$environment == input$user_list_environment)
+      }
+    }
 
     # Role filter
-    if (input$users_list_role != "All") {
-      data <- data |> dplyr::filter(.data$user_role == input$users_list_role)
+    if (input$user_list_role != "All") {
+      data <- data |> dplyr::filter(.data$role == input$user_list_role)
     }
 
     # Active today filter
-    if (input$users_list_active != "All") {
-      active_val <- input$users_list_active == "Yes"
+    if (input$user_list_active != "All") {
+      active_val <- input$user_list_active == "Yes"
       data <- data |> dplyr::filter(.data$active_today == active_val)
     }
 
     # Search filter
-    if (nzchar(input$users_list_search)) {
-      search_term <- tolower(input$users_list_search)
+    if (nzchar(input$user_list_search)) {
+      search_term <- tolower(input$user_list_search)
       data <- data |>
         dplyr::filter(
-          grepl(search_term, tolower(.data$username)) |
-            grepl(search_term, tolower(.data$email))
+          grepl(search_term, tolower(.data$username))
         )
     }
 
@@ -316,14 +492,42 @@ users_list_server <- function(input, output, session) {
   })
 
   # Render table
-  output$users_list_table <- DT::renderDataTable({
-    shiny::req(filtered_users_list())
+  output$user_list_table <- DT::renderDataTable({
+    data <- filtered_user_list()
 
-    data <- filtered_users_list()
+    if (is.null(data) || nrow(data) == 0) {
+      return(
+        DT::datatable(
+          data.frame(
+            " " = "Data not available - Check that Chronicle data exists at the configured path."
+          ),
+          options = list(
+            dom = "t",
+            ordering = FALSE,
+            columnDefs = list(
+              list(className = "dt-center", targets = "_all")
+            )
+          ),
+          rownames = FALSE,
+          colnames = ""
+        )
+      )
+    }
+
     data |>
+      dplyr::mutate(
+        environment = ifelse(
+          is.na(.data$environment) |
+            .data$environment == "" |
+            .data$environment == " ",
+          "(Not Set)",
+          .data$environment
+        )
+      ) |>
       dplyr::select(
         "username",
-        "user_role",
+        "role",
+        "environment",
         "last_active_at",
         "active_today"
       ) |>
@@ -351,7 +555,7 @@ workbench_app_ui <- bslib::page_navbar(
   bslib::nav_menu(
     "Users",
     bslib::nav_panel("Overview", users_overview_ui),
-    bslib::nav_panel("User List", users_list_ui)
+    bslib::nav_panel("User List", user_list_ui)
   )
 )
 
@@ -364,7 +568,7 @@ workbench_app_server <- function(input, output, session) {
   users_overview_server(input, output, session)
 
   # Users → User List
-  users_list_server(input, output, session)
+  user_list_server(input, output, session)
 }
 
 # ==============================================
