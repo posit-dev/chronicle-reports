@@ -23,6 +23,7 @@ github
 https
 importFrom
 Justfile
+lifecycle
 lintr
 lubridate
 magrittr
@@ -47,6 +48,7 @@ tibble
 tidyr
 tidyverse
 UI
+unaggregated
 urbina
 Urbina
 wc

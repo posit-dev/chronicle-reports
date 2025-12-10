@@ -2,5 +2,7 @@
 
 export(chr_get_curated_metric_data)
 export(chr_get_metric_data)
-export(list_apps)
-export(run_app)
+export(chronicle_data)
+export(chronicle_list_apps)
+export(chronicle_raw_data)
+export(chronicle_run_app)
