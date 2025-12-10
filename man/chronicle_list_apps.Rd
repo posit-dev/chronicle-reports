@@ -2,19 +2,16 @@
 % Please edit documentation in R/run_app.R
 \name{chronicle_list_apps}
 \alias{chronicle_list_apps}
-\alias{list_apps}
 \title{List Available Chronicle Reports Apps}
 \usage{
 chronicle_list_apps()
-
-list_apps()
 }
 \value{
 A character vector of app names.
 }
 \description{
 Returns a character vector of available Chronicle Reports Shiny dashboards
-that can be run with \code{\link[=run_app]{run_app()}}.
+that can be run with \code{\link[=chronicle_run_app]{chronicle_run_app()}}.
 }
 \examples{
 # List all available apps

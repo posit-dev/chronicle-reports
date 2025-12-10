@@ -51,19 +51,19 @@ You can then list available reports and run them:
 chronicle.reports::chronicle_list_apps()
 
 # Run a report with default data path
-chronicle.reports::run_app("connect_users")
+chronicle.reports::chronicle_run_app("connect_users")
 ```
 
 If your Chronicle data is in a non-default directory (i.e., not `/var/lib/posit-chronicle/data`), then you need to pass in the base path.
 
 ```R
-chronicle.reports::run_app("connect_users", "/path/to/chronicle/data")
+chronicle.reports::chronicle_run_app("connect_users", "/path/to/chronicle/data")
 ```
 
 If your Chronicle data is in S3, then you need to pass in the bucket path.
 
 ```R
-chronicle.reports::run_app("connect_users", "s3://chronicle-bucket/optional-prefix")
+chronicle.reports::chronicle_run_app("connect_users", "s3://chronicle-bucket/optional-prefix")
 ```
 
 
@@ -79,7 +79,7 @@ vi app.R
 
 ```R
 # The Connect Users report:
-chronicle.reports::run_app("connect_users", base_path="/path/to/chronicle/data")
+chronicle.reports::chronicle_run_app("connect_users", base_path="/path/to/chronicle/data")
 ```
 
 You can then deploy that file to Connect:
@@ -123,12 +123,12 @@ library(devtools)
 
 # Re-load the code and run your app
 load_all()
-run_app("my_custom_app", base_path="/path/to/chronicle/data")
+chronicle_run_app("my_custom_app", base_path="/path/to/chronicle/data")
 ```
 
 ## Reports
 
-This section describes each of the available reports in this repository. You can list all available reports with `chronicle_list_apps()` and run any report with `run_app("app_name")`.
+This section describes each of the available reports in this repository. You can list all available reports with `chronicle_list_apps()` and run any report with `chronicle_run_app("app_name")`.
 
 ### [Connect Users](./inst/apps/connect_users/) (`connect_users`)
 

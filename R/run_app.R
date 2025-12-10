@@ -32,15 +32,15 @@
 #'   chronicle_list_apps()
 #'
 #'   # Run an app with default data path
-#'   run_app("connect_users")
+#'   chronicle_run_app("connect_users")
 #'
 #'   # Run an app with custom filesystem path
-#'   run_app("connect_users", "/path/to/chronicle/data")
+#'   chronicle_run_app("connect_users", "/path/to/chronicle/data")
 #'
 #'   # Run an app with S3 path
-#'   run_app("connect_users", "s3://chronicle-bucket/data")
+#'   chronicle_run_app("connect_users", "s3://chronicle-bucket/data")
 #' }
-run_app <- function(
+chronicle_run_app <- function(
   app_name,
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
@@ -93,7 +93,7 @@ run_app <- function(
 #' List Available Chronicle Reports Apps
 #'
 #' Returns a character vector of available Chronicle Reports Shiny dashboards
-#' that can be run with [run_app()].
+#' that can be run with [chronicle_run_app()].
 #'
 #' @return A character vector of app names.
 #'
@@ -118,15 +118,4 @@ chronicle_list_apps <- function() {
     app_file <- file.path(apps_dir, name, "app.R")
     file.exists(app_file)
   })]
-}
-
-#' @rdname chronicle_list_apps
-#' @export
-list_apps <- function() {
-  lifecycle::deprecate_warn(
-    "0.2.0",
-    "list_apps()",
-    "chronicle_list_apps()"
-  )
-  chronicle_list_apps()
 }
