@@ -19,9 +19,6 @@ chr_path <- function(
 
 #' Get Chronicle metric data from parquet files
 #'
-#' @keywords internal
-#' @noRd
-#'
 #' @param metric Name of the metric to retrieve
 #' @param base_path Base path to Chronicle data directory
 #' @param frequency Frequency of data collection ("daily" or "hourly")
@@ -29,6 +26,7 @@ chr_path <- function(
 #' @param schema Optional Arrow schema for the dataset
 #'
 #' @return Arrow dataset object
+#' @export
 chr_get_metric_data <- function(
   metric,
   base_path,
@@ -57,13 +55,11 @@ chr_get_metric_data <- function(
 
 #' Get curated Chronicle metric data from parquet files
 #'
-#' @keywords internal
-#' @noRd
-#'
 #' @param metric Name of the curated metric to retrieve
 #' @param base_path Base path to Chronicle data directory
 #'
 #' @return Arrow dataset object
+#' @export
 chr_get_curated_metric_data <- function(
   metric,
   base_path

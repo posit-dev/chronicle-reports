@@ -1,3 +1,29 @@
+# Posit Workbench Users Dashboard
+# This app analyzes user activity on Posit Workbench
+
+library(shiny)
+library(bslib)
+library(chronicle.reports)
+library(rlang)
+
+# Brand colors
+BRAND_COLORS <- list(
+  BLUE = "#447099",
+  GREEN = "#72994E",
+  BURGUNDY = "#9A4665",
+  GRAY = "#404041"
+)
+
+# Load app constants
+source("../constants.R")
+
+# Get base path from environment variable
+base_path <- Sys.getenv(
+  "CHRONICLE_BASE_PATH",
+  APP_CONFIG$DEFAULT_BASE_PATH
+)
+
+# Workbench-specific color mappings
 COLORS <- list(
   # Semantic mappings
   LICENSED_USERS = BRAND_COLORS$BLUE,
@@ -54,7 +80,7 @@ calculate_workbench_daily_user_counts <- function(data) {
 # ==============================================
 # Define the UI layout
 # ==============================================
-workbench_users_ui <- bslib::page_sidebar(
+ui <- bslib::page_sidebar(
   title = "Posit Workbench Users Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE, # helps with vertical spacing
@@ -116,13 +142,11 @@ workbench_users_ui <- bslib::page_sidebar(
 # ==============================================
 # Define the server logic
 # ==============================================
-workbench_users_server <- function(input, output, session) {
+server <- function(input, output, session) {
   # Read data once at startup with error handling
   raw_data <- shiny::reactive({
     tryCatch(
       {
-        base_path <- shiny::getShinyOption("base_path")
-
         data <- chr_get_metric_data("pwb_users", base_path, "daily") |>
           dplyr::mutate(date = as.Date(timestamp))
         return(data)
@@ -289,31 +313,4 @@ workbench_users_server <- function(input, output, session) {
   })
 }
 
-#' Run the Workbench Users Dashboard Shiny App
-#'
-#' @param base_path the base path where Chronicle data files are stored.
-#'   Defaults to the value of the `CHRONICLE_BASE_PATH` environment variable,
-#'   or `"/var/lib/posit-chronicle/data"` if the environment variable is not set.
-#'   This path should be accessible by the Shiny app.
-#'   If you deploy this app to Posit Connect, you can set this environment variable
-#'   in the Connect UI. See
-#'   https://docs.posit.co/connect/user/content-settings/#content-vars
-#'   for more information.
-#'
-#' @return A Shiny app object that can be run or deployed.
-#'
-#' @export
-#'
-#' @examples
-#' workbench_users_app(base_path = "/path/to/chronicle/data")
-workbench_users_app <- function(
-  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
-) {
-  # The base path where Chronicle data files are stored. If you deploy this app
-  # to Posit Connect, you can set this environment variable in the Connect
-  # UI. See https://docs.posit.co/connect/user/content-settings/#content-vars
-  # for more information.
-  shiny::shinyOptions(base_path = base_path)
-
-  shiny::shinyApp(workbench_users_ui, workbench_users_server)
-}
+shinyApp(ui, server)
