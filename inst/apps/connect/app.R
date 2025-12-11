@@ -564,7 +564,7 @@ content_overview_ui <- bslib::card(
     bslib::value_box(
       title = "Content Types",
       max_height = "120px",
-      value = shiny::textOutput("content_new_value"),
+      value = shiny::textOutput("content_types_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
     ),
     bslib::value_box(
@@ -577,6 +577,10 @@ content_overview_ui <- bslib::card(
   bslib::card(
     bslib::card_header("Content Trends Over Time"),
     shinycssloaders::withSpinner(plotly::plotlyOutput("content_trend_plot"))
+  ),
+  bslib::card(
+    bslib::card_header("Content by Type"),
+    shinycssloaders::withSpinner(plotly::plotlyOutput("content_type_bar_plot"))
   )
 )
 
@@ -622,24 +626,37 @@ content_overview_server <- function(input, output, session) {
   latest_content_metrics <- shiny::reactive({
     # Use the curated raw data to compute latest-day aggregates by spec
     data <- contents_data()
-    if (is.null(data)) return(NULL)
+    if (is.null(data)) {
+      return(NULL)
+    }
 
     df <- data |> dplyr::collect()
-    if (!"date" %in% names(df) || nrow(df) == 0) return(NULL)
+    if (!"date" %in% names(df) || nrow(df) == 0) {
+      return(NULL)
+    }
 
     latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
     latest_df <- df |> dplyr::filter(.data$date == latest_date)
-    if (nrow(latest_df) == 0) return(NULL)
+    if (nrow(latest_df) == 0) {
+      return(NULL)
+    }
 
     # Total content: sum of all counts for the date
     # Prefer a canonical count column if present; otherwise sum numeric columns excluding date
-    count_cols <- intersect(c("total_content", "count", "value"), names(latest_df))
+    count_cols <- intersect(
+      c("total_content", "count", "value"),
+      names(latest_df)
+    )
     total_sum <- if (length(count_cols) > 0) {
       sum(latest_df[[count_cols[1]]], na.rm = TRUE)
     } else {
       num_cols <- names(latest_df)[sapply(latest_df, is.numeric)]
       num_cols <- setdiff(num_cols, c("date"))
-      if (length(num_cols) == 0) 0L else sum(as.numeric(unlist(latest_df[num_cols])), na.rm = TRUE)
+      if (length(num_cols) == 0) {
+        0L
+      } else {
+        sum(as.numeric(unlist(latest_df[num_cols])), na.rm = TRUE)
+      }
     }
 
     # Unique content types: number of rows for the latest day
@@ -648,28 +665,34 @@ content_overview_server <- function(input, output, session) {
     tibble::tibble(
       date = latest_date,
       total_content = total_sum,
-      new_content = unique_types_count,
-      updated_content = unique_types_count
+      total_types = unique_types_count,
+      placeholder_box = unique_types_count # TBD on third value or if will remove
     )
   })
 
   # Value boxes (latest values)
   output$content_total_value <- shiny::renderText({
     data <- latest_content_metrics()
-    if (is.null(data) || nrow(data) == 0) return("-")
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
     prettyNum(data$total_content, big.mark = ",")
   })
 
-  output$content_new_value <- shiny::renderText({
+  output$content_types_value <- shiny::renderText({
     data <- latest_content_metrics()
-    if (is.null(data) || nrow(data) == 0) return("-")
-    prettyNum(data$new_content, big.mark = ",")
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(data$total_types, big.mark = ",")
   })
 
   output$content_updated_value <- shiny::renderText({
     data <- latest_content_metrics()
-    if (is.null(data) || nrow(data) == 0) return("-")
-    prettyNum(data$updated_content, big.mark = ",")
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(data$placeholder_box, big.mark = ",")
   })
 
   # Trend chart (filtered by date range)
@@ -685,13 +708,21 @@ content_overview_server <- function(input, output, session) {
             annotations = list(
               list(
                 text = "<b>Data not available</b>",
-                x = 0.5, y = 0.55, xref = "paper", yref = "paper",
-                showarrow = FALSE, font = list(size = 18, color = "#666666")
+                x = 0.5,
+                y = 0.55,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
               ),
               list(
                 text = "Check that Chronicle data exists at the configured path",
-                x = 0.5, y = 0.45, xref = "paper", yref = "paper",
-                showarrow = FALSE, font = list(size = 14, color = "#666666")
+                x = 0.5,
+                y = 0.45,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 14, color = "#666666")
               )
             )
           )
@@ -729,8 +760,12 @@ content_overview_server <- function(input, output, session) {
             annotations = list(
               list(
                 text = "<b>No data available for selected date range</b>",
-                x = 0.5, y = 0.5, xref = "paper", yref = "paper",
-                showarrow = FALSE, font = list(size = 18, color = "#666666")
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
               )
             )
           )
@@ -742,13 +777,26 @@ content_overview_server <- function(input, output, session) {
     total_by_date <- if (length(count_cols) > 0) {
       df |>
         dplyr::group_by(.data$date) |>
-        dplyr::summarise(total_content = sum(.data[[count_cols[1]]], na.rm = TRUE), .groups = "drop")
+        dplyr::summarise(
+          total_content = sum(.data[[count_cols[1]]], na.rm = TRUE),
+          .groups = "drop"
+        )
     } else {
       num_cols <- names(df)[sapply(df, is.numeric)]
       num_cols <- setdiff(num_cols, c("date"))
       df |>
         dplyr::group_by(.data$date) |>
-        dplyr::summarise(total_content = if (length(num_cols) == 0) 0L else sum(as.numeric(dplyr::across(dplyr::all_of(num_cols))), na.rm = TRUE), .groups = "drop")
+        dplyr::summarise(
+          total_content = if (length(num_cols) == 0) {
+            0L
+          } else {
+            sum(
+              as.numeric(dplyr::across(dplyr::all_of(num_cols))),
+              na.rm = TRUE
+            )
+          },
+          .groups = "drop"
+        )
     }
 
     types_by_date <- df |>
@@ -775,8 +823,12 @@ content_overview_server <- function(input, output, session) {
             annotations = list(
               list(
                 text = "<b>No data available for selected date range</b>",
-                x = 0.5, y = 0.5, xref = "paper", yref = "paper",
-                showarrow = FALSE, font = list(size = 18, color = "#666666")
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
               )
             )
           )
@@ -815,6 +867,135 @@ content_overview_server <- function(input, output, session) {
         xaxis = list(fixedrange = TRUE),
         yaxis = list(fixedrange = TRUE),
         legend = list(orientation = "h", x = 0.5, xanchor = "center")
+      ) |>
+      plotly::config(displayModeBar = FALSE)
+  })
+
+  # Bar chart: content counts by type over selected date range
+  output$content_type_bar_plot <- plotly::renderPlotly({
+    data <- contents_data()
+
+    if (is.null(data)) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>Data not available</b>",
+                x = 0.5,
+                y = 0.55,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              ),
+              list(
+                text = "Check that Chronicle data exists at the configured path",
+                x = 0.5,
+                y = 0.45,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 14, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    shiny::req(input$content_overview_date_range)
+
+    df <- data |> dplyr::collect()
+
+    if (!"date" %in% names(df) || nrow(df) == 0) {
+      return(plotly::plotly_empty())
+    }
+
+    # Filter to selected range
+    df <- df |>
+      dplyr::filter(
+        .data$date >= input$content_overview_date_range[1],
+        .data$date <= input$content_overview_date_range[2]
+      )
+
+    if (nrow(df) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    # Identify type column heuristically
+    type_col <- NULL
+    possible_type_cols <- c("type", "content_type", "kind")
+    for (nm in possible_type_cols) {
+      if (nm %in% names(df)) {
+        type_col <- nm
+        break
+      }
+    }
+
+    # Compute counts per type
+    count_cols <- intersect(c("total_content", "count", "value"), names(df))
+
+    if (!is.null(type_col)) {
+      if (length(count_cols) > 0) {
+        type_summary <- df |>
+          dplyr::group_by(.data[[type_col]]) |>
+          dplyr::summarise(total = sum(.data[[count_cols[1]]], na.rm = TRUE), .groups = "drop")
+      } else {
+        type_summary <- df |>
+          dplyr::group_by(.data[[type_col]]) |>
+          dplyr::summarise(total = dplyr::n(), .groups = "drop")
+      }
+      names(type_summary)[1] <- "content_type"
+    } else {
+      # Fallback: no explicit type column. Treat each row as one item category "Unknown"
+      total_val <- if (length(count_cols) > 0) {
+        sum(df[[count_cols[1]]], na.rm = TRUE)
+      } else {
+        nrow(df)
+      }
+      type_summary <- tibble::tibble(content_type = "Unknown", total = total_val)
+    }
+
+    if (nrow(type_summary) == 0) {
+      return(plotly::plotly_empty())
+    }
+
+    # Order by total desc for nicer bars
+    type_summary <- type_summary |>
+      dplyr::arrange(dplyr::desc(.data$total))
+
+    p <- ggplot2::ggplot(
+      type_summary,
+      ggplot2::aes(x = stats::reorder(.data$content_type, .data$total), y = .data$total)
+    ) +
+      ggplot2::geom_col(fill = BRAND_COLORS$GREEN) +
+      ggplot2::coord_flip() +
+      ggplot2::theme_minimal() +
+      ggplot2::labs(x = "Content Type", y = "Count")
+
+    plotly::ggplotly(p) |>
+      plotly::layout(
+        xaxis = list(fixedrange = TRUE),
+        yaxis = list(fixedrange = TRUE)
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
