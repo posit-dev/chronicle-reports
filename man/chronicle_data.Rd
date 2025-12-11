@@ -2,12 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{chronicle_data}
 \alias{chronicle_data}
-\alias{chr_get_curated_metric_data}
 \title{Load Chronicle data}
 \usage{
 chronicle_data(metric, base_path)
-
-chr_get_curated_metric_data(metric, base_path)
 }
 \arguments{
 \item{metric}{Name of the curated metric to retrieve (e.g., "connect/user_totals")}

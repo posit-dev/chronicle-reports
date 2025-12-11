@@ -8,10 +8,7 @@ test_that("chronicle_list_apps returns expected app names", {
   apps <- chronicle_list_apps()
   expected_apps <- c(
     "connect",
-    "connect_user_totals",
-    "connect_users",
-    "workbench",
-    "workbench_users"
+    "workbench"
   )
   expect_equal(sort(apps), sort(expected_apps))
 })
