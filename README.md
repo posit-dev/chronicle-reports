@@ -51,19 +51,19 @@ You can then list available reports and run them:
 chronicle.reports::chronicle_list_apps()
 
 # Run a report with default data path
-chronicle.reports::chronicle_run_app("connect_users")
+chronicle.reports::chronicle_run_app("connect")
 ```
 
 If your Chronicle data is in a non-default directory (i.e., not `/var/lib/posit-chronicle/data`), then you need to pass in the base path.
 
 ```R
-chronicle.reports::chronicle_run_app("connect_users", "/path/to/chronicle/data")
+chronicle.reports::chronicle_run_app("connect", base_path="/path/to/chronicle/data")
 ```
 
 If your Chronicle data is in S3, then you need to pass in the bucket path.
 
 ```R
-chronicle.reports::chronicle_run_app("connect_users", "s3://chronicle-bucket/optional-prefix")
+chronicle.reports::chronicle_run_app("connect", base_path="s3://chronicle-bucket/optional-prefix")
 ```
 
 
@@ -72,14 +72,14 @@ chronicle.reports::chronicle_run_app("connect_users", "s3://chronicle-bucket/opt
 The reports can be published to Posit Connect using the `rsconnect` package. For example, for the Connect Users report, create a new `app.R` file:
 
 ```bash
-mkdir chronicle-connect-users-report
-cd chronicle-connect-users-report
+mkdir chronicle-connect-report
+cd chronicle-connect-report
 vi app.R
 ```
 
 ```R
 # The Connect Users report:
-chronicle.reports::chronicle_run_app("connect_users", base_path="/path/to/chronicle/data")
+chronicle.reports::chronicle_run_app("connect", base_path="/path/to/chronicle/data")
 ```
 
 You can then deploy that file to Connect:
@@ -88,7 +88,7 @@ You can then deploy that file to Connect:
 # install.packages("rsconnect")
 
 # appDir should match whatever directory you are using
-rsconnect::deployApp(appDir="chronicle-connect-users-report", appFiles=c("app.R"))
+rsconnect::deployApp(appDir="chronicle-connect-report", appFiles=c("app.R"))
 ```
 
 ## Building your own report
@@ -102,7 +102,7 @@ library(devtools)
 
 # Copy an existing app as a template
 file.copy(
-  system.file("apps/connect_users", package = "chronicle.reports"),
+  system.file("apps/connect", package = "chronicle.reports"),
   "my-custom-report",
   recursive = TRUE
 )
@@ -129,18 +129,6 @@ chronicle_run_app("my_custom_app", base_path="/path/to/chronicle/data")
 ## Reports
 
 This section describes each of the available reports in this repository. You can list all available reports with `chronicle_list_apps()` and run any report with `chronicle_run_app("app_name")`.
-
-### [Connect Users](./inst/apps/connect_users/) (`connect_users`)
-
-This report analyzes user activity data from Posit Connect using raw Chronicle data, focusing on licensed users, daily active users, and publishers over time. It provides insights into user engagement patterns and trends.
-
-### [Workbench Users](./inst/apps/workbench_users/) (`workbench_users`)
-
-This report analyzes user activity data from Posit Workbench using raw Chronicle data, focusing on licensed users and daily active users over time. It provides insights into user engagement patterns and trends.
-
-### [Connect User Totals](./inst/apps/connect_user_totals/) (`connect_user_totals`)
-
-This report is similar to Connect Users but uses curated Chronicle data from the `connect/user_totals` dataset. It provides the same user activity insights with pre-processed data.
 
 ### [Connect Dashboard](./inst/apps/connect/) (`connect`)
 

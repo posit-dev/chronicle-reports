@@ -2,18 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{chronicle_raw_data}
 \alias{chronicle_raw_data}
-\alias{chr_get_metric_data}
 \title{Load raw Chronicle data (Advanced)}
 \usage{
 chronicle_raw_data(
-  metric,
-  base_path,
-  frequency = c("daily", "hourly"),
-  ymd = NULL,
-  schema = NULL
-)
-
-chr_get_metric_data(
   metric,
   base_path,
   frequency = c("daily", "hourly"),

@@ -110,36 +110,3 @@ chronicle_data <- function(
     format = "parquet"
   )
 }
-
-# Deprecated aliases for backward compatibility --------------------------------
-
-#' @rdname chronicle_raw_data
-#' @export
-chr_get_metric_data <- function(
-  metric,
-  base_path,
-  frequency = c("daily", "hourly"),
-  ymd = NULL,
-  schema = NULL
-) {
-  lifecycle::deprecate_warn(
-    "0.2.0",
-    "chr_get_metric_data()",
-    "chronicle_raw_data()"
-  )
-  chronicle_raw_data(metric, base_path, frequency, ymd, schema)
-}
-
-#' @rdname chronicle_data
-#' @export
-chr_get_curated_metric_data <- function(
-  metric,
-  base_path
-) {
-  lifecycle::deprecate_warn(
-    "0.2.0",
-    "chr_get_curated_metric_data()",
-    "chronicle_data()"
-  )
-  chronicle_data(metric, base_path)
-}
