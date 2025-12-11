@@ -546,12 +546,20 @@ users_list_server <- function(input, output, session) {
 
 content_overview_ui <- bslib::card(
   bslib::card_header("Filters"),
+  bslib::layout_columns(
+    col_widths = c(6, 6),
+    shiny::selectInput(
+      "content_overview_environment",
+      "Environment:",
+      choices = c("All")
+    ),
   shiny::dateRangeInput(
     "content_overview_date_range",
     "Date Range:",
     start = NULL,
     end = NULL,
     format = "yyyy-mm-dd"
+  )
   ),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
@@ -599,6 +607,46 @@ content_overview_server <- function(input, output, session) {
     )
   })
 
+  # Populate environment filter dynamically based on curated data
+  shiny::observe({
+    data <- contents_data()
+    if (is.null(data)) {
+      return()
+    }
+    df <- data |> dplyr::collect()
+    # Detect environment column if present
+    env_col <- NULL
+    possible_env_cols <- c("environment", "env")
+    for (nm in possible_env_cols) {
+      if (nm %in% names(df)) {
+        env_col <- nm
+        break
+      }
+    }
+    if (is.null(env_col)) {
+      # No environment column; keep only "All"
+      shiny::updateSelectInput(session, "content_overview_environment", choices = c("All"), selected = "All")
+      return()
+    }
+
+    env_values <- df |>
+      dplyr::pull(env_col) |>
+      unique()
+
+    has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+    env_values <- env_values[!is.na(env_values) & env_values != "" & env_values != " "] |> sort()
+    if (has_na) {
+      env_values <- c(env_values, "(Not Set)")
+    }
+
+    shiny::updateSelectInput(
+      session,
+      "content_overview_environment",
+      choices = c("All", env_values),
+      selected = "All"
+    )
+  })
+
   # Set default date range when data loads
   shiny::observe({
     shiny::req(contents_data())
@@ -631,6 +679,24 @@ content_overview_server <- function(input, output, session) {
     }
 
     df <- data |> dplyr::collect()
+    # Apply environment filter if available and selected
+    env_col <- NULL
+    possible_env_cols <- c("environment", "env")
+    for (nm in possible_env_cols) {
+      if (nm %in% names(df)) {
+        env_col <- nm
+        break
+      }
+    }
+    if (!is.null(env_col) && input$content_overview_environment != "All") {
+      if (input$content_overview_environment == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(is.na(.data[[env_col]]) | .data[[env_col]] == "" | .data[[env_col]] == " ")
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+      }
+    }
     if (!"date" %in% names(df) || nrow(df) == 0) {
       return(NULL)
     }
@@ -732,6 +798,24 @@ content_overview_server <- function(input, output, session) {
     shiny::req(input$content_overview_date_range)
 
     df <- data |> dplyr::collect()
+    # Apply environment filter if available and selected
+    env_col <- NULL
+    possible_env_cols <- c("environment", "env")
+    for (nm in possible_env_cols) {
+      if (nm %in% names(df)) {
+        env_col <- nm
+        break
+      }
+    }
+    if (!is.null(env_col) && input$content_overview_environment != "All") {
+      if (input$content_overview_environment == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(is.na(.data[[env_col]]) | .data[[env_col]] == "" | .data[[env_col]] == " ")
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+      }
+    }
 
     if (!"date" %in% names(df) || nrow(df) == 0) {
       return(
@@ -908,6 +992,24 @@ content_overview_server <- function(input, output, session) {
     shiny::req(input$content_overview_date_range)
 
     df <- data |> dplyr::collect()
+    # Apply environment filter if available and selected
+    env_col <- NULL
+    possible_env_cols <- c("environment", "env")
+    for (nm in possible_env_cols) {
+      if (nm %in% names(df)) {
+        env_col <- nm
+        break
+      }
+    }
+    if (!is.null(env_col) && input$content_overview_environment != "All") {
+      if (input$content_overview_environment == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(is.na(.data[[env_col]]) | .data[[env_col]] == "" | .data[[env_col]] == " ")
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+      }
+    }
 
     if (!"date" %in% names(df) || nrow(df) == 0) {
       return(plotly::plotly_empty())
