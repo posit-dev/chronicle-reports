@@ -553,13 +553,13 @@ content_overview_ui <- bslib::card(
       "Environment:",
       choices = c("All")
     ),
-  shiny::dateRangeInput(
-    "content_overview_date_range",
-    "Date Range:",
-    start = NULL,
-    end = NULL,
-    format = "yyyy-mm-dd"
-  )
+    shiny::dateRangeInput(
+      "content_overview_date_range",
+      "Date Range:",
+      start = NULL,
+      end = NULL,
+      format = "yyyy-mm-dd"
+    )
   ),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
@@ -576,7 +576,7 @@ content_overview_ui <- bslib::card(
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
     ),
     bslib::value_box(
-      title = "Updated Content",
+      title = "Placeholder",
       max_height = "120px",
       value = shiny::textOutput("content_updated_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
@@ -625,7 +625,12 @@ content_overview_server <- function(input, output, session) {
     }
     if (is.null(env_col)) {
       # No environment column; keep only "All"
-      shiny::updateSelectInput(session, "content_overview_environment", choices = c("All"), selected = "All")
+      shiny::updateSelectInput(
+        session,
+        "content_overview_environment",
+        choices = c("All"),
+        selected = "All"
+      )
       return()
     }
 
@@ -634,7 +639,10 @@ content_overview_server <- function(input, output, session) {
       unique()
 
     has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
-    env_values <- env_values[!is.na(env_values) & env_values != "" & env_values != " "] |> sort()
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
+      sort()
     if (has_na) {
       env_values <- c(env_values, "(Not Set)")
     }
@@ -691,7 +699,11 @@ content_overview_server <- function(input, output, session) {
     if (!is.null(env_col) && input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
-          dplyr::filter(is.na(.data[[env_col]]) | .data[[env_col]] == "" | .data[[env_col]] == " ")
+          dplyr::filter(
+            is.na(.data[[env_col]]) |
+              .data[[env_col]] == "" |
+              .data[[env_col]] == " "
+          )
       } else {
         df <- df |>
           dplyr::filter(.data[[env_col]] == input$content_overview_environment)
@@ -810,7 +822,11 @@ content_overview_server <- function(input, output, session) {
     if (!is.null(env_col) && input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
-          dplyr::filter(is.na(.data[[env_col]]) | .data[[env_col]] == "" | .data[[env_col]] == " ")
+          dplyr::filter(
+            is.na(.data[[env_col]]) |
+              .data[[env_col]] == "" |
+              .data[[env_col]] == " "
+          )
       } else {
         df <- df |>
           dplyr::filter(.data[[env_col]] == input$content_overview_environment)
@@ -942,7 +958,7 @@ content_overview_server <- function(input, output, session) {
         values = c(
           "Total Content" = BRAND_COLORS$BLUE,
           "Content Types" = BRAND_COLORS$GREEN,
-          "Updated Content" = BRAND_COLORS$BURGUNDY
+          "Placeholder" = BRAND_COLORS$BURGUNDY
         )
       )
 
@@ -1004,7 +1020,11 @@ content_overview_server <- function(input, output, session) {
     if (!is.null(env_col) && input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
-          dplyr::filter(is.na(.data[[env_col]]) | .data[[env_col]] == "" | .data[[env_col]] == " ")
+          dplyr::filter(
+            is.na(.data[[env_col]]) |
+              .data[[env_col]] == "" |
+              .data[[env_col]] == " "
+          )
       } else {
         df <- df |>
           dplyr::filter(.data[[env_col]] == input$content_overview_environment)
@@ -1060,7 +1080,10 @@ content_overview_server <- function(input, output, session) {
       if (length(count_cols) > 0) {
         type_summary <- df |>
           dplyr::group_by(.data[[type_col]]) |>
-          dplyr::summarise(total = sum(.data[[count_cols[1]]], na.rm = TRUE), .groups = "drop")
+          dplyr::summarise(
+            total = sum(.data[[count_cols[1]]], na.rm = TRUE),
+            .groups = "drop"
+          )
       } else {
         type_summary <- df |>
           dplyr::group_by(.data[[type_col]]) |>
@@ -1074,7 +1097,10 @@ content_overview_server <- function(input, output, session) {
       } else {
         nrow(df)
       }
-      type_summary <- tibble::tibble(content_type = "Unknown", total = total_val)
+      type_summary <- tibble::tibble(
+        content_type = "Unknown",
+        total = total_val
+      )
     }
 
     if (nrow(type_summary) == 0) {
@@ -1087,7 +1113,10 @@ content_overview_server <- function(input, output, session) {
 
     p <- ggplot2::ggplot(
       type_summary,
-      ggplot2::aes(x = stats::reorder(.data$content_type, .data$total), y = .data$total)
+      ggplot2::aes(
+        x = stats::reorder(.data$content_type, .data$total),
+        y = .data$total
+      )
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$GREEN) +
       ggplot2::coord_flip() +
