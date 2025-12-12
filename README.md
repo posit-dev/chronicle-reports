@@ -69,8 +69,7 @@ chronicle.reports::chronicle_list_apps()
 
 ### Connect Dashboard
 
-[Screenshot: Connect Dashboard - Users Overview]
-
+<img width="2509" height="1296" alt="image" src="https://github.com/user-attachments/assets/9a9726ea-22e0-44a5-ae1c-c5a0ea1f1ffa" />
 
 A multi-page dashboard for Posit Connect usage analysis with three main sections:
 
@@ -88,7 +87,7 @@ A multi-page dashboard for Posit Connect usage analysis with three main sections
 
 ### Workbench Dashboard
 
-![Workbench Dashboard](image.png)
+<img width="2005" height="1236" alt="image" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
 
 A multi-page dashboard for Posit Workbench user analytics:
 
