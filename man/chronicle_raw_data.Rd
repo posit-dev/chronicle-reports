@@ -40,14 +40,30 @@ Use raw data only when you need:
 }
 }
 \examples{
+# Load raw daily Connect users data with sample data
+sample_path <- chronicle_sample_path()
+data <- chronicle_raw_data("connect_users", sample_path, frequency = "daily")
+
+# View the data
+dplyr::collect(data)
+
+# Filter to a specific date using ymd parameter
+data <- chronicle_raw_data(
+  "connect_users",
+  sample_path,
+  frequency = "daily",
+  ymd = list(year = 2024, month = 1, day = 1)
+)
+dplyr::collect(data)
+
 \dontrun{
-# Load raw daily Connect users data
-data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
+# Load from production Chronicle data
+data <- chronicle_raw_data("connect_users", "/var/lib/posit-chronicle/data")
 
 # Load hourly data for a specific date
 data <- chronicle_raw_data(
   "connect_users",
-  base_path,
+  "/var/lib/posit-chronicle/data",
   frequency = "hourly",
   ymd = list(year = 2024, month = 12, day = 10)
 )

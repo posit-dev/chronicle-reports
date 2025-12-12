@@ -25,8 +25,17 @@ raw data is available before loading it with \code{\link[=chronicle_raw_data]{ch
 curated metrics that are faster and easier to work with.
 }
 \examples{
+# List available daily raw metrics with sample data
+sample_path <- chronicle_sample_path()
+metrics <- chronicle_list_raw_data(sample_path, "daily")
+print(metrics)
+
+# Load one of the available metrics
+data <- chronicle_raw_data(metrics[1], sample_path)
+dplyr::collect(data)
+
 \dontrun{
-# List available daily raw metrics
+# List metrics from production Chronicle data
 metrics <- chronicle_list_raw_data("/var/lib/posit-chronicle/data", "daily")
 print(metrics)
 
@@ -35,8 +44,5 @@ hourly_metrics <- chronicle_list_raw_data(
   "/var/lib/posit-chronicle/data",
   "hourly"
 )
-
-# Load one of the available metrics
-data <- chronicle_raw_data(metrics[1], "/var/lib/posit-chronicle/data")
 }
 }

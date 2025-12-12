@@ -19,12 +19,18 @@ directory. This is useful for discovering what data is available before
 loading it with \code{\link[=chronicle_data]{chronicle_data()}}.
 }
 \examples{
-\dontrun{
-# List all available curated metrics
-metrics <- chronicle_list_data("/var/lib/posit-chronicle/data")
+# List all available curated metrics with sample data
+sample_path <- chronicle_sample_path()
+metrics <- chronicle_list_data(sample_path)
 print(metrics)
 
 # Load one of the available metrics
-data <- chronicle_data(metrics[1], "/var/lib/posit-chronicle/data")
+data <- chronicle_data(metrics[1], sample_path)
+dplyr::collect(data)
+
+\dontrun{
+# List metrics from production Chronicle data
+metrics <- chronicle_list_data("/var/lib/posit-chronicle/data")
+print(metrics)
 }
 }

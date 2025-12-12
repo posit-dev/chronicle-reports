@@ -19,8 +19,20 @@ Loads curated Chronicle metric data. This is the
 recommended way to access Chronicle data for most use cases.
 }
 \examples{
+# Load curated Connect user totals with sample data
+sample_path <- chronicle_sample_path()
+data <- chronicle_data("connect/user_totals", sample_path)
+
+# View the data
+dplyr::collect(data)
+
+# Filter by date
+data |>
+  dplyr::filter(date >= as.Date("2024-01-02")) |>
+  dplyr::collect()
+
 \dontrun{
-# Load curated Connect user totals
+# Load from production Chronicle data
 data <- chronicle_data("connect/user_totals", "/var/lib/posit-chronicle/data")
 
 # Load from S3
