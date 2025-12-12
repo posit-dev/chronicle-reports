@@ -20,7 +20,7 @@ recommended way to access Chronicle data for most use cases.
 }
 \examples{
 # Load curated Connect user totals with sample data
-sample_path <- chronicle_sample_path()
+sample_path <- chronicle_sample_data()
 data <- chronicle_data("connect/user_totals", sample_path)
 
 # View the data

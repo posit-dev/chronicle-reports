@@ -39,7 +39,7 @@ chronicle_path <- function(
 #'
 #' @examples
 #' # Load raw daily Connect users data with sample data
-#' sample_path <- chronicle_sample_path()
+#' sample_path <- chronicle_sample_data()
 #' data <- chronicle_raw_data("connect_users", sample_path, frequency = "daily")
 #'
 #' # View the data
@@ -109,7 +109,7 @@ chronicle_raw_data <- function(
 #'
 #' @examples
 #' # Load curated Connect user totals with sample data
-#' sample_path <- chronicle_sample_path()
+#' sample_path <- chronicle_sample_data()
 #' data <- chronicle_data("connect/user_totals", sample_path)
 #'
 #' # View the data
@@ -156,7 +156,7 @@ chronicle_data <- function(
 #'
 #' @examples
 #' # List all available curated metrics with sample data
-#' sample_path <- chronicle_sample_path()
+#' sample_path <- chronicle_sample_data()
 #' metrics <- chronicle_list_data(sample_path)
 #' print(metrics)
 #'
@@ -208,7 +208,7 @@ chronicle_list_data <- function(base_path) {
 #'
 #' @examples
 #' # List available daily raw metrics with sample data
-#' sample_path <- chronicle_sample_path()
+#' sample_path <- chronicle_sample_data()
 #' metrics <- chronicle_list_raw_data(sample_path, "daily")
 #' print(metrics)
 #'

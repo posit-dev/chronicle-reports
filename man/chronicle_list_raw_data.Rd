@@ -26,7 +26,7 @@ curated metrics that are faster and easier to work with.
 }
 \examples{
 # List available daily raw metrics with sample data
-sample_path <- chronicle_sample_path()
+sample_path <- chronicle_sample_data()
 metrics <- chronicle_list_raw_data(sample_path, "daily")
 print(metrics)
 

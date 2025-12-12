@@ -41,7 +41,7 @@ Use raw data only when you need:
 }
 \examples{
 # Load raw daily Connect users data with sample data
-sample_path <- chronicle_sample_path()
+sample_path <- chronicle_sample_data()
 data <- chronicle_raw_data("connect_users", sample_path, frequency = "daily")
 
 # View the data

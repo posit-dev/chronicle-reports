@@ -27,7 +27,7 @@
 #'
 #' @examples
 #' # Get path to sample data
-#' sample_path <- chronicle_sample_path()
+#' sample_path <- chronicle_sample_data()
 #'
 #' # List available metrics
 #' chronicle_list_data(sample_path)
@@ -38,7 +38,7 @@
 #'
 #' # Clean up (optional - automatically cleaned at session end)
 #' unlink(sample_path, recursive = TRUE)
-chronicle_sample_path <- function(refresh = FALSE) {
+chronicle_sample_data <- function(refresh = FALSE) {
   # Check if we have a cached path and it still exists
   if (!refresh && exists("sample_path", envir = .chronicle_sample_env)) {
     cached_path <- get("sample_path", envir = .chronicle_sample_env)
@@ -79,7 +79,7 @@ chronicle_sample_path <- function(refresh = FALSE) {
 }
 
 # Internal helper functions for creating sample data
-# These are not exported but are used by chronicle_sample_path()
+# These are not exported but are used by chronicle_sample_data()
 
 #' @noRd
 sample_connect_user_totals_internal <- function() {

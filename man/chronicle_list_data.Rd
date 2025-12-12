@@ -20,7 +20,7 @@ loading it with \code{\link[=chronicle_data]{chronicle_data()}}.
 }
 \examples{
 # List all available curated metrics with sample data
-sample_path <- chronicle_sample_path()
+sample_path <- chronicle_sample_data()
 metrics <- chronicle_list_data(sample_path)
 print(metrics)
 
