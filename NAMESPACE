@@ -2,5 +2,7 @@
 
 export(chronicle_data)
 export(chronicle_list_apps)
+export(chronicle_list_data)
+export(chronicle_list_raw_data)
 export(chronicle_raw_data)
 export(chronicle_run_app)

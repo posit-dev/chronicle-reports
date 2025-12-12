@@ -28,7 +28,7 @@ Arrow dataset object
 }
 \description{
 Loads raw Chronicle metric data. \strong{Most users should use \code{\link[=chronicle_data]{chronicle_data()}}
-instead}, which provides pre-aggregated data that is faster and easier
+instead}, which provides curated data that is faster and easier
 to work with.
 }
 \details{
