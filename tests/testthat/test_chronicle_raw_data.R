@@ -209,7 +209,7 @@ test_that("chronicle_raw_data ymd with non-existent date", {
   on.exit(unlink(base_path, recursive = TRUE))
 
   # Try to load data for a date that doesn't exist in sample data
-  # Arrow might not error immediately due to lazy evaluation
+  # Arrow should error with IOError about missing directory
   expect_error(
     {
       data <- chronicle_raw_data(
@@ -220,6 +220,6 @@ test_that("chronicle_raw_data ymd with non-existent date", {
       )
       dplyr::collect(data)
     },
-    regexp = ".*" # Any error is acceptable
+    regexp = "(IOError|does not exist|no such file)"
   )
 })

@@ -123,13 +123,13 @@ test_that("chronicle_data handles non-existent metric gracefully", {
 
   # Try to load a metric that doesn't exist
   # Arrow's open_dataset doesn't error immediately (lazy evaluation)
-  # But trying to collect should fail or return empty results
+  # But trying to collect should fail with IOError about missing directory
   expect_error(
     {
       data <- chronicle_data("fake/metric", base_path)
       dplyr::collect(data)
     },
-    regexp = ".*" # Any error message is acceptable
+    regexp = "(IOError|does not exist|no such file)"
   )
 })
 

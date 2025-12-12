@@ -288,5 +288,5 @@ create_sample_chronicle_data_internal <- function(base_path) {
     frequency = "daily"
   )
 
-  invisible(base_path)
+  base_path
 }

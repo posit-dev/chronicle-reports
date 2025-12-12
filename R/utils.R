@@ -171,17 +171,21 @@ chronicle_data <- function(
 #' }
 chronicle_list_data <- function(base_path) {
   data_path <- chronicle_path(base_path, frequency = "curated")
-  all_dirs <- c()
   product_dirs <- list.dirs(data_path, recursive = FALSE, full.names = FALSE)
 
-  for (product_dir in product_dirs) {
-    metric_dirs <- list.dirs(
-      file.path(data_path, product_dir),
-      recursive = FALSE,
-      full.names = FALSE
-    )
-    all_dirs <- c(all_dirs, file.path(product_dir, metric_dirs))
-  }
+  # Get two levels of directory names: product/metric
+  all_dirs <- unlist(
+    lapply(product_dirs, function(product_dir) {
+      metric_dirs <- list.dirs(
+        file.path(data_path, product_dir),
+        recursive = FALSE,
+        full.names = FALSE
+      )
+      file.path(product_dir, metric_dirs)
+    }),
+    use.names = FALSE
+  )
+
   all_dirs
 }
 
