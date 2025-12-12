@@ -37,6 +37,6 @@ hourly_metrics <- chronicle_list_raw_data(
 )
 
 # Load one of the available metrics
-data <- chronicle_raw_data(metrics[1], "/var/lib/posit-chronicle/data")
+data <- chronicle_raw_data(metrics[1], "/var/lib/posit-chronicle/data", "daily")
 }
 }
