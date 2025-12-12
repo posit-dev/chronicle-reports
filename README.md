@@ -115,7 +115,7 @@ chronicle.reports::chronicle_list_apps()
 
 **Run it**: `chronicle_run_app("connect")`
 
-<img width="2509" height="1296" alt="image" src="https://github.com/user-attachments/assets/9a9726ea-22e0-44a5-ae1c-c5a0ea1f1ffa" />
+<img width="2509" height="1296" alt="Connect Dashboard showing user overview, content metrics, and usage statistics" src="https://github.com/user-attachments/assets/9a9726ea-22e0-44a5-ae1c-c5a0ea1f1ffa" />
 
 A multi-page dashboard for Posit Connect usage analysis with three main sections:
 
