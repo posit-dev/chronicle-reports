@@ -23,6 +23,7 @@ github
 https
 importFrom
 Justfile
+lifecycle
 lintr
 lubridate
 magrittr

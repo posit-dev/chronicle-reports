@@ -81,7 +81,7 @@ users_overview_server <- function(input, output, session) {
   users_data <- shiny::reactive({
     tryCatch(
       {
-        chr_get_curated_metric_data("workbench/user_totals", base_path)
+        chronicle_data("workbench/user_totals", base_path)
       },
       error = function(e) {
         shiny::showNotification(
@@ -417,7 +417,7 @@ user_list_server <- function(input, output, session) {
   user_list_data <- shiny::reactive({
     tryCatch(
       {
-        data <- chr_get_curated_metric_data("workbench/user_list", base_path)
+        data <- chronicle_data("workbench/user_list", base_path)
 
         # Get max_date snapshot - collect first, then filter to all users from max date
         collected_data <- data |> dplyr::collect()
@@ -493,7 +493,7 @@ user_list_server <- function(input, output, session) {
 
     # Role filter
     if (input$user_list_role != "All") {
-      data <- data |> dplyr::filter(.data$role == input$user_list_role)
+      data <- data |> dplyr::filter(.data$user_role == input$user_list_role)
     }
 
     # Active today filter
@@ -549,7 +549,7 @@ user_list_server <- function(input, output, session) {
       ) |>
       dplyr::select(
         "username",
-        "role",
+        "user_role",
         "environment",
         "last_active_at",
         "active_today"

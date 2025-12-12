@@ -24,6 +24,7 @@ Imports:
     duckdb,
     ggplot2,
     glue,
+    lifecycle,
     lubridate,
     plotly,
     rlang,

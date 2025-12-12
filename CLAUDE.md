@@ -12,19 +12,18 @@ This is an R package (`chronicle.reports`) that provides Shiny dashboard applica
 
 ### Available Reports
 
-1. **Connect Users Dashboard** ([R/connect_users_app.R](R/connect_users_app.R))
-   - Analyzes Posit Connect user activity
-   - Tracks: licensed users, daily active users, publishers
-   - Visualizes trends over time and activity patterns by day of week
-   - Entry point: `connect_users_app()`
+All reports are now located in [inst/apps/](inst/apps/) and can be run using `chronicle_run_app()`:
 
-2. **Workbench Users Dashboard** ([R/workbench_users_app.R](R/workbench_users_app.R))
-   - Analyzes Posit Workbench user activity
-   - Tracks: licensed users, daily active users
-   - Entry point: `workbench_users_app()`
+1. **Connect Dashboard** ([inst/apps/connect/app.R](inst/apps/connect/app.R))
+   - Comprehensive Posit Connect usage analysis
+   - Tracks: licensed users, daily active users, publishers, content metrics
+   - Visualizes trends over time and activity patterns
+   - Entry point: `chronicle_run_app("connect")`
 
-3. **Connect User Totals Dashboard** ([R/connect_user_totals_app.R](R/connect_user_totals_app.R))
-   - Entry point: `connect_user_totals_app()`
+2. **Workbench Dashboard** ([inst/apps/workbench/app.R](inst/apps/workbench/app.R))
+   - Comprehensive Posit Workbench usage analysis
+   - Tracks: licensed users, daily active users, session metrics
+   - Entry point: `chronicle_run_app("workbench")`
 
 ### Key Files
 
@@ -59,11 +58,15 @@ load_all()
 Reports expect Chronicle data at a base path (default: `/var/lib/posit-chronicle/data`):
 
 ```r
-# Local filesystem
-connect_users_app("/path/to/chronicle/data")
+# List available apps
+chronicle_list_apps()
+# Returns: c("connect", "workbench")
 
-# S3
-connect_users_app("s3://chronicle-bucket/optional-prefix")
+# Run an app with local filesystem data
+chronicle_run_app("connect", base_path = "/path/to/chronicle/data")
+
+# Run an app with S3 data
+chronicle_run_app("workbench", base_path = "s3://chronicle-bucket/optional-prefix")
 ```
 
 ### Testing
@@ -80,20 +83,23 @@ test()
 Create an `app.R` file:
 
 ```r
-chronicle.reports::connect_users_app(base_path="/path/to/chronicle/data")
+chronicle.reports::chronicle_run_app(
+  app_name = "connect",
+  base_path = "/path/to/chronicle/data"
+)
 ```
 
 Then deploy:
 
 ```r
-rsconnect::deployApp(appDir="your-report-dir", appFiles=c("app.R"))
+rsconnect::deployApp(appDir = "your-report-dir", appFiles = c("app.R"))
 ```
 
 ## Architecture Patterns
 
 ### Data Flow
 
-1. **Data Loading**: Reports use `chr_get_metric_data()` from utils.R to load Chronicle metrics
+1. **Data Loading**: Reports use `chronicle_data()` (for curated data) or `chronicle_raw_data()` (for raw data) from utils.R to load Chronicle metrics
 2. **Data Processing**: Each app has its own calculation function (e.g., `calculate_connect_daily_user_counts()`)
 3. **Reactivity**: Shiny reactive expressions handle data filtering and updates
 4. **Visualization**: Combination of plotly (interactive) and ggplot2 (static) charts
@@ -124,16 +130,16 @@ Brand colors are defined in `chronicle_constants.R` and used consistently across
 
 ### Adding a New Report
 
-1. Create a new file in `R/` (e.g., `R/new_report_app.R`)
-2. Define UI function using `bslib` components
-3. Define server function with reactive data processing
-4. Create exported wrapper function that calls `shiny::shinyApp()`
-5. Document with roxygen2
+1. Create a new directory in `inst/apps/` (e.g., `inst/apps/my_report/`)
+2. Create an `app.R` file inside that directory
+3. Define UI function using `bslib` components
+4. Define server function with reactive data processing
+5. The app will automatically be available via `chronicle_run_app("my_report")`
 6. Add entry to README.md
 
 ### Modifying Data Calculations
 
-Look for functions named `calculate_*_daily_*_counts()` in the app files. These contain the business logic for metric calculations.
+Look for functions named `calculate_*_daily_*_counts()` in the app files within `inst/apps/*/app.R`. These contain the business logic for metric calculations.
 
 ### Updating UI Components
 

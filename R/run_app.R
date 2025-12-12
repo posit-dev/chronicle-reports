@@ -2,7 +2,7 @@
 #'
 #' Launch one of the available Chronicle Reports Shiny dashboards. Apps are
 #' located in the package's `inst/apps/` directory and can be listed with
-#' [list_apps()].
+#' [chronicle_list_apps()].
 #'
 #' @param app_name Name of the app to run. Available apps:
 #'   \itemize{
@@ -12,7 +12,7 @@
 #'     \item `"connect"` - Comprehensive Connect Dashboard
 #'     \item `"workbench"` - Comprehensive Workbench Dashboard
 #'   }
-#'   Use [list_apps()] to see all available apps.
+#'   Use [chronicle_list_apps()] to see all available apps.
 #' @param base_path The base path where Chronicle data files are stored.
 #'   Defaults to the value of the `CHRONICLE_BASE_PATH` environment variable,
 #'   or `"/var/lib/posit-chronicle/data"` if the environment variable is not set.
@@ -29,25 +29,25 @@
 #' @examples
 #' if (interactive()) {
 #'   # List available apps
-#'   list_apps()
+#'   chronicle_list_apps()
 #'
 #'   # Run an app with default data path
-#'   run_app("connect_users")
+#'   chronicle_run_app("connect_users")
 #'
 #'   # Run an app with custom filesystem path
-#'   run_app("connect_users", "/path/to/chronicle/data")
+#'   chronicle_run_app("connect_users", "/path/to/chronicle/data")
 #'
 #'   # Run an app with S3 path
-#'   run_app("connect_users", "s3://chronicle-bucket/data")
+#'   chronicle_run_app("connect_users", "s3://chronicle-bucket/data")
 #' }
-run_app <- function(
+chronicle_run_app <- function(
   app_name,
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   # Validate app_name
   if (missing(app_name)) {
     stop(
-      "app_name is required. Use list_apps() to see available apps.",
+      "app_name is required. Use chronicle_list_apps() to see available apps.",
       call. = FALSE
     )
   }
@@ -60,7 +60,7 @@ run_app <- function(
 
   # Check if app exists
   if (app_dir == "" || !dir.exists(app_dir)) {
-    available_apps <- list_apps()
+    available_apps <- chronicle_list_apps()
     stop(
       "App '",
       app_name,
@@ -93,7 +93,7 @@ run_app <- function(
 #' List Available Chronicle Reports Apps
 #'
 #' Returns a character vector of available Chronicle Reports Shiny dashboards
-#' that can be run with [run_app()].
+#' that can be run with [chronicle_run_app()].
 #'
 #' @return A character vector of app names.
 #'
@@ -101,8 +101,8 @@ run_app <- function(
 #'
 #' @examples
 #' # List all available apps
-#' list_apps()
-list_apps <- function() {
+#' chronicle_list_apps()
+chronicle_list_apps <- function() {
   apps_dir <- system.file("apps", package = "chronicle.reports")
 
   # If apps directory doesn't exist, return empty vector
