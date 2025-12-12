@@ -177,7 +177,7 @@ chronicle_list_data <- function(base_path) {
 #' )
 #'
 #' # Load one of the available metrics
-#' data <- chronicle_raw_data(metrics[1], "/var/lib/posit-chronicle/data")
+#' data <- chronicle_raw_data(metrics[1], "/var/lib/posit-chronicle/data", frequency = "daily")
 #' }
 chronicle_list_raw_data <- function(
   base_path,
