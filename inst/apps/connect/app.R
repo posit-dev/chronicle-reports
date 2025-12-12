@@ -794,8 +794,6 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
-    shiny::req(input$content_overview_date_range)
-
     df <- df |>
       dplyr::filter(
         .data$date >= input$content_overview_date_range[1],
