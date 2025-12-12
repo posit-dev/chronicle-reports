@@ -58,45 +58,6 @@ options(repos = c(
 ))
 ```
 
-## Available Reports
-
-Chronicle Reports includes two comprehensive dashboards. List available reports at any time:
-
-```r
-chronicle.reports::chronicle_list_apps()
-# Returns: c("connect", "workbench")
-```
-
-### Connect Dashboard
-
-<img width="2509" height="1296" alt="image" src="https://github.com/user-attachments/assets/9a9726ea-22e0-44a5-ae1c-c5a0ea1f1ffa" />
-
-A multi-page dashboard for Posit Connect usage analysis with three main sections:
-
-- **Users**:
-  - Overview: Total licensed users, daily active users, publishers with trend visualizations
-  - User List: Searchable, filterable table of all users with role and activity details
-- **Content**:
-  - Overview: Content metrics and trends (placeholder data)
-  - Content List: Searchable inventory of all published content (placeholder data)
-- **Usage**:
-  - Overview: Visit trends and patterns (placeholder data)
-  - Shiny Apps: Application-specific usage statistics (placeholder data)
-
-**Run it**: `chronicle_run_app("connect")`
-
-### Workbench Dashboard
-
-<img width="2005" height="1236" alt="image" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
-
-A multi-page dashboard for Posit Workbench user analytics:
-
-- **Users**:
-  - Overview: Licensed users, daily active users, administrators, and super administrators with trend analysis
-  - User List: Filterable table showing all users with role and activity information
-
-**Run it**: `chronicle_run_app("workbench")`
-
 ## Running Reports
 
 ### Basic Usage
@@ -140,6 +101,45 @@ Set `CHRONICLE_BASE_PATH` to avoid hard coding the path:
 Sys.setenv(CHRONICLE_BASE_PATH = "/path/to/chronicle/data")
 chronicle.reports::chronicle_run_app("connect")
 ```
+
+## Available Reports
+
+Chronicle Reports includes two comprehensive dashboards. List available reports at any time:
+
+```r
+chronicle.reports::chronicle_list_apps()
+# Returns: c("connect", "workbench")
+```
+
+### Connect Dashboard
+
+**Run it**: `chronicle_run_app("connect")`
+
+<img width="2509" height="1296" alt="image" src="https://github.com/user-attachments/assets/9a9726ea-22e0-44a5-ae1c-c5a0ea1f1ffa" />
+
+A multi-page dashboard for Posit Connect usage analysis with three main sections:
+
+- **Users**:
+  - Overview: Total licensed users, daily active users, publishers with trend visualizations
+  - User List: Searchable, filterable table of all users with role and activity details
+- **Content**:
+  - Overview: Content metrics and trends (placeholder data)
+  - Content List: Searchable inventory of all published content (placeholder data)
+- **Usage**:
+  - Overview: Visit trends and patterns (placeholder data)
+  - Shiny Apps: Application-specific usage statistics (placeholder data)
+
+### Workbench Dashboard
+
+**Run it**: `chronicle_run_app("workbench")`
+
+<img width="2005" height="1236" alt="image" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
+
+A multi-page dashboard for Posit Workbench user analytics:
+
+- **Users**:
+  - Overview: Licensed users, daily active users, administrators, and super administrators with trend analysis
+  - User List: Filterable table showing all users with role and activity information
 
 ## Publishing to Posit Connect
 
