@@ -840,7 +840,7 @@ content_overview_server <- function(input, output, session) {
             0L
           } else {
             sum(
-              as.numeric(dplyr::across(dplyr::all_of(num_cols))),
+              rowSums(dplyr::across(dplyr::all_of(num_cols)), na.rm = TRUE),
               na.rm = TRUE
             )
           },
