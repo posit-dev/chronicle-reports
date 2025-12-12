@@ -547,10 +547,15 @@ users_list_server <- function(input, output, session) {
 content_overview_ui <- bslib::card(
   bslib::card_header("Filters"),
   bslib::layout_columns(
-    col_widths = c(6, 6),
+    col_widths = c(4, 4, 4),
     shiny::selectInput(
       "content_overview_environment",
       "Environment:",
+      choices = c("All")
+    ),
+    shiny::selectInput(
+      "content_overview_type",
+      "Type:",
       choices = c("All")
     ),
     shiny::dateRangeInput(
@@ -559,27 +564,6 @@ content_overview_ui <- bslib::card(
       start = NULL,
       end = NULL,
       format = "yyyy-mm-dd"
-    )
-  ),
-  bslib::layout_columns(
-    col_widths = c(4, 4, 4),
-    bslib::value_box(
-      title = "Total Content",
-      max_height = "120px",
-      value = shiny::textOutput("content_total_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
-    ),
-    bslib::value_box(
-      title = "Content Types",
-      max_height = "120px",
-      value = shiny::textOutput("content_types_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
-    ),
-    bslib::value_box(
-      title = "Placeholder",
-      max_height = "120px",
-      value = shiny::textOutput("content_updated_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
     )
   ),
   bslib::card(
@@ -598,7 +582,7 @@ content_overview_server <- function(input, output, session) {
     tryCatch(
       {
         # Curated daily totals for content metrics
-        chr_get_curated_metric_data("connect/content_totals", base_path)
+        chronicle_data("connect/content_totals", base_path)
       },
       error = function(e) {
         message("Error loading contents: ", e$message)
@@ -631,26 +615,64 @@ content_overview_server <- function(input, output, session) {
         choices = c("All"),
         selected = "All"
       )
+    } else {
+      env_values <- df |>
+        dplyr::pull(env_col) |>
+        unique()
+
+      has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+      env_values <- env_values[
+        !is.na(env_values) & env_values != "" & env_values != " "
+      ] |>
+        sort()
+      if (has_na) {
+        env_values <- c(env_values, "(Not Set)")
+      }
+
+      shiny::updateSelectInput(
+        session,
+        "content_overview_environment",
+        choices = c("All", env_values),
+        selected = "All"
+      )
+    }
+
+    # Detect type column if present
+    type_col <- NULL
+    possible_type_cols <- c("type", "content_type", "kind")
+    for (nm in possible_type_cols) {
+      if (nm %in% names(df)) {
+        type_col <- nm
+        break
+      }
+    }
+    if (is.null(type_col)) {
+      shiny::updateSelectInput(
+        session,
+        "content_overview_type",
+        choices = c("All"),
+        selected = "All"
+      )
       return()
     }
 
-    env_values <- df |>
-      dplyr::pull(env_col) |>
+    type_values <- df |>
+      dplyr::pull(type_col) |>
       unique()
 
-    has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
-    env_values <- env_values[
-      !is.na(env_values) & env_values != "" & env_values != " "
+    has_type_na <- any(is.na(type_values) | type_values == "" | type_values == " ")
+    type_values <- type_values[
+      !is.na(type_values) & type_values != "" & type_values != " "
     ] |>
       sort()
-    if (has_na) {
-      env_values <- c(env_values, "(Not Set)")
+    if (has_type_na) {
+      type_values <- c(type_values, "(Not Set)")
     }
 
     shiny::updateSelectInput(
       session,
-      "content_overview_environment",
-      choices = c("All", env_values),
+      "content_overview_type",
+      choices = c("All", type_values),
       selected = "All"
     )
   })
@@ -677,101 +699,7 @@ content_overview_server <- function(input, output, session) {
     )
   })
 
-  # (Removed) daily_content_metrics; using curated data directly for aggregation
-
-  latest_content_metrics <- shiny::reactive({
-    # Use the curated raw data to compute latest-day aggregates by spec
-    data <- contents_data()
-    if (is.null(data)) {
-      return(NULL)
-    }
-
-    df <- data |> dplyr::collect()
-    # Apply environment filter if available and selected
-    env_col <- NULL
-    possible_env_cols <- c("environment", "env")
-    for (nm in possible_env_cols) {
-      if (nm %in% names(df)) {
-        env_col <- nm
-        break
-      }
-    }
-    if (!is.null(env_col) && input$content_overview_environment != "All") {
-      if (input$content_overview_environment == "(Not Set)") {
-        df <- df |>
-          dplyr::filter(
-            is.na(.data[[env_col]]) |
-              .data[[env_col]] == "" |
-              .data[[env_col]] == " "
-          )
-      } else {
-        df <- df |>
-          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
-      }
-    }
-    if (!"date" %in% names(df) || nrow(df) == 0) {
-      return(NULL)
-    }
-
-    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-    latest_df <- df |> dplyr::filter(.data$date == latest_date)
-    if (nrow(latest_df) == 0) {
-      return(NULL)
-    }
-
-    # Total content: sum of all counts for the date
-    # Prefer a canonical count column if present; otherwise sum numeric columns excluding date
-    count_cols <- intersect(
-      c("total_content", "count", "value"),
-      names(latest_df)
-    )
-    total_sum <- if (length(count_cols) > 0) {
-      sum(latest_df[[count_cols[1]]], na.rm = TRUE)
-    } else {
-      num_cols <- names(latest_df)[sapply(latest_df, is.numeric)]
-      num_cols <- setdiff(num_cols, c("date"))
-      if (length(num_cols) == 0) {
-        0L
-      } else {
-        sum(as.numeric(unlist(latest_df[num_cols])), na.rm = TRUE)
-      }
-    }
-
-    # Unique content types: number of rows for the latest day
-    unique_types_count <- nrow(latest_df)
-
-    tibble::tibble(
-      date = latest_date,
-      total_content = total_sum,
-      total_types = unique_types_count,
-      placeholder_box = unique_types_count # TBD on third value or if will remove
-    )
-  })
-
-  # Value boxes (latest values)
-  output$content_total_value <- shiny::renderText({
-    data <- latest_content_metrics()
-    if (is.null(data) || nrow(data) == 0) {
-      return("-")
-    }
-    prettyNum(data$total_content, big.mark = ",")
-  })
-
-  output$content_types_value <- shiny::renderText({
-    data <- latest_content_metrics()
-    if (is.null(data) || nrow(data) == 0) {
-      return("-")
-    }
-    prettyNum(data$total_types, big.mark = ",")
-  })
-
-  output$content_updated_value <- shiny::renderText({
-    data <- latest_content_metrics()
-    if (is.null(data) || nrow(data) == 0) {
-      return("-")
-    }
-    prettyNum(data$placeholder_box, big.mark = ",")
-  })
+  # (Removed) value boxes and latest metrics; charts remain
 
   # Trend chart (filtered by date range)
   output$content_trend_plot <- plotly::renderPlotly({
@@ -830,6 +758,29 @@ content_overview_server <- function(input, output, session) {
       } else {
         df <- df |>
           dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+      }
+    }
+
+    # Apply type filter if available and selected
+    type_col <- NULL
+    possible_type_cols <- c("type", "content_type", "kind")
+    for (nm in possible_type_cols) {
+      if (nm %in% names(df)) {
+        type_col <- nm
+        break
+      }
+    }
+    if (!is.null(type_col) && input$content_overview_type != "All") {
+      if (input$content_overview_type == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data[[type_col]]) |
+              .data[[type_col]] == "" |
+              .data[[type_col]] == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[type_col]] == input$content_overview_type)
       }
     }
 
@@ -899,20 +850,10 @@ content_overview_server <- function(input, output, session) {
         )
     }
 
-    types_by_date <- df |>
-      dplyr::group_by(.data$date) |>
-      dplyr::summarise(unique_types = dplyr::n(), .groups = "drop")
-
+    # Only plot Total Content over time (remove unique content types)
     plot_data <- total_by_date |>
-      dplyr::left_join(types_by_date, by = "date") |>
-      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
-      dplyr::mutate(
-        metric = factor(
-          .data$metric,
-          levels = c("total_content", "unique_types"),
-          labels = c("Total Content", "Unique Content Types")
-        )
-      )
+      dplyr::mutate(metric = factor("Total Content", levels = "Total Content")) |>
+      dplyr::rename(value = total_content)
 
     if (nrow(plot_data) == 0) {
       return(
@@ -954,13 +895,7 @@ content_overview_server <- function(input, output, session) {
       ) +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "", y = "Content Items", color = "") +
-      ggplot2::scale_color_manual(
-        values = c(
-          "Total Content" = BRAND_COLORS$BLUE,
-          "Content Types" = BRAND_COLORS$GREEN,
-          "Placeholder" = BRAND_COLORS$BURGUNDY
-        )
-      )
+      ggplot2::scale_color_manual(values = c("Total Content" = BRAND_COLORS$BLUE))
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
@@ -1035,7 +970,7 @@ content_overview_server <- function(input, output, session) {
       return(plotly::plotly_empty())
     }
 
-    # Filter to selected range
+    # Filter to selected range and select ONLY the latest day in range
     df <- df |>
       dplyr::filter(
         .data$date >= input$content_overview_date_range[1],
@@ -1063,6 +998,10 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
+    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
+    df <- df |>
+      dplyr::filter(.data$date == latest_date)
+
     # Identify type column heuristically
     type_col <- NULL
     possible_type_cols <- c("type", "content_type", "kind")
@@ -1073,11 +1012,27 @@ content_overview_server <- function(input, output, session) {
       }
     }
 
+    # Apply type filter if selected
+    if (!is.null(type_col) && input$content_overview_type != "All") {
+      if (input$content_overview_type == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data[[type_col]]) |
+              .data[[type_col]] == "" |
+              .data[[type_col]] == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[type_col]] == input$content_overview_type)
+      }
+    }
+
     # Compute counts per type
     count_cols <- intersect(c("total_content", "count", "value"), names(df))
 
     if (!is.null(type_col)) {
       if (length(count_cols) > 0) {
+        # Latest-day totals are not cumulative; just use that day's counts
         type_summary <- df |>
           dplyr::group_by(.data[[type_col]]) |>
           dplyr::summarise(
