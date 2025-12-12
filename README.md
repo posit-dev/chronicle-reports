@@ -133,7 +133,7 @@ A multi-page dashboard for Posit Connect usage analysis with three main sections
 
 **Run it**: `chronicle_run_app("workbench")`
 
-<img width="2005" height="1236" alt="image" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
+<img width="2005" height="1236" alt="Workbench Dashboard displaying user analytics and activity trends" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
 
 A multi-page dashboard for Posit Workbench user analytics:
 
