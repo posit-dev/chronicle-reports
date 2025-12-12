@@ -14,13 +14,13 @@ chronicle_path <- function(
   frequency = c("daily", "hourly", "curated")
 ) {
   frequency <- match.arg(frequency)
-  glue::glue("{base_path}/{frequency}/v2/{metric}/")
+  glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
 }
 
 #' Load raw Chronicle data (Advanced)
 #'
 #' Loads raw Chronicle metric data. **Most users should use [chronicle_data()]
-#' instead**, which provides pre-aggregated data that is faster and easier
+#' instead**, which provides curated data that is faster and easier
 #' to work with.
 #'
 #' Use raw data only when you need:
@@ -78,10 +78,8 @@ chronicle_raw_data <- function(
 
 #' Load Chronicle data
 #'
-#' Loads pre-aggregated (curated) Chronicle metric data. This is the
+#' Loads curated Chronicle metric data. This is the
 #' recommended way to access Chronicle data for most use cases.
-#'
-#' For raw/unaggregated data, see [chronicle_raw_data()].
 #'
 #' @param metric Name of the curated metric to retrieve (e.g., "connect/user_totals")
 #' @param base_path Base path to Chronicle data directory
@@ -109,4 +107,84 @@ chronicle_data <- function(
     partitioning = arrow::schema(date = arrow::date32()),
     format = "parquet"
   )
+}
+
+
+#' List available curated Chronicle metrics
+#'
+#' Lists all available curated metrics in the Chronicle data
+#' directory. This is useful for discovering what data is available before
+#' loading it with [chronicle_data()].
+#'
+#' @param base_path Base path to Chronicle data directory
+#'
+#' @return Character vector of available metric paths in the format
+#'   "product/metric" (e.g., "connect/content_list", "workbench/user_totals")
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # List all available curated metrics
+#' metrics <- chronicle_list_data("/var/lib/posit-chronicle/data")
+#' print(metrics)
+#'
+#' # Load one of the available metrics
+#' data <- chronicle_data(metrics[1], "/var/lib/posit-chronicle/data")
+#' }
+chronicle_list_data <- function(base_path) {
+  data_path <- chronicle_path(base_path, frequency = "curated")
+  all_dirs <- c()
+  product_dirs <- list.dirs(data_path, recursive = FALSE, full.names = FALSE)
+
+  for (product_dir in product_dirs) {
+    metric_dirs <- list.dirs(
+      file.path(data_path, product_dir),
+      recursive = FALSE,
+      full.names = FALSE
+    )
+    all_dirs <- c(all_dirs, file.path(product_dir, metric_dirs))
+  }
+  all_dirs
+}
+
+
+#' List available raw Chronicle metrics
+#'
+#' Lists all available raw metrics available in the Chronicle data
+#' directory at a specified frequency. This is useful for discovering what
+#' raw data is available before loading it with [chronicle_raw_data()].
+#'
+#' **Most users should use [chronicle_list_data()] instead**, which lists
+#' curated metrics that are faster and easier to work with.
+#'
+#' @param base_path Base path to Chronicle data directory
+#' @param frequency Frequency of data collection: "daily" (default) or "hourly"
+#'
+#' @return Character vector of available raw metric names
+#'   (e.g., "connect_users", "workbench_sessions")
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # List available daily raw metrics
+#' metrics <- chronicle_list_raw_data("/var/lib/posit-chronicle/data", "daily")
+#' print(metrics)
+#'
+#' # List available hourly raw metrics
+#' hourly_metrics <- chronicle_list_raw_data(
+#'   "/var/lib/posit-chronicle/data",
+#'   "hourly"
+#' )
+#'
+#' # Load one of the available metrics
+#' data <- chronicle_raw_data(metrics[1], "/var/lib/posit-chronicle/data")
+#' }
+chronicle_list_raw_data <- function(
+  base_path,
+  frequency = c("daily", "hourly")
+) {
+  frequency <- match.arg(frequency)
+  data_path <- chronicle_path(base_path, frequency = frequency)
+
+  list.dirs(data_path, recursive = FALSE, full.names = FALSE)
 }

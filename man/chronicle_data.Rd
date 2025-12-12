@@ -15,11 +15,8 @@ chronicle_data(metric, base_path)
 Arrow dataset object
 }
 \description{
-Loads pre-aggregated (curated) Chronicle metric data. This is the
+Loads curated Chronicle metric data. This is the
 recommended way to access Chronicle data for most use cases.
-}
-\details{
-For raw/unaggregated data, see \code{\link[=chronicle_raw_data]{chronicle_raw_data()}}.
 }
 \examples{
 \dontrun{
