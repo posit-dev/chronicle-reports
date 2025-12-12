@@ -38,14 +38,30 @@ chronicle_path <- function(
 #' @export
 #'
 #' @examples
+#' # Load raw daily Connect users data with sample data
+#' sample_path <- chronicle_sample_data()
+#' data <- chronicle_raw_data("connect_users", sample_path, frequency = "daily")
+#'
+#' # View the data
+#' dplyr::collect(data)
+#'
+#' # Filter to a specific date using ymd parameter
+#' data <- chronicle_raw_data(
+#'   "connect_users",
+#'   sample_path,
+#'   frequency = "daily",
+#'   ymd = list(year = 2024, month = 1, day = 1)
+#' )
+#' dplyr::collect(data)
+#'
 #' \dontrun{
-#' # Load raw daily Connect users data
-#' data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
+#' # Load from production Chronicle data
+#' data <- chronicle_raw_data("connect_users", "/var/lib/posit-chronicle/data")
 #'
 #' # Load hourly data for a specific date
 #' data <- chronicle_raw_data(
 #'   "connect_users",
-#'   base_path,
+#'   "/var/lib/posit-chronicle/data",
 #'   frequency = "hourly",
 #'   ymd = list(year = 2024, month = 12, day = 10)
 #' )
@@ -61,7 +77,11 @@ chronicle_raw_data <- function(
   path <- chronicle_path(base_path, metric, frequency)
 
   if (!is.null(ymd)) {
-    path <- glue::glue("{path}{ymd[['year']]}/{ymd[['month']]}/{ymd[['day']]}/")
+    # Format month and day with leading zeros
+    year_str <- ymd[["year"]]
+    month_str <- sprintf("%02d", as.integer(ymd[["month"]]))
+    day_str <- sprintf("%02d", as.integer(ymd[["day"]]))
+    path <- glue::glue("{path}{year_str}/{month_str}/{day_str}/")
     partitioning <- NULL
   } else {
     partitioning <- c("Year", "Month", "Day")
@@ -88,8 +108,20 @@ chronicle_raw_data <- function(
 #' @export
 #'
 #' @examples
+#' # Load curated Connect user totals with sample data
+#' sample_path <- chronicle_sample_data()
+#' data <- chronicle_data("connect/user_totals", sample_path)
+#'
+#' # View the data
+#' dplyr::collect(data)
+#'
+#' # Filter by date
+#' data |>
+#'   dplyr::filter(date >= as.Date("2024-01-02")) |>
+#'   dplyr::collect()
+#'
 #' \dontrun{
-#' # Load curated Connect user totals
+#' # Load from production Chronicle data
 #' data <- chronicle_data("connect/user_totals", "/var/lib/posit-chronicle/data")
 #'
 #' # Load from S3
@@ -123,27 +155,37 @@ chronicle_data <- function(
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # List all available curated metrics
-#' metrics <- chronicle_list_data("/var/lib/posit-chronicle/data")
+#' # List all available curated metrics with sample data
+#' sample_path <- chronicle_sample_data()
+#' metrics <- chronicle_list_data(sample_path)
 #' print(metrics)
 #'
 #' # Load one of the available metrics
-#' data <- chronicle_data(metrics[1], "/var/lib/posit-chronicle/data")
+#' data <- chronicle_data(metrics[1], sample_path)
+#' dplyr::collect(data)
+#'
+#' \dontrun{
+#' # List metrics from production Chronicle data
+#' metrics <- chronicle_list_data("/var/lib/posit-chronicle/data")
+#' print(metrics)
 #' }
 chronicle_list_data <- function(base_path) {
   data_path <- chronicle_path(base_path, frequency = "curated")
-  all_dirs <- c()
   product_dirs <- list.dirs(data_path, recursive = FALSE, full.names = FALSE)
 
-  for (product_dir in product_dirs) {
-    metric_dirs <- list.dirs(
-      file.path(data_path, product_dir),
-      recursive = FALSE,
-      full.names = FALSE
-    )
-    all_dirs <- c(all_dirs, file.path(product_dir, metric_dirs))
-  }
+  # Get two levels of directory names: product/metric
+  all_dirs <- unlist(
+    lapply(product_dirs, function(product_dir) {
+      metric_dirs <- list.dirs(
+        file.path(data_path, product_dir),
+        recursive = FALSE,
+        full.names = FALSE
+      )
+      file.path(product_dir, metric_dirs)
+    }),
+    use.names = FALSE
+  )
+
   all_dirs
 }
 
@@ -165,8 +207,17 @@ chronicle_list_data <- function(base_path) {
 #' @export
 #'
 #' @examples
+#' # List available daily raw metrics with sample data
+#' sample_path <- chronicle_sample_data()
+#' metrics <- chronicle_list_raw_data(sample_path, "daily")
+#' print(metrics)
+#'
+#' # Load one of the available metrics
+#' data <- chronicle_raw_data(metrics[1], sample_path)
+#' dplyr::collect(data)
+#'
 #' \dontrun{
-#' # List available daily raw metrics
+#' # List metrics from production Chronicle data
 #' metrics <- chronicle_list_raw_data("/var/lib/posit-chronicle/data", "daily")
 #' print(metrics)
 #'
@@ -177,7 +228,7 @@ chronicle_list_data <- function(base_path) {
 #' )
 #'
 #' # Load one of the available metrics
-#' data <- chronicle_raw_data(metrics[1], "/var/lib/posit-chronicle/data", frequency = "daily")
+#' data <- chronicle_raw_data(hourly_metrics[1], "/var/lib/posit-chronicle/data", frequency = "hourly")
 #' }
 chronicle_list_raw_data <- function(
   base_path,
