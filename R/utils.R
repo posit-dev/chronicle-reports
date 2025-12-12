@@ -222,6 +222,9 @@ chronicle_list_data <- function(base_path) {
 #'   "/var/lib/posit-chronicle/data",
 #'   "hourly"
 #' )
+#'
+#' # Load one of the available metrics
+#' data <- chronicle_raw_data(hourly_metrics[1], "/var/lib/posit-chronicle/data", frequency = "hourly")
 #' }
 chronicle_list_raw_data <- function(
   base_path,
