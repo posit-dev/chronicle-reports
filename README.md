@@ -189,8 +189,6 @@ Then simplify your `app.R`:
 chronicle.reports::chronicle_run_app("connect")
 ```
 
-[Screenshot: Deployed Chronicle Report in Posit Connect]
-
 ## Sample Data
 
 Use `chronicle_sample_data()` to explore Chronicle Reports without access to real Chronicle data. This function creates a temporary directory with minimal sample metrics for both Connect and Workbench.
