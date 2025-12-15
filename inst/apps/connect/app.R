@@ -1138,7 +1138,7 @@ content_list_server <- function(input, output, session) {
 
     # Environment choices (environment column is guaranteed)
     env_values <- df |>
-      dplyr::pull(environment) |>
+      dplyr::pull(.data$environment) |>
       unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
