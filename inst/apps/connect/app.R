@@ -637,7 +637,9 @@ content_overview_server <- function(input, output, session) {
       dplyr::pull("type") |>
       unique()
 
-    has_type_na <- any(is.na(type_values) | type_values == "" | type_values == " ")
+    has_type_na <- any(
+      is.na(type_values) | type_values == "" | type_values == " "
+    )
     type_values <- type_values[
       !is.na(type_values) & type_values != "" & type_values != " "
     ] |>
@@ -738,7 +740,9 @@ content_overview_server <- function(input, output, session) {
     if ("type" %in% names(df) && input$content_overview_type != "All") {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
-          dplyr::filter(is.na(.data$type) | .data$type == "" | .data$type == " ")
+          dplyr::filter(
+            is.na(.data$type) | .data$type == "" | .data$type == " "
+          )
       } else {
         df <- df |>
           dplyr::filter(.data$type == input$content_overview_type)
@@ -811,7 +815,9 @@ content_overview_server <- function(input, output, session) {
 
     # Only plot Total Content over time (remove unique content types)
     plot_data <- total_by_date |>
-      dplyr::mutate(metric = factor("Total Content", levels = "Total Content")) |>
+      dplyr::mutate(
+        metric = factor("Total Content", levels = "Total Content")
+      ) |>
       dplyr::rename(value = total_content)
 
     if (nrow(plot_data) == 0) {
@@ -854,7 +860,9 @@ content_overview_server <- function(input, output, session) {
       ) +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "", y = "Content Items", color = "") +
-      ggplot2::scale_color_manual(values = c("Total Content" = BRAND_COLORS$BLUE))
+      ggplot2::scale_color_manual(
+        values = c("Total Content" = BRAND_COLORS$BLUE)
+      )
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
@@ -961,7 +969,9 @@ content_overview_server <- function(input, output, session) {
     if ("type" %in% names(df) && input$content_overview_type != "All") {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
-          dplyr::filter(is.na(.data$type) | .data$type == "" | .data$type == " ")
+          dplyr::filter(
+            is.na(.data$type) | .data$type == "" | .data$type == " "
+          )
       } else {
         df <- df |>
           dplyr::filter(.data$type == input$content_overview_type)
@@ -1029,14 +1039,13 @@ content_overview_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Content - Content List UI/Server (PLACEHOLDER)
+# Content - Content List UI/Server
 # ==============================================
 
 content_list_ui <- bslib::card(
   bslib::card_header("Content List"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
-    # TODO: Add filters for R, Python, and Quarto versions.
     shiny::selectInput(
       "content_list_environment",
       "Environment:",
@@ -1103,53 +1112,53 @@ content_list_server <- function(input, output, session) {
   shiny::observe({
     data <- content_list_data()
     if (is.null(data) || nrow(data) == 0) {
-      shiny::updateSelectInput(session, "content_list_environment", choices = c("All"), selected = "All")
-      shiny::updateSelectInput(session, "content_list_owner", choices = c("All"), selected = "All")
-      shiny::updateSelectInput(session, "content_list_type", choices = c("All"), selected = "All")
-      return()
-    }
-
-    # Detect type column
-    df <- data
-
-    # Environment choices
-    env_col <- intersect(c("environment", "env"), names(df))[1]
-    if (!is.na(env_col)) {
-      env_values <- df |>
-        dplyr::pull(env_col) |>
-        unique()
-
-      has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
-      env_values <- env_values[
-        !is.na(env_values) & env_values != "" & env_values != " "
-      ] |>
-        sort()
-      if (has_env_na) {
-        env_values <- c(env_values, "(Not Set)")
-      }
-
-      shiny::updateSelectInput(
-        session,
-        "content_list_environment",
-        choices = c("All", env_values),
-        selected = "All"
-      )
-    } else {
       shiny::updateSelectInput(
         session,
         "content_list_environment",
         choices = c("All"),
         selected = "All"
       )
+      shiny::updateSelectInput(
+        session,
+        "content_list_owner",
+        choices = c("All"),
+        selected = "All"
+      )
+      shiny::updateSelectInput(
+        session,
+        "content_list_type",
+        choices = c("All"),
+        selected = "All"
+      )
+      return()
     }
 
-    type_col <- intersect(
-      c("type", "content_type", "kind", "app_mode", "bundle_type"),
-      names(df)
-    )[1]
-    if (is.na(type_col)) {
-      type_col <- NULL
+    # Detect type column
+    df <- data
+
+    # Environment choices (environment column is guaranteed)
+    env_values <- df |>
+      dplyr::pull(environment) |>
+      unique()
+
+    has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
+      sort()
+    if (has_env_na) {
+      env_values <- c(env_values, "(Not Set)")
     }
+
+    shiny::updateSelectInput(
+      session,
+      "content_list_environment",
+      choices = c("All", env_values),
+      selected = "All"
+    )
+
+    # Type column on this file is app_mode; UI label remains "Type"
+    type_col <- "app_mode"
 
     # Resolve owner names by joining latest user list on owner id
     owners_choices <- c("All")
@@ -1157,20 +1166,38 @@ content_list_server <- function(input, output, session) {
     if (!is.null(ulist) && nrow(ulist) > 0) {
       # Identify join keys heuristically
       content_owner_id_col <- intersect(
-        c("owner_id", "owner_guid", "content_owner_guid", "user_id", "owner", "user_guid", "guid"),
+        c(
+          "owner_id",
+          "owner_guid",
+          "content_owner_guid",
+          "user_id",
+          "owner",
+          "user_guid",
+          "guid"
+        ),
         names(df)
       )[1]
       if (is.na(content_owner_id_col)) {
         content_owner_id_col <- NULL
       }
 
-      user_id_col <- intersect(c("id", "user_id", "user_guid", "guid"), names(ulist))[1]
+      user_id_col <- intersect(
+        c("id", "user_id", "user_guid", "guid"),
+        names(ulist)
+      )[1]
       if (is.na(user_id_col)) {
         user_id_col <- NULL
       }
       # Identify display name columns in user list
-      user_display_cols <- intersect(c("username", "email", "first_name", "last_name"), names(ulist))
-      if (!is.null(content_owner_id_col) && !is.null(user_id_col) && length(user_display_cols) > 0) {
+      user_display_cols <- intersect(
+        c("username", "email", "first_name", "last_name"),
+        names(ulist)
+      )
+      if (
+        !is.null(content_owner_id_col) &&
+          !is.null(user_id_col) &&
+          length(user_display_cols) > 0
+      ) {
         joined <- tryCatch(
           {
             df |>
@@ -1191,8 +1218,11 @@ content_list_server <- function(input, output, session) {
             dplyr::pull("owner") |>
             unique()
           has_na <- any(is.na(owners) | owners == "" | owners == " ")
-          owners <- owners[!is.na(owners) & owners != "" & owners != " "] |> sort()
-          if (has_na) owners <- c(owners, "(Not Set)")
+          owners <- owners[!is.na(owners) & owners != "" & owners != " "] |>
+            sort()
+          if (has_na) {
+            owners <- c(owners, "(Not Set)")
+          }
           owners_choices <- c("All", owners)
         }
       }
@@ -1211,12 +1241,20 @@ content_list_server <- function(input, output, session) {
           dplyr::pull(owner_fallback_col) |>
           unique()
         has_na <- any(is.na(owners) | owners == "" | owners == " ")
-        owners <- owners[!is.na(owners) & owners != "" & owners != " "] |> sort()
-        if (has_na) owners <- c(owners, "(Not Set)")
+        owners <- owners[!is.na(owners) & owners != "" & owners != " "] |>
+          sort()
+        if (has_na) {
+          owners <- c(owners, "(Not Set)")
+        }
         owners_choices <- c("All", owners)
       }
     }
-    shiny::updateSelectInput(session, "content_list_owner", choices = owners_choices, selected = "All")
+    shiny::updateSelectInput(
+      session,
+      "content_list_owner",
+      choices = owners_choices,
+      selected = "All"
+    )
 
     # Types
     if (!is.null(type_col)) {
@@ -1225,41 +1263,49 @@ content_list_server <- function(input, output, session) {
         unique()
       has_na <- any(is.na(types) | types == "" | types == " ")
       types <- types[!is.na(types) & types != "" & types != " "] |> sort()
-      if (has_na) types <- c(types, "(Not Set)")
-      shiny::updateSelectInput(session, "content_list_type", choices = c("All", types), selected = "All")
+      if (has_na) {
+        types <- c(types, "(Not Set)")
+      }
+      shiny::updateSelectInput(
+        session,
+        "content_list_type",
+        choices = c("All", types),
+        selected = "All"
+      )
     } else {
-      shiny::updateSelectInput(session, "content_list_type", choices = c("All"), selected = "All")
+      shiny::updateSelectInput(
+        session,
+        "content_list_type",
+        choices = c("All"),
+        selected = "All"
+      )
     }
   })
 
   # Apply filters
   filtered_content_list <- shiny::reactive({
     data <- content_list_data()
-    if (is.null(data)) return(NULL)
+    if (is.null(data)) {
+      return(NULL)
+    }
 
     df <- data
 
-    # Detect type column consistently with the choices logic
-    type_col <- intersect(
-      c("type", "content_type", "kind", "app_mode", "bundle_type"),
-      names(df)
-    )[1]
-    if (is.na(type_col)) {
-      type_col <- NULL
-    }
-    # Environment filter
-    env_col <- intersect(c("environment", "env"), names(df))[1]
-    if (!is.na(env_col) && input$content_list_environment != "All") {
+    # Type column is app_mode; UI label remains "Type"
+    type_col <- "app_mode"
+
+    # Environment filter (environment column is guaranteed)
+    if (input$content_list_environment != "All") {
       if (input$content_list_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[env_col]]) |
-              .data[[env_col]] == "" |
-              .data[[env_col]] == " "
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[env_col]] == input$content_list_environment)
+          dplyr::filter(.data$environment == input$content_list_environment)
       }
     }
 
@@ -1267,14 +1313,25 @@ content_list_server <- function(input, output, session) {
     ulist <- latest_user_list()
     if (!is.null(ulist) && nrow(ulist) > 0) {
       content_owner_id_col <- intersect(
-        c("owner_id", "owner_guid", "content_owner_guid", "user_id", "owner", "user_guid", "guid"),
+        c(
+          "owner_id",
+          "owner_guid",
+          "content_owner_guid",
+          "user_id",
+          "owner",
+          "user_guid",
+          "guid"
+        ),
         names(df)
       )[1]
       if (is.na(content_owner_id_col)) {
         content_owner_id_col <- NULL
       }
 
-      user_id_col <- intersect(c("id", "user_id", "user_guid", "guid"), names(ulist))[1]
+      user_id_col <- intersect(
+        c("id", "user_id", "user_guid", "guid"),
+        names(ulist)
+      )[1]
       if (is.na(user_id_col)) {
         user_id_col <- NULL
       }
@@ -1301,14 +1358,16 @@ content_list_server <- function(input, output, session) {
     if ("owner" %in% names(df) && input$content_list_owner != "All") {
       if (input$content_list_owner == "(Not Set)") {
         df <- df |>
-          dplyr::filter(is.na(.data$owner) | .data$owner == "" | .data$owner == " ")
+          dplyr::filter(
+            is.na(.data$owner) | .data$owner == "" | .data$owner == " "
+          )
       } else {
         df <- df |> dplyr::filter(.data$owner == input$content_list_owner)
       }
     }
 
     # Type filter
-    if (!is.null(type_col) && input$content_list_type != "All") {
+    if (input$content_list_type != "All") {
       if (input$content_list_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
@@ -1348,16 +1407,31 @@ content_list_server <- function(input, output, session) {
     df <- data
     # Choose columns to display if present
     owner_col <- intersect(c("owner", "username", "user"), names(df))[1]
-    type_col <- intersect(c("type", "content_type", "kind", "app_mode", "bundle_type"), names(df))[1]
+    # Underlying column is app_mode; display header should read "Type"
+    type_col <- "app_mode"
     title_col <- intersect(c("title", "name"), names(df))[1]
-    env_col <- intersect(c("environment", "env"), names(df))[1]
-    py_col <- intersect(c("python_version", "py_version", "python"), names(df))[1]
+    env_col <- "environment"
+    py_col <- intersect(c("python_version", "py_version", "python"), names(df))[
+      1
+    ]
     r_col <- intersect(c("r_version", "R_version", "r"), names(df))[1]
     quarto_col <- intersect(c("quarto_version", "quarto"), names(df))[1]
-    updated_col <- intersect(c("last_updated", "last_deployed_at", "updated_at"), names(df))[1]
+    updated_col <- intersect(
+      c("last_updated", "last_deployed_at", "updated_at"),
+      names(df)
+    )[1]
 
     # Fallbacks
-    cols <- c(title_col, owner_col, type_col, env_col, py_col, r_col, quarto_col, updated_col)
+    cols <- c(
+      title_col,
+      owner_col,
+      type_col,
+      env_col,
+      py_col,
+      r_col,
+      quarto_col,
+      updated_col
+    )
     cols <- cols[!is.na(cols)]
     if (length(cols) == 0) {
       # Show everything except internal columns like date
