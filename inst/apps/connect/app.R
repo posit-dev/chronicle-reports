@@ -1443,7 +1443,7 @@ content_list_server <- function(input, output, session) {
     if (!is.na(type_col) && type_col %in% names(display)) {
       names(display)[names(display) == type_col] <- "type"
     }
-    names(display) <- sub("_", " ", names(display))
+
     # TODO: Show the total number of rows currently displayed (nrow(display))
     #       at the top of the table.
 
