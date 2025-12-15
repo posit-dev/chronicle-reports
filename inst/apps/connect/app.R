@@ -1035,7 +1035,7 @@ content_overview_server <- function(input, output, session) {
 content_list_ui <- bslib::card(
   bslib::card_header("Content List"),
   bslib::layout_columns(
-    col_widths = c(3, 3, 3, 3),
+    col_widths = c(4, 4, 4),
     # TODO: Add filters for R, Python, and Quarto versions.
     shiny::selectInput(
       "content_list_environment",
@@ -1051,11 +1051,6 @@ content_list_ui <- bslib::card(
       "content_list_type",
       "Type:",
       choices = c("All")
-    ),
-    shiny::textInput(
-      "content_list_search",
-      "Search:",
-      placeholder = "Title"
     )
   ),
   shinycssloaders::withSpinner(
@@ -1252,13 +1247,6 @@ content_list_server <- function(input, output, session) {
     if (is.na(type_col)) {
       type_col <- NULL
     }
-    title_col <- intersect(c("title", "name"), names(df))[1]
-    # TODO: If both title and name exist, prefer the non-blank one;
-    #       if both are blank, display "(Not Set)".
-    if (is.na(title_col)) {
-      title_col <- NULL
-    }
-
     # Environment filter
     env_col <- intersect(c("environment", "env"), names(df))[1]
     if (!is.na(env_col) && input$content_list_environment != "All") {
@@ -1332,15 +1320,6 @@ content_list_server <- function(input, output, session) {
         df <- df |>
           dplyr::filter(.data[[type_col]] == input$content_list_type)
       }
-    }
-
-    # Search filter on title/name
-    # TODO: Avoid double search (this filter plus the default DT search box)
-    #       so users have a single, clear search behavior.
-    if (!is.null(title_col) && nzchar(input$content_list_search)) {
-      search_term <- tolower(input$content_list_search)
-      df <- df |>
-        dplyr::filter(grepl(search_term, tolower(.data[[title_col]]), fixed = TRUE))
     }
 
     df
