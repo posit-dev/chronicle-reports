@@ -1163,91 +1163,24 @@ content_list_server <- function(input, output, session) {
     # Resolve owner names by joining latest user list on owner id
     owners_choices <- c("All")
     ulist <- latest_user_list()
-    if (!is.null(ulist) && nrow(ulist) > 0) {
-      # Identify join keys heuristically
-      content_owner_id_col <- intersect(
-        c(
-          "owner_id",
-          "owner_guid",
-          "content_owner_guid",
-          "user_id",
-          "owner",
-          "user_guid",
-          "guid"
-        ),
-        names(df)
-      )[1]
-      if (is.na(content_owner_id_col)) {
-        content_owner_id_col <- NULL
-      }
+    if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
+      owners <- df |>
+        dplyr::left_join(
+          ulist |>
+            dplyr::select(id, username) |>
+            dplyr::rename(owner_guid = .data$id, owner = .data$username),
+          by = "owner_guid"
+        ) |>
+        dplyr::pull(.data$owner) |>
+        unique()
 
-      user_id_col <- intersect(
-        c("id", "user_id", "user_guid", "guid"),
-        names(ulist)
-      )[1]
-      if (is.na(user_id_col)) {
-        user_id_col <- NULL
+      has_na <- any(is.na(owners) | owners == "" | owners == " ")
+      owners <- owners[!is.na(owners) & owners != "" & owners != " "] |>
+        sort()
+      if (has_na) {
+        owners <- c(owners, "(Not Set)")
       }
-      # Identify display name columns in user list
-      user_display_cols <- intersect(
-        c("username", "email", "first_name", "last_name"),
-        names(ulist)
-      )
-      if (
-        !is.null(content_owner_id_col) &&
-          !is.null(user_id_col) &&
-          length(user_display_cols) > 0
-      ) {
-        joined <- tryCatch(
-          {
-            df |>
-              dplyr::left_join(
-                ulist |>
-                  dplyr::mutate(
-                    owner = dplyr::coalesce(.data$username, .data$email)
-                  ),
-                by = setNames(user_id_col, content_owner_id_col)
-              )
-          },
-          error = function(e) {
-            NULL
-          }
-        )
-        if (!is.null(joined)) {
-          owners <- joined |>
-            dplyr::pull("owner") |>
-            unique()
-          has_na <- any(is.na(owners) | owners == "" | owners == " ")
-          owners <- owners[!is.na(owners) & owners != "" & owners != " "] |>
-            sort()
-          if (has_na) {
-            owners <- c(owners, "(Not Set)")
-          }
-          owners_choices <- c("All", owners)
-        }
-      }
-    }
-    # Fallback: if join didn't produce owner choices, derive from content list
-    if (length(owners_choices) == 1) {
-      owner_fallback_col <- intersect(
-        c("owner", "username", "user", "email"),
-        names(df)
-      )[1]
-      if (is.na(owner_fallback_col)) {
-        owner_fallback_col <- NULL
-      }
-      if (!is.null(owner_fallback_col)) {
-        owners <- df |>
-          dplyr::pull(owner_fallback_col) |>
-          unique()
-        has_na <- any(is.na(owners) | owners == "" | owners == " ")
-        owners <- owners[!is.na(owners) & owners != "" & owners != " "] |>
-          sort()
-        if (has_na) {
-          owners <- c(owners, "(Not Set)")
-        }
-        owners_choices <- c("All", owners)
-      }
+      owners_choices <- c("All", owners)
     }
     shiny::updateSelectInput(
       session,
@@ -1311,47 +1244,13 @@ content_list_server <- function(input, output, session) {
 
     # Join owner display for filtering, using latest user list
     ulist <- latest_user_list()
-    if (!is.null(ulist) && nrow(ulist) > 0) {
-      content_owner_id_col <- intersect(
-        c(
-          "owner_id",
-          "owner_guid",
-          "content_owner_guid",
-          "user_id",
-          "owner",
-          "user_guid",
-          "guid"
-        ),
-        names(df)
-      )[1]
-      if (is.na(content_owner_id_col)) {
-        content_owner_id_col <- NULL
-      }
+    if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
+      owner_lookup <- ulist |>
+        dplyr::select(id, username) |>
+        dplyr::rename(owner_guid = .data$id, owner = .data$username)
 
-      user_id_col <- intersect(
-        c("id", "user_id", "user_guid", "guid"),
-        names(ulist)
-      )[1]
-      if (is.na(user_id_col)) {
-        user_id_col <- NULL
-      }
-      if (!is.null(content_owner_id_col) && !is.null(user_id_col)) {
-        ulist2 <- ulist |>
-          dplyr::mutate(owner = dplyr::coalesce(.data$username, .data$email)) |>
-          dplyr::select(dplyr::all_of(c(user_id_col, "owner")))
-        df <- tryCatch(
-          {
-            df |>
-              dplyr::left_join(
-                ulist2,
-                by = setNames(user_id_col, content_owner_id_col)
-              )
-          },
-          error = function(e) {
-            df
-          }
-        )
-      }
+      df <- df |>
+        dplyr::left_join(owner_lookup, by = "owner_guid")
     }
 
     # Owner filter
@@ -1405,43 +1304,21 @@ content_list_server <- function(input, output, session) {
     }
 
     df <- data
-    # Choose columns to display if present
-    owner_col <- intersect(c("owner", "username", "user"), names(df))[1]
-    # Underlying column is app_mode; display header should read "Type"
-    type_col <- "app_mode"
-    title_col <- intersect(c("title", "name"), names(df))[1]
-    env_col <- "environment"
-    py_col <- intersect(c("python_version", "py_version", "python"), names(df))[
-      1
-    ]
-    r_col <- intersect(c("r_version", "R_version", "r"), names(df))[1]
-    quarto_col <- intersect(c("quarto_version", "quarto"), names(df))[1]
-    updated_col <- intersect(
-      c("last_updated", "last_deployed_at", "updated_at"),
-      names(df)
-    )[1]
-
-    # Fallbacks
     cols <- c(
-      title_col,
-      owner_col,
-      type_col,
-      env_col,
-      py_col,
-      r_col,
-      quarto_col,
-      updated_col
+      "title",
+      "owner",
+      "app_mode",
+      "environment",
+      "py_version",
+      "r_version",
+      "quarto_version",
+      "last_deployed_time"
     )
-    cols <- cols[!is.na(cols)]
-    if (length(cols) == 0) {
-      # Show everything except internal columns like date
-      cols <- setdiff(names(df), c("date"))
-    }
 
     # Standardize column names for display
     display <- df[, cols, drop = FALSE]
-    if (!is.na(type_col) && type_col %in% names(display)) {
-      names(display)[names(display) == type_col] <- "type"
+    if ("app_mode" %in% names(display)) {
+      names(display)[names(display) == "app_mode"] <- "type"
     }
 
     DT::datatable(
