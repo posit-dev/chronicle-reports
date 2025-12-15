@@ -355,9 +355,18 @@ users_overview_server <- function(input, output, session) {
 # ==============================================
 
 users_list_ui <- bslib::card(
-  bslib::card_header("Filters"),
+  bslib::card_header(
+    shiny::div(
+      style = "display: flex; justify-content: space-between; align-items: baseline;",
+      shiny::span("Filters"),
+      shiny::span(
+        style = "font-weight: normal; font-size: 0.9em; color: #555;",
+        shiny::textOutput("users_list_as_of", inline = TRUE)
+      )
+    )
+  ),
   bslib::layout_columns(
-    col_widths = c(3, 3, 3, 3),
+    col_widths = c(4, 4, 4),
     shiny::selectInput(
       "users_list_environment",
       "Environment:",
@@ -372,11 +381,6 @@ users_list_ui <- bslib::card(
       "users_list_active",
       "Active Today:",
       choices = c("All", "Yes", "No")
-    ),
-    shiny::textInput(
-      "users_list_search",
-      "Search:",
-      placeholder = "Username or email"
     )
   ),
   shinycssloaders::withSpinner(
@@ -472,17 +476,18 @@ users_list_server <- function(input, output, session) {
       data <- data |> dplyr::filter(.data$active_today == active_val)
     }
 
-    # Search filter
-    if (nzchar(input$users_list_search)) {
-      search_term <- tolower(input$users_list_search)
-      data <- data |>
-        dplyr::filter(
-          grepl(search_term, tolower(.data$username), fixed = TRUE) |
-            grepl(search_term, tolower(.data$email), fixed = TRUE)
-        )
+    data
+  })
+
+  # "As of" label showing the latest snapshot date
+  output$users_list_as_of <- shiny::renderText({
+    data <- users_list_data()
+    if (is.null(data) || nrow(data) == 0 || !"date" %in% names(data)) {
+      return("")
     }
 
-    data
+    latest_date <- max(data$date, na.rm = TRUE)
+    paste0("Users as of ", format(latest_date, "%Y-%m-%d"))
   })
 
   # Render table
