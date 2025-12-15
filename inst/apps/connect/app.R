@@ -541,119 +541,545 @@ users_list_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Content - Overview UI/Server (PLACEHOLDER)
+# Content - Overview UI/Server
 # ==============================================
 
 content_overview_ui <- bslib::card(
-  bslib::card_header(
-    shiny::tags$div(
-      shiny::tags$span("PLACEHOLDER DATA - Content Overview"),
-      style = "color: #9A4665; font-weight: bold;"
-    )
-  ),
-  shiny::dateRangeInput(
-    "content_overview_date_range",
-    "Date Range:",
-    start = Sys.Date() - 90,
-    end = Sys.Date(),
-    format = "yyyy-mm-dd"
-  ),
+  bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
-    bslib::value_box(
-      title = "Total Content",
-      max_height = "120px",
-      value = shiny::textOutput("content_total_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
+    shiny::selectInput(
+      "content_overview_environment",
+      "Environment:",
+      choices = c("All")
     ),
-    bslib::value_box(
-      title = "New Content",
-      max_height = "120px",
-      value = shiny::textOutput("content_new_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
+    shiny::selectInput(
+      "content_overview_type",
+      "Type:",
+      choices = c("All")
     ),
-    bslib::value_box(
-      title = "Updated Content",
-      max_height = "120px",
-      value = shiny::textOutput("content_updated_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
+    shiny::dateRangeInput(
+      "content_overview_date_range",
+      "Date Range:",
+      start = NULL,
+      end = NULL,
+      format = "yyyy-mm-dd"
     )
   ),
   bslib::card(
-    bslib::card_header("Content Trends Over Time (PLACEHOLDER)"),
+    bslib::card_header("Content Trends Over Time"),
     shinycssloaders::withSpinner(plotly::plotlyOutput("content_trend_plot"))
+  ),
+  bslib::card(
+    bslib::card_header("Content by Type"),
+    shinycssloaders::withSpinner(plotly::plotlyOutput("content_type_bar_plot"))
   )
 )
 
 content_overview_server <- function(input, output, session) {
-  # Generate placeholder data
-  content_data <- shiny::reactive({
-    data.frame(
-      date = seq.Date(Sys.Date() - 90, Sys.Date(), by = "day"),
-      total_content = 450 + cumsum(sample(-2:5, 91, replace = TRUE)),
-      new_content = sample(0:5, 91, replace = TRUE),
-      updated_content = sample(0:10, 91, replace = TRUE)
+  # Load curated content totals data
+  contents_data <- shiny::reactive({
+    tryCatch(
+      {
+        # Curated daily totals for content metrics
+        chronicle_data("connect/content_totals", base_path)
+      },
+      error = function(e) {
+        message("Error loading contents: ", e$message)
+        NULL
+      }
     )
   })
 
-  # Value boxes (latest values)
-  output$content_total_value <- shiny::renderText({
-    data <- content_data()
-    prettyNum(tail(data$total_content, 1), big.mark = ",")
+  # Populate environment filter dynamically based on curated data
+  shiny::observe({
+    data <- contents_data()
+    if (is.null(data)) {
+      return()
+    }
+    df <- data |> dplyr::collect()
+    # Detect environment column if present
+    env_col <- NULL
+    possible_env_cols <- c("environment", "env")
+    for (nm in possible_env_cols) {
+      if (nm %in% names(df)) {
+        env_col <- nm
+        break
+      }
+    }
+    if (is.null(env_col)) {
+      # No environment column; keep only "All"
+      shiny::updateSelectInput(
+        session,
+        "content_overview_environment",
+        choices = c("All"),
+        selected = "All"
+      )
+    } else {
+      env_values <- df |>
+        dplyr::pull(env_col) |>
+        unique()
+
+      has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+      env_values <- env_values[
+        !is.na(env_values) & env_values != "" & env_values != " "
+      ] |>
+        sort()
+      if (has_na) {
+        env_values <- c(env_values, "(Not Set)")
+      }
+
+      shiny::updateSelectInput(
+        session,
+        "content_overview_environment",
+        choices = c("All", env_values),
+        selected = "All"
+      )
+    }
+
+    # Detect type column if present
+    type_col <- NULL
+    possible_type_cols <- c("type", "content_type", "kind")
+    for (nm in possible_type_cols) {
+      if (nm %in% names(df)) {
+        type_col <- nm
+        break
+      }
+    }
+    if (is.null(type_col)) {
+      shiny::updateSelectInput(
+        session,
+        "content_overview_type",
+        choices = c("All"),
+        selected = "All"
+      )
+      return()
+    }
+
+    type_values <- df |>
+      dplyr::pull(type_col) |>
+      unique()
+
+    has_type_na <- any(is.na(type_values) | type_values == "" | type_values == " ")
+    type_values <- type_values[
+      !is.na(type_values) & type_values != "" & type_values != " "
+    ] |>
+      sort()
+    if (has_type_na) {
+      type_values <- c(type_values, "(Not Set)")
+    }
+
+    shiny::updateSelectInput(
+      session,
+      "content_overview_type",
+      choices = c("All", type_values),
+      selected = "All"
+    )
   })
 
-  output$content_new_value <- shiny::renderText({
-    data <- content_data()
-    prettyNum(tail(data$new_content, 1), big.mark = ",")
+  # Set default date range when data loads
+  shiny::observe({
+    shiny::req(contents_data())
+
+    date_summary <- contents_data() |>
+      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::summarise(
+        min_date = min(.data$date, na.rm = TRUE),
+        max_date = max(.data$date, na.rm = TRUE)
+      ) |>
+      dplyr::collect()
+
+    shiny::updateDateRangeInput(
+      session,
+      "content_overview_date_range",
+      start = date_summary$min_date,
+      end = date_summary$max_date,
+      min = date_summary$min_date,
+      max = date_summary$max_date
+    )
   })
 
-  output$content_updated_value <- shiny::renderText({
-    data <- content_data()
-    prettyNum(tail(data$updated_content, 1), big.mark = ",")
-  })
+  # (Removed) value boxes and latest metrics; charts remain
 
-  # Trend chart
+  # Trend chart (filtered by date range)
   output$content_trend_plot <- plotly::renderPlotly({
-    data <- content_data()
+    data <- contents_data()
 
-    # Filter by date range
-    data <- data |>
+    if (is.null(data)) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>Data not available</b>",
+                x = 0.5,
+                y = 0.55,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              ),
+              list(
+                text = "Check that Chronicle data exists at the configured path",
+                x = 0.5,
+                y = 0.45,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 14, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    shiny::req(input$content_overview_date_range)
+
+    df <- data |> dplyr::collect()
+    # Apply environment filter if available and selected
+    env_col <- NULL
+    possible_env_cols <- c("environment", "env")
+    for (nm in possible_env_cols) {
+      if (nm %in% names(df)) {
+        env_col <- nm
+        break
+      }
+    }
+    if (!is.null(env_col) && input$content_overview_environment != "All") {
+      if (input$content_overview_environment == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data[[env_col]]) |
+              .data[[env_col]] == "" |
+              .data[[env_col]] == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+      }
+    }
+
+    # Apply type filter if available and selected
+    type_col <- NULL
+    possible_type_cols <- c("type", "content_type", "kind")
+    for (nm in possible_type_cols) {
+      if (nm %in% names(df)) {
+        type_col <- nm
+        break
+      }
+    }
+    if (!is.null(type_col) && input$content_overview_type != "All") {
+      if (input$content_overview_type == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data[[type_col]]) |
+              .data[[type_col]] == "" |
+              .data[[type_col]] == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[type_col]] == input$content_overview_type)
+      }
+    }
+
+    if (!"date" %in% names(df) || nrow(df) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE)
+          )
+      )
+    }
+
+    df <- df |>
       dplyr::filter(
-        date >= input$content_overview_date_range[1],
-        date <= input$content_overview_date_range[2]
+        .data$date >= input$content_overview_date_range[1],
+        .data$date <= input$content_overview_date_range[2]
       )
 
-    plot_data <- data |>
-      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
-      dplyr::mutate(
-        metric = factor(
-          .data$metric,
-          levels = c("total_content", "new_content", "updated_content"),
-          labels = c("Total Content", "New Content", "Updated Content")
-        )
+    if (nrow(df) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              )
+            )
+          )
       )
+    }
+
+    # Aggregate by date according to spec
+    count_cols <- intersect(c("total_content", "count", "value"), names(df))
+    total_by_date <- if (length(count_cols) > 0) {
+      df |>
+        dplyr::group_by(.data$date) |>
+        dplyr::summarise(
+          total_content = sum(.data[[count_cols[1]]], na.rm = TRUE),
+          .groups = "drop"
+        )
+    } else {
+      num_cols <- names(df)[sapply(df, is.numeric)]
+      num_cols <- setdiff(num_cols, c("date"))
+      df |>
+        dplyr::group_by(.data$date) |>
+        dplyr::summarise(
+          total_content = if (length(num_cols) == 0) {
+            0L
+          } else {
+            sum(
+              rowSums(dplyr::across(dplyr::all_of(num_cols)), na.rm = TRUE),
+              na.rm = TRUE
+            )
+          },
+          .groups = "drop"
+        )
+    }
+
+    # Only plot Total Content over time (remove unique content types)
+    plot_data <- total_by_date |>
+      dplyr::mutate(metric = factor("Total Content", levels = "Total Content")) |>
+      dplyr::rename(value = total_content)
+
+    if (nrow(plot_data) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              )
+            )
+          )
+      )
+    }
 
     p <- ggplot2::ggplot(
       plot_data,
       ggplot2::aes(x = date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
-      ggplot2::geom_point(size = 0.5) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          text = paste0(
+            format(date, "%B %d, %Y"),
+            "<br>",
+            prettyNum(.data$value, big.mark = ","),
+            " ",
+            .data$metric
+          )
+        ),
+        size = 0.5
+      ) +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "", y = "Content Items", color = "") +
-      ggplot2::scale_color_manual(
-        values = c(
-          "Total Content" = BRAND_COLORS$BLUE,
-          "New Content" = BRAND_COLORS$GREEN,
-          "Updated Content" = BRAND_COLORS$BURGUNDY
-        )
-      )
+      ggplot2::scale_color_manual(values = c("Total Content" = BRAND_COLORS$BLUE))
 
-    plotly::ggplotly(p) |>
+    plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
         xaxis = list(fixedrange = TRUE),
         yaxis = list(fixedrange = TRUE),
         legend = list(orientation = "h", x = 0.5, xanchor = "center")
+      ) |>
+      plotly::config(displayModeBar = FALSE)
+  })
+
+  # Bar chart: content counts by type over selected date range
+  output$content_type_bar_plot <- plotly::renderPlotly({
+    data <- contents_data()
+
+    if (is.null(data)) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>Data not available</b>",
+                x = 0.5,
+                y = 0.55,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              ),
+              list(
+                text = "Check that Chronicle data exists at the configured path",
+                x = 0.5,
+                y = 0.45,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 14, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    shiny::req(input$content_overview_date_range)
+
+    df <- data |> dplyr::collect()
+    # Apply environment filter if available and selected
+    env_col <- NULL
+    possible_env_cols <- c("environment", "env")
+    for (nm in possible_env_cols) {
+      if (nm %in% names(df)) {
+        env_col <- nm
+        break
+      }
+    }
+    if (!is.null(env_col) && input$content_overview_environment != "All") {
+      if (input$content_overview_environment == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data[[env_col]]) |
+              .data[[env_col]] == "" |
+              .data[[env_col]] == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+      }
+    }
+
+    if (!"date" %in% names(df) || nrow(df) == 0) {
+      return(plotly::plotly_empty())
+    }
+
+    # Filter to selected range and select ONLY the latest day in range
+    df <- df |>
+      dplyr::filter(
+        .data$date >= input$content_overview_date_range[1],
+        .data$date <= input$content_overview_date_range[2]
+      )
+
+    if (nrow(df) == 0) {
+      return(
+        plotly::plotly_empty() |>
+          plotly::layout(
+            xaxis = list(showgrid = FALSE, zeroline = FALSE),
+            yaxis = list(showgrid = FALSE, zeroline = FALSE),
+            annotations = list(
+              list(
+                text = "<b>No data available for selected date range</b>",
+                x = 0.5,
+                y = 0.5,
+                xref = "paper",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 18, color = "#666666")
+              )
+            )
+          )
+      )
+    }
+
+    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
+    df <- df |>
+      dplyr::filter(.data$date == latest_date)
+
+    # Identify type column heuristically
+    type_col <- NULL
+    possible_type_cols <- c("type", "content_type", "kind")
+    for (nm in possible_type_cols) {
+      if (nm %in% names(df)) {
+        type_col <- nm
+        break
+      }
+    }
+
+    # Apply type filter if selected
+    if (!is.null(type_col) && input$content_overview_type != "All") {
+      if (input$content_overview_type == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data[[type_col]]) |
+              .data[[type_col]] == "" |
+              .data[[type_col]] == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data[[type_col]] == input$content_overview_type)
+      }
+    }
+
+    # Compute counts per type
+    count_cols <- intersect(c("total_content", "count", "value"), names(df))
+
+    if (!is.null(type_col)) {
+      if (length(count_cols) > 0) {
+        # Latest-day totals are not cumulative; just use that day's counts
+        type_summary <- df |>
+          dplyr::group_by(.data[[type_col]]) |>
+          dplyr::summarise(
+            total = sum(.data[[count_cols[1]]], na.rm = TRUE),
+            .groups = "drop"
+          )
+      } else {
+        type_summary <- df |>
+          dplyr::group_by(.data[[type_col]]) |>
+          dplyr::summarise(total = dplyr::n(), .groups = "drop")
+      }
+      names(type_summary)[1] <- "content_type"
+    } else {
+      # Fallback: no explicit type column. Treat each row as one item category "Unknown"
+      total_val <- if (length(count_cols) > 0) {
+        sum(df[[count_cols[1]]], na.rm = TRUE)
+      } else {
+        nrow(df)
+      }
+      type_summary <- tibble::tibble(
+        content_type = "Unknown",
+        total = total_val
+      )
+    }
+
+    if (nrow(type_summary) == 0) {
+      return(plotly::plotly_empty())
+    }
+
+    # Order by total desc for nicer bars
+    type_summary <- type_summary |>
+      dplyr::arrange(dplyr::desc(.data$total))
+
+    p <- ggplot2::ggplot(
+      type_summary,
+      ggplot2::aes(
+        x = stats::reorder(.data$content_type, .data$total),
+        y = .data$total
+      )
+    ) +
+      ggplot2::geom_col(fill = BRAND_COLORS$GREEN) +
+      ggplot2::coord_flip() +
+      ggplot2::theme_minimal() +
+      ggplot2::labs(x = "Content Type", y = "Count")
+
+    plotly::ggplotly(p) |>
+      plotly::layout(
+        xaxis = list(fixedrange = TRUE),
+        yaxis = list(fixedrange = TRUE)
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
