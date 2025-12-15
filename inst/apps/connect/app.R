@@ -598,40 +598,26 @@ content_overview_server <- function(input, output, session) {
       return()
     }
     df <- data |> dplyr::collect()
-    # Detect environment column if present
-    env_col <- intersect(c("environment", "env"), names(df))[1]
-    if (is.na(env_col)) {
-      env_col <- NULL
-    }
-    if (is.null(env_col)) {
-      # No environment column; keep only "All"
-      shiny::updateSelectInput(
-        session,
-        "content_overview_environment",
-        choices = c("All"),
-        selected = "All"
-      )
-    } else {
-      env_values <- df |>
-        dplyr::pull(env_col) |>
-        unique()
+    # Environment column is always `environment`
+    env_values <- df |>
+      dplyr::pull(.data$environment) |>
+      unique()
 
-      has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
-      env_values <- env_values[
-        !is.na(env_values) & env_values != "" & env_values != " "
-      ] |>
-        sort()
-      if (has_na) {
-        env_values <- c(env_values, "(Not Set)")
-      }
-
-      shiny::updateSelectInput(
-        session,
-        "content_overview_environment",
-        choices = c("All", env_values),
-        selected = "All"
-      )
+    has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
+      sort()
+    if (has_na) {
+      env_values <- c(env_values, "(Not Set)")
     }
+
+    shiny::updateSelectInput(
+      session,
+      "content_overview_environment",
+      choices = c("All", env_values),
+      selected = "All"
+    )
 
     type_values <- df |>
       dplyr::pull("type") |>
@@ -717,22 +703,18 @@ content_overview_server <- function(input, output, session) {
     shiny::req(input$content_overview_date_range)
 
     df <- data |> dplyr::collect()
-    # Apply environment filter if available and selected
-    env_col <- intersect(c("environment", "env"), names(df))[1]
-    if (is.na(env_col)) {
-      env_col <- NULL
-    }
-    if (!is.null(env_col) && input$content_overview_environment != "All") {
+    # Apply environment filter using fixed `environment` column
+    if (input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[env_col]]) |
-              .data[[env_col]] == "" |
-              .data[[env_col]] == " "
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+          dplyr::filter(.data$environment == input$content_overview_environment)
       }
     }
 
@@ -786,32 +768,13 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
-    # Aggregate by date according to spec
-    count_cols <- intersect(c("total_content", "count", "value"), names(df))
-    total_by_date <- if (length(count_cols) > 0) {
-      df |>
-        dplyr::group_by(.data$date) |>
-        dplyr::summarise(
-          total_content = sum(.data[[count_cols[1]]], na.rm = TRUE),
-          .groups = "drop"
-        )
-    } else {
-      num_cols <- names(df)[sapply(df, is.numeric)]
-      num_cols <- setdiff(num_cols, c("date"))
-      df |>
-        dplyr::group_by(.data$date) |>
-        dplyr::summarise(
-          total_content = if (length(num_cols) == 0) {
-            0L
-          } else {
-            sum(
-              rowSums(dplyr::across(dplyr::all_of(num_cols)), na.rm = TRUE),
-              na.rm = TRUE
-            )
-          },
-          .groups = "drop"
-        )
-    }
+    # Aggregate by date using canonical `count` column
+    total_by_date <- df |>
+      dplyr::group_by(.data$date) |>
+      dplyr::summarise(
+        total_content = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
+      )
 
     # Only plot Total Content over time (remove unique content types)
     plot_data <- total_by_date |>
@@ -910,22 +873,18 @@ content_overview_server <- function(input, output, session) {
     shiny::req(input$content_overview_date_range)
 
     df <- data |> dplyr::collect()
-    # Apply environment filter if available and selected
-    env_col <- intersect(c("environment", "env"), names(df))[1]
-    if (is.na(env_col)) {
-      env_col <- NULL
-    }
-    if (!is.null(env_col) && input$content_overview_environment != "All") {
+    # Apply environment filter using fixed `environment` column
+    if (input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[env_col]]) |
-              .data[[env_col]] == "" |
-              .data[[env_col]] == " "
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+          dplyr::filter(.data$environment == input$content_overview_environment)
       }
     }
 
@@ -978,31 +937,19 @@ content_overview_server <- function(input, output, session) {
       }
     }
 
-    # Compute counts per type
-    count_cols <- intersect(c("total_content", "count", "value"), names(df))
-
+    # Compute counts per type using canonical `count` column
     if ("type" %in% names(df)) {
-      if (length(count_cols) > 0) {
-        # Latest-day totals are not cumulative; just use that day's counts
-        type_summary <- df |>
-          dplyr::group_by(.data$type) |>
-          dplyr::summarise(
-            total = sum(.data[[count_cols[1]]], na.rm = TRUE),
-            .groups = "drop"
-          )
-      } else {
-        type_summary <- df |>
-          dplyr::group_by(.data$type) |>
-          dplyr::summarise(total = dplyr::n(), .groups = "drop")
-      }
+      # Latest-day totals are not cumulative; just use that day's counts
+      type_summary <- df |>
+        dplyr::group_by(.data$type) |>
+        dplyr::summarise(
+          total = sum(.data$count, na.rm = TRUE),
+          .groups = "drop"
+        )
       names(type_summary)[1] <- "content_type"
     } else {
       # Fallback: no explicit type column. Treat each row as one item category "Unknown"
-      total_val <- if (length(count_cols) > 0) {
-        sum(df[[count_cols[1]]], na.rm = TRUE)
-      } else {
-        nrow(df)
-      }
+      total_val <- sum(df$count, na.rm = TRUE)
       type_summary <- tibble::tibble(
         content_type = "Unknown",
         total = total_val
