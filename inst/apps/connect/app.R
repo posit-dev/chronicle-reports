@@ -1075,7 +1075,6 @@ content_list_server <- function(input, output, session) {
       return()
     }
 
-    # Detect type column
     df <- data
 
     # Environment choices (environment column is guaranteed)
@@ -1128,9 +1127,9 @@ content_list_server <- function(input, output, session) {
       selected = "All"
     )
 
-    # Populate app type choices
+    # Populate type choices
     types <- df |>
-      dplyr::pull("app_mode") |>
+      dplyr::pull("type") |>
       unique()
     has_na <- any(is.na(types) | types == "" | types == " ")
     types <- types[!is.na(types) & types != "" & types != " "] |> sort()
@@ -1197,13 +1196,13 @@ content_list_server <- function(input, output, session) {
       if (input$content_list_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[["app_mode"]]) |
-              .data[["app_mode"]] == "" |
-              .data[["app_mode"]] == " "
+            is.na(.data$type) |
+              .data$type == "" |
+              .data$type == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[["app_mode"]] == input$content_list_type)
+          dplyr::filter(.data$type == input$content_list_type)
       }
     }
 
@@ -1234,7 +1233,7 @@ content_list_server <- function(input, output, session) {
     cols <- c(
       "title",
       "owner",
-      "app_mode",
+      "type",
       "environment",
       "py_version",
       "r_version",
@@ -1242,14 +1241,8 @@ content_list_server <- function(input, output, session) {
       "last_deployed_time"
     )
 
-    # Standardize column names for display
-    display <- df[, cols, drop = FALSE]
-    if ("app_mode" %in% names(display)) {
-      names(display)[names(display) == "app_mode"] <- "type"
-    }
-
     DT::datatable(
-      display,
+      df[, cols, drop = FALSE],
       options = list(
         pageLength = 25,
         autoWidth = TRUE,
