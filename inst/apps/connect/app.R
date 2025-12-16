@@ -718,8 +718,8 @@ content_overview_server <- function(input, output, session) {
       }
     }
 
-    # Apply type filter using fixed 'type' column
-    if ("type" %in% names(df) && input$content_overview_type != "All") {
+    # Apply type filter
+    if (input$content_overview_type != "All") {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
@@ -924,8 +924,8 @@ content_overview_server <- function(input, output, session) {
     df <- df |>
       dplyr::filter(.data$date == latest_date)
 
-    # Apply type filter using fixed 'type' column
-    if ("type" %in% names(df) && input$content_overview_type != "All") {
+    # Apply type filter
+    if (input$content_overview_type != "All") {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
@@ -937,24 +937,14 @@ content_overview_server <- function(input, output, session) {
       }
     }
 
-    # Compute counts per type using canonical `count` column
-    if ("type" %in% names(df)) {
-      # Latest-day totals are not cumulative; just use that day's counts
-      type_summary <- df |>
-        dplyr::group_by(.data$type) |>
-        dplyr::summarise(
-          total = sum(.data$count, na.rm = TRUE),
-          .groups = "drop"
-        )
-      names(type_summary)[1] <- "content_type"
-    } else {
-      # Fallback: no explicit type column. Treat each row as one item category "Unknown"
-      total_val <- sum(df$count, na.rm = TRUE)
-      type_summary <- tibble::tibble(
-        content_type = "Unknown",
-        total = total_val
+    # Latest-day totals are not cumulative; just use that day's counts
+    type_summary <- df |>
+      dplyr::group_by(.data$type) |>
+      dplyr::summarise(
+        total = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
       )
-    }
+    names(type_summary)[1] <- "content_type"
 
     if (nrow(type_summary) == 0) {
       return(plotly::plotly_empty())
@@ -1104,9 +1094,6 @@ content_list_server <- function(input, output, session) {
       selected = "All"
     )
 
-    # Type column on this file is app_mode; UI label remains "Type"
-    type_col <- "app_mode"
-
     # Resolve owner names by joining latest user list on owner id
     owners_choices <- c("All")
     ulist <- latest_user_list()
@@ -1136,30 +1123,21 @@ content_list_server <- function(input, output, session) {
       selected = "All"
     )
 
-    # Types
-    if (!is.null(type_col)) {
-      types <- df |>
-        dplyr::pull(type_col) |>
-        unique()
-      has_na <- any(is.na(types) | types == "" | types == " ")
-      types <- types[!is.na(types) & types != "" & types != " "] |> sort()
-      if (has_na) {
-        types <- c(types, "(Not Set)")
-      }
-      shiny::updateSelectInput(
-        session,
-        "content_list_type",
-        choices = c("All", types),
-        selected = "All"
-      )
-    } else {
-      shiny::updateSelectInput(
-        session,
-        "content_list_type",
-        choices = c("All"),
-        selected = "All"
-      )
+    # Populate app type choices
+    types <- df |>
+      dplyr::pull("app_mode") |>
+      unique()
+    has_na <- any(is.na(types) | types == "" | types == " ")
+    types <- types[!is.na(types) & types != "" & types != " "] |> sort()
+    if (has_na) {
+      types <- c(types, "(Not Set)")
     }
+    shiny::updateSelectInput(
+      session,
+      "content_list_type",
+      choices = c("All", types),
+      selected = "All"
+    )
   })
 
   # Apply filters
@@ -1170,9 +1148,6 @@ content_list_server <- function(input, output, session) {
     }
 
     df <- data
-
-    # Type column is app_mode; UI label remains "Type"
-    type_col <- "app_mode"
 
     # Environment filter (environment column is guaranteed)
     if (input$content_list_environment != "All") {
@@ -1217,13 +1192,13 @@ content_list_server <- function(input, output, session) {
       if (input$content_list_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[type_col]]) |
-              .data[[type_col]] == "" |
-              .data[[type_col]] == " "
+            is.na(.data[["app_mode"]]) |
+              .data[["app_mode"]] == "" |
+              .data[["app_mode"]] == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[type_col]] == input$content_list_type)
+          dplyr::filter(.data[["app_mode"]] == input$content_list_type)
       }
     }
 
