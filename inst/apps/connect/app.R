@@ -669,7 +669,7 @@ content_overview_server <- function(input, output, session) {
     )
   })
 
-  contents_filtered <- shiny::reactive({
+  filtered_contents <- shiny::reactive({
     data <- contents_data()
     if (is.null(data)) {
       return(NULL)
@@ -708,13 +708,9 @@ content_overview_server <- function(input, output, session) {
     df
   })
 
-  contents_filtered_in_range <- shiny::reactive({
-    df <- contents_filtered()
+  filtered_contents_in_range <- shiny::reactive({
+    df <- filtered_contents()
     if (is.null(df)) {
-      return(NULL)
-    }
-
-    if (!"date" %in% names(df)) {
       return(NULL)
     }
 
@@ -761,7 +757,7 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
-    df <- contents_filtered_in_range()
+    df <- filtered_contents_in_range()
 
     if (is.null(df) || nrow(df) == 0) {
       return(
@@ -886,7 +882,7 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
-    df <- contents_filtered_in_range()
+    df <- filtered_contents_in_range()
 
     if (is.null(df)) {
       return(plotly::plotly_empty())
