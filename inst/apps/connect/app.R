@@ -603,69 +603,34 @@ content_overview_server <- function(input, output, session) {
       return()
     }
     df <- data |> dplyr::collect()
-    # Detect environment column if present
-    env_col <- NULL
-    possible_env_cols <- c("environment", "env")
-    for (nm in possible_env_cols) {
-      if (nm %in% names(df)) {
-        env_col <- nm
-        break
-      }
-    }
-    if (is.null(env_col)) {
-      # No environment column; keep only "All"
-      shiny::updateSelectInput(
-        session,
-        "content_overview_environment",
-        choices = c("All"),
-        selected = "All"
-      )
-    } else {
-      env_values <- df |>
-        dplyr::pull(env_col) |>
-        unique()
-
-      has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
-      env_values <- env_values[
-        !is.na(env_values) & env_values != "" & env_values != " "
-      ] |>
-        sort()
-      if (has_na) {
-        env_values <- c(env_values, "(Not Set)")
-      }
-
-      shiny::updateSelectInput(
-        session,
-        "content_overview_environment",
-        choices = c("All", env_values),
-        selected = "All"
-      )
-    }
-
-    # Detect type column if present
-    type_col <- NULL
-    possible_type_cols <- c("type", "content_type", "kind")
-    for (nm in possible_type_cols) {
-      if (nm %in% names(df)) {
-        type_col <- nm
-        break
-      }
-    }
-    if (is.null(type_col)) {
-      shiny::updateSelectInput(
-        session,
-        "content_overview_type",
-        choices = c("All"),
-        selected = "All"
-      )
-      return()
-    }
-
-    type_values <- df |>
-      dplyr::pull(type_col) |>
+    # Environment column is always `environment`
+    env_values <- df |>
+      dplyr::pull(.data$environment) |>
       unique()
 
-    has_type_na <- any(is.na(type_values) | type_values == "" | type_values == " ")
+    has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
+      sort()
+    if (has_na) {
+      env_values <- c(env_values, "(Not Set)")
+    }
+
+    shiny::updateSelectInput(
+      session,
+      "content_overview_environment",
+      choices = c("All", env_values),
+      selected = "All"
+    )
+
+    type_values <- df |>
+      dplyr::pull("type") |>
+      unique()
+
+    has_type_na <- any(
+      is.na(type_values) | type_values == "" | type_values == " "
+    )
     type_values <- type_values[
       !is.na(type_values) & type_values != "" & type_values != " "
     ] |>
@@ -743,49 +708,31 @@ content_overview_server <- function(input, output, session) {
     shiny::req(input$content_overview_date_range)
 
     df <- data |> dplyr::collect()
-    # Apply environment filter if available and selected
-    env_col <- NULL
-    possible_env_cols <- c("environment", "env")
-    for (nm in possible_env_cols) {
-      if (nm %in% names(df)) {
-        env_col <- nm
-        break
-      }
-    }
-    if (!is.null(env_col) && input$content_overview_environment != "All") {
+    # Apply environment filter using fixed `environment` column
+    if (input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[env_col]]) |
-              .data[[env_col]] == "" |
-              .data[[env_col]] == " "
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+          dplyr::filter(.data$environment == input$content_overview_environment)
       }
     }
 
-    # Apply type filter if available and selected
-    type_col <- NULL
-    possible_type_cols <- c("type", "content_type", "kind")
-    for (nm in possible_type_cols) {
-      if (nm %in% names(df)) {
-        type_col <- nm
-        break
-      }
-    }
-    if (!is.null(type_col) && input$content_overview_type != "All") {
+    # Apply type filter
+    if (input$content_overview_type != "All") {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[type_col]]) |
-              .data[[type_col]] == "" |
-              .data[[type_col]] == " "
+            is.na(.data$type) | .data$type == "" | .data$type == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[type_col]] == input$content_overview_type)
+          dplyr::filter(.data$type == input$content_overview_type)
       }
     }
 
@@ -826,36 +773,19 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
-    # Aggregate by date according to spec
-    count_cols <- intersect(c("total_content", "count", "value"), names(df))
-    total_by_date <- if (length(count_cols) > 0) {
-      df |>
-        dplyr::group_by(.data$date) |>
-        dplyr::summarise(
-          total_content = sum(.data[[count_cols[1]]], na.rm = TRUE),
-          .groups = "drop"
-        )
-    } else {
-      num_cols <- names(df)[sapply(df, is.numeric)]
-      num_cols <- setdiff(num_cols, c("date"))
-      df |>
-        dplyr::group_by(.data$date) |>
-        dplyr::summarise(
-          total_content = if (length(num_cols) == 0) {
-            0L
-          } else {
-            sum(
-              rowSums(dplyr::across(dplyr::all_of(num_cols)), na.rm = TRUE),
-              na.rm = TRUE
-            )
-          },
-          .groups = "drop"
-        )
-    }
+    # Aggregate by date using canonical `count` column
+    total_by_date <- df |>
+      dplyr::group_by(.data$date) |>
+      dplyr::summarise(
+        total_content = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
+      )
 
     # Only plot Total Content over time (remove unique content types)
     plot_data <- total_by_date |>
-      dplyr::mutate(metric = factor("Total Content", levels = "Total Content")) |>
+      dplyr::mutate(
+        metric = factor("Total Content", levels = "Total Content")
+      ) |>
       dplyr::rename(value = total_content)
 
     if (nrow(plot_data) == 0) {
@@ -898,7 +828,9 @@ content_overview_server <- function(input, output, session) {
       ) +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "", y = "Content Items", color = "") +
-      ggplot2::scale_color_manual(values = c("Total Content" = BRAND_COLORS$BLUE))
+      ggplot2::scale_color_manual(
+        values = c("Total Content" = BRAND_COLORS$BLUE)
+      )
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
@@ -946,26 +878,18 @@ content_overview_server <- function(input, output, session) {
     shiny::req(input$content_overview_date_range)
 
     df <- data |> dplyr::collect()
-    # Apply environment filter if available and selected
-    env_col <- NULL
-    possible_env_cols <- c("environment", "env")
-    for (nm in possible_env_cols) {
-      if (nm %in% names(df)) {
-        env_col <- nm
-        break
-      }
-    }
-    if (!is.null(env_col) && input$content_overview_environment != "All") {
+    # Apply environment filter using fixed `environment` column
+    if (input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[env_col]]) |
-              .data[[env_col]] == "" |
-              .data[[env_col]] == " "
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[env_col]] == input$content_overview_environment)
+          dplyr::filter(.data$environment == input$content_overview_environment)
       }
     }
 
@@ -1005,61 +929,27 @@ content_overview_server <- function(input, output, session) {
     df <- df |>
       dplyr::filter(.data$date == latest_date)
 
-    # Identify type column heuristically
-    type_col <- NULL
-    possible_type_cols <- c("type", "content_type", "kind")
-    for (nm in possible_type_cols) {
-      if (nm %in% names(df)) {
-        type_col <- nm
-        break
-      }
-    }
-
-    # Apply type filter if selected
-    if (!is.null(type_col) && input$content_overview_type != "All") {
+    # Apply type filter
+    if (input$content_overview_type != "All") {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data[[type_col]]) |
-              .data[[type_col]] == "" |
-              .data[[type_col]] == " "
+            is.na(.data$type) | .data$type == "" | .data$type == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data[[type_col]] == input$content_overview_type)
+          dplyr::filter(.data$type == input$content_overview_type)
       }
     }
 
-    # Compute counts per type
-    count_cols <- intersect(c("total_content", "count", "value"), names(df))
-
-    if (!is.null(type_col)) {
-      if (length(count_cols) > 0) {
-        # Latest-day totals are not cumulative; just use that day's counts
-        type_summary <- df |>
-          dplyr::group_by(.data[[type_col]]) |>
-          dplyr::summarise(
-            total = sum(.data[[count_cols[1]]], na.rm = TRUE),
-            .groups = "drop"
-          )
-      } else {
-        type_summary <- df |>
-          dplyr::group_by(.data[[type_col]]) |>
-          dplyr::summarise(total = dplyr::n(), .groups = "drop")
-      }
-      names(type_summary)[1] <- "content_type"
-    } else {
-      # Fallback: no explicit type column. Treat each row as one item category "Unknown"
-      total_val <- if (length(count_cols) > 0) {
-        sum(df[[count_cols[1]]], na.rm = TRUE)
-      } else {
-        nrow(df)
-      }
-      type_summary <- tibble::tibble(
-        content_type = "Unknown",
-        total = total_val
+    # Latest-day totals are not cumulative; just use that day's counts
+    type_summary <- df |>
+      dplyr::group_by(.data$type) |>
+      dplyr::summarise(
+        total = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
       )
-    }
+    names(type_summary)[1] <- "content_type"
 
     if (nrow(type_summary) == 0) {
       return(plotly::plotly_empty())
@@ -1091,32 +981,27 @@ content_overview_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Content - Content List UI/Server (PLACEHOLDER)
+# Content - Content List UI/Server
 # ==============================================
 
 content_list_ui <- bslib::card(
-  bslib::card_header(
-    shiny::tags$div(
-      shiny::tags$span("PLACEHOLDER DATA - Content List"),
-      style = "color: #9A4665; font-weight: bold;"
-    )
-  ),
+  bslib::card_header("Content List"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
+      "content_list_environment",
+      "Environment:",
+      choices = c("All")
+    ),
+    shiny::selectInput(
       "content_list_owner",
       "Owner:",
-      choices = c("All", "user1", "user2", "user3")
+      choices = c("All")
     ),
     shiny::selectInput(
       "content_list_type",
       "Type:",
-      choices = c("All", "shiny", "rmd", "jupyter", "quarto")
-    ),
-    shiny::textInput(
-      "content_list_search",
-      "Search:",
-      placeholder = "Title"
+      choices = c("All")
     )
   ),
   shinycssloaders::withSpinner(
@@ -1125,50 +1010,253 @@ content_list_ui <- bslib::card(
 )
 
 content_list_server <- function(input, output, session) {
-  # Generate placeholder content list
+  # Load real content list data (snapshot at latest day)
   content_list_data <- shiny::reactive({
-    data.frame(
-      title = paste("Content Item", 1:50),
-      owner = sample(c("user1", "user2", "user3"), 50, replace = TRUE),
-      type = sample(c("shiny", "rmd", "jupyter", "quarto"), 50, replace = TRUE),
-      python_version = sample(c("3.9", "3.10", "3.11", NA), 50, replace = TRUE),
-      r_version = sample(c("4.1", "4.2", "4.3", NA), 50, replace = TRUE),
-      last_updated = Sys.Date() - sample(0:365, 50, replace = TRUE)
+    tryCatch(
+      {
+        data <- chronicle_data("connect/content_list", base_path)
+
+        df <- data |> dplyr::collect()
+        if (!"date" %in% names(df) || nrow(df) == 0) {
+          return(NULL)
+        }
+
+        latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
+        df |> dplyr::filter(.data$date == latest_date)
+      },
+      error = function(e) {
+        message("Error loading content list: ", e$message)
+        NULL
+      }
+    )
+  })
+
+  # Load latest user list for owner name resolution
+  latest_user_list <- shiny::reactive({
+    tryCatch(
+      {
+        udata <- chronicle_data("connect/user_list", base_path)
+        udf <- udata |> dplyr::collect()
+        if (!"date" %in% names(udf) || nrow(udf) == 0) {
+          return(NULL)
+        }
+        latest_date <- suppressWarnings(max(udf$date, na.rm = TRUE))
+        udf |> dplyr::filter(.data$date == latest_date)
+      },
+      error = function(e) {
+        message("Error loading user list for owner resolution: ", e$message)
+        NULL
+      }
+    )
+  })
+
+  # Populate owner and type filters dynamically
+  shiny::observe({
+    data <- content_list_data()
+    if (is.null(data) || nrow(data) == 0) {
+      shiny::updateSelectInput(
+        session,
+        "content_list_environment",
+        choices = c("All"),
+        selected = "All"
+      )
+      shiny::updateSelectInput(
+        session,
+        "content_list_owner",
+        choices = c("All"),
+        selected = "All"
+      )
+      shiny::updateSelectInput(
+        session,
+        "content_list_type",
+        choices = c("All"),
+        selected = "All"
+      )
+      return()
+    }
+
+    # Detect type column
+    df <- data
+
+    # Environment choices (environment column is guaranteed)
+    env_values <- df |>
+      dplyr::pull(.data$environment) |>
+      unique()
+
+    has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
+      sort()
+    if (has_env_na) {
+      env_values <- c(env_values, "(Not Set)")
+    }
+
+    shiny::updateSelectInput(
+      session,
+      "content_list_environment",
+      choices = c("All", env_values),
+      selected = "All"
+    )
+
+    # Resolve owner names by joining latest user list on owner id
+    owners_choices <- c("All")
+    ulist <- latest_user_list()
+    if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
+      owners <- df |>
+        dplyr::left_join(
+          ulist |>
+            dplyr::select(id, username) |>
+            dplyr::rename(owner_guid = .data$id, owner = .data$username),
+          by = "owner_guid"
+        ) |>
+        dplyr::pull(.data$owner) |>
+        unique()
+
+      has_na <- any(is.na(owners) | owners == "" | owners == " ")
+      owners <- owners[!is.na(owners) & owners != "" & owners != " "] |>
+        sort()
+      if (has_na) {
+        owners <- c(owners, "(Not Set)")
+      }
+      owners_choices <- c("All", owners)
+    }
+    shiny::updateSelectInput(
+      session,
+      "content_list_owner",
+      choices = owners_choices,
+      selected = "All"
+    )
+
+    # Populate app type choices
+    types <- df |>
+      dplyr::pull("app_mode") |>
+      unique()
+    has_na <- any(is.na(types) | types == "" | types == " ")
+    types <- types[!is.na(types) & types != "" & types != " "] |> sort()
+    if (has_na) {
+      types <- c(types, "(Not Set)")
+    }
+    shiny::updateSelectInput(
+      session,
+      "content_list_type",
+      choices = c("All", types),
+      selected = "All"
     )
   })
 
   # Apply filters
   filtered_content_list <- shiny::reactive({
     data <- content_list_data()
-
-    if (input$content_list_owner != "All") {
-      data <- data |> dplyr::filter(.data$owner == input$content_list_owner)
+    if (is.null(data)) {
+      return(NULL)
     }
 
+    df <- data
+
+    # Environment filter (environment column is guaranteed)
+    if (input$content_list_environment != "All") {
+      if (input$content_list_environment == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data$environment == input$content_list_environment)
+      }
+    }
+
+    # Join owner display for filtering, using latest user list
+    ulist <- latest_user_list()
+    if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
+      owner_lookup <- ulist |>
+        dplyr::select(id, username) |>
+        dplyr::rename(owner_guid = .data$id, owner = .data$username)
+
+      df <- df |>
+        dplyr::left_join(owner_lookup, by = "owner_guid")
+    }
+
+    # Owner filter
+    if ("owner" %in% names(df) && input$content_list_owner != "All") {
+      if (input$content_list_owner == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data$owner) | .data$owner == "" | .data$owner == " "
+          )
+      } else {
+        df <- df |> dplyr::filter(.data$owner == input$content_list_owner)
+      }
+    }
+
+    # Type filter
     if (input$content_list_type != "All") {
-      data <- data |> dplyr::filter(.data$type == input$content_list_type)
+      if (input$content_list_type == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data[["app_mode"]]) |
+              .data[["app_mode"]] == "" |
+              .data[["app_mode"]] == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data[["app_mode"]] == input$content_list_type)
+      }
     }
 
-    if (nzchar(input$content_list_search)) {
-      search_term <- tolower(input$content_list_search)
-      data <- data |>
-        dplyr::filter(grepl(search_term, tolower(.data$title), fixed = TRUE))
-    }
-
-    data
+    df
   })
 
   # Render table
   output$content_list_table <- DT::renderDataTable({
-    filtered_content_list() |>
-      DT::datatable(
-        options = list(
-          pageLength = 25,
-          autoWidth = TRUE,
-          scrollX = TRUE
-        ),
-        rownames = FALSE
+    data <- filtered_content_list()
+    if (is.null(data) || nrow(data) == 0) {
+      return(
+        DT::datatable(
+          data.frame(
+            " " = "Data not available - Check that Chronicle data exists at the configured path."
+          ),
+          options = list(
+            dom = "t",
+            ordering = FALSE,
+            columnDefs = list(list(className = "dt-center", targets = "_all"))
+          ),
+          rownames = FALSE,
+          colnames = ""
+        )
       )
+    }
+
+    df <- data
+    cols <- c(
+      "title",
+      "owner",
+      "app_mode",
+      "environment",
+      "py_version",
+      "r_version",
+      "quarto_version",
+      "last_deployed_time"
+    )
+
+    # Standardize column names for display
+    display <- df[, cols, drop = FALSE]
+    if ("app_mode" %in% names(display)) {
+      names(display)[names(display) == "app_mode"] <- "type"
+    }
+
+    DT::datatable(
+      display,
+      options = list(
+        pageLength = 25,
+        autoWidth = TRUE,
+        scrollX = TRUE
+      ),
+      rownames = FALSE
+    )
   })
 }
 
