@@ -888,7 +888,7 @@ content_overview_server <- function(input, output, session) {
 
     df <- contents_filtered_in_range()
 
-    if (is.null(df) || !"date" %in% names(df)) {
+    if (is.null(df)) {
       return(plotly::plotly_empty())
     }
 
