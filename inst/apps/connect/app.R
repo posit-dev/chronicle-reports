@@ -14,8 +14,11 @@ BRAND_COLORS <- list(
   GRAY = "#404041"
 )
 
-# Load app constants
-source("../constants.R")
+# Common application configuration
+APP_CONFIG <- list(
+  # Default Chronicle data path
+  DEFAULT_BASE_PATH = "/var/lib/posit-chronicle/data"
+)
 
 # Get base path from environment variable
 base_path <- Sys.getenv(
@@ -660,7 +663,9 @@ content_overview_server <- function(input, output, session) {
       dplyr::pull(type_col) |>
       unique()
 
-    has_type_na <- any(is.na(type_values) | type_values == "" | type_values == " ")
+    has_type_na <- any(
+      is.na(type_values) | type_values == "" | type_values == " "
+    )
     type_values <- type_values[
       !is.na(type_values) & type_values != "" & type_values != " "
     ] |>
@@ -850,7 +855,9 @@ content_overview_server <- function(input, output, session) {
 
     # Only plot Total Content over time (remove unique content types)
     plot_data <- total_by_date |>
-      dplyr::mutate(metric = factor("Total Content", levels = "Total Content")) |>
+      dplyr::mutate(
+        metric = factor("Total Content", levels = "Total Content")
+      ) |>
       dplyr::rename(value = total_content)
 
     if (nrow(plot_data) == 0) {
@@ -893,7 +900,9 @@ content_overview_server <- function(input, output, session) {
       ) +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "", y = "Content Items", color = "") +
-      ggplot2::scale_color_manual(values = c("Total Content" = BRAND_COLORS$BLUE))
+      ggplot2::scale_color_manual(
+        values = c("Total Content" = BRAND_COLORS$BLUE)
+      )
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
