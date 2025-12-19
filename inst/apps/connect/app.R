@@ -669,7 +669,59 @@ content_overview_server <- function(input, output, session) {
     )
   })
 
-  # (Removed) value boxes and latest metrics; charts remain
+  filtered_contents <- shiny::reactive({
+    data <- contents_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    df <- data |> dplyr::collect()
+
+    # Environment filter
+    if (input$content_overview_environment != "All") {
+      if (input$content_overview_environment == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data$environment == input$content_overview_environment)
+      }
+    }
+
+    # Content Type filter
+    if (input$content_overview_type != "All") {
+      if (input$content_overview_type == "(Not Set)") {
+        df <- df |>
+          dplyr::filter(
+            is.na(.data$type) | .data$type == "" | .data$type == " "
+          )
+      } else {
+        df <- df |>
+          dplyr::filter(.data$type == input$content_overview_type)
+      }
+    }
+
+    df
+  })
+
+  filtered_contents_in_range <- shiny::reactive({
+    df <- filtered_contents()
+    if (is.null(df)) {
+      return(NULL)
+    }
+
+    shiny::req(input$content_overview_date_range)
+
+    df |>
+      dplyr::filter(
+        .data$date >= input$content_overview_date_range[1],
+        .data$date <= input$content_overview_date_range[2]
+      )
+  })
 
   # Trend chart (filtered by date range)
   output$content_trend_plot <- plotly::renderPlotly({
@@ -705,54 +757,9 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
-    shiny::req(input$content_overview_date_range)
+    df <- filtered_contents_in_range()
 
-    df <- data |> dplyr::collect()
-    # Apply environment filter using fixed `environment` column
-    if (input$content_overview_environment != "All") {
-      if (input$content_overview_environment == "(Not Set)") {
-        df <- df |>
-          dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
-          )
-      } else {
-        df <- df |>
-          dplyr::filter(.data$environment == input$content_overview_environment)
-      }
-    }
-
-    # Apply type filter
-    if (input$content_overview_type != "All") {
-      if (input$content_overview_type == "(Not Set)") {
-        df <- df |>
-          dplyr::filter(
-            is.na(.data$type) | .data$type == "" | .data$type == " "
-          )
-      } else {
-        df <- df |>
-          dplyr::filter(.data$type == input$content_overview_type)
-      }
-    }
-
-    if (!"date" %in% names(df) || nrow(df) == 0) {
-      return(
-        plotly::plotly_empty() |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE)
-          )
-      )
-    }
-
-    df <- df |>
-      dplyr::filter(
-        .data$date >= input$content_overview_date_range[1],
-        .data$date <= input$content_overview_date_range[2]
-      )
-
-    if (nrow(df) == 0) {
+    if (is.null(df) || nrow(df) == 0) {
       return(
         plotly::plotly_empty() |>
           plotly::layout(
@@ -875,34 +882,11 @@ content_overview_server <- function(input, output, session) {
       )
     }
 
-    shiny::req(input$content_overview_date_range)
+    df <- filtered_contents_in_range()
 
-    df <- data |> dplyr::collect()
-    # Apply environment filter using fixed `environment` column
-    if (input$content_overview_environment != "All") {
-      if (input$content_overview_environment == "(Not Set)") {
-        df <- df |>
-          dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
-          )
-      } else {
-        df <- df |>
-          dplyr::filter(.data$environment == input$content_overview_environment)
-      }
-    }
-
-    if (!"date" %in% names(df) || nrow(df) == 0) {
+    if (is.null(df)) {
       return(plotly::plotly_empty())
     }
-
-    # Filter to selected range and select ONLY the latest day in range
-    df <- df |>
-      dplyr::filter(
-        .data$date >= input$content_overview_date_range[1],
-        .data$date <= input$content_overview_date_range[2]
-      )
 
     if (nrow(df) == 0) {
       return(
@@ -928,19 +912,6 @@ content_overview_server <- function(input, output, session) {
     latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
     df <- df |>
       dplyr::filter(.data$date == latest_date)
-
-    # Apply type filter
-    if (input$content_overview_type != "All") {
-      if (input$content_overview_type == "(Not Set)") {
-        df <- df |>
-          dplyr::filter(
-            is.na(.data$type) | .data$type == "" | .data$type == " "
-          )
-      } else {
-        df <- df |>
-          dplyr::filter(.data$type == input$content_overview_type)
-      }
-    }
 
     # Latest-day totals are not cumulative; just use that day's counts
     type_summary <- df |>
