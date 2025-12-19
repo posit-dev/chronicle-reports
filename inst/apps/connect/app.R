@@ -1225,16 +1225,11 @@ content_list_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Usage - Overview UI/Server (PLACEHOLDER)
+# Usage - Overview UI/Server
 # ==============================================
 
 usage_overview_ui <- bslib::card(
-  bslib::card_header(
-    shiny::tags$div(
-      shiny::tags$span("PLACEHOLDER DATA - Usage Overview"),
-      style = "color: #9A4665; font-weight: bold;"
-    )
-  ),
+  bslib::card_header("Usage Overview"),
   shiny::dateRangeInput(
     "usage_overview_date_range",
     "Date Range:",
@@ -1258,45 +1253,116 @@ usage_overview_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Visit Trends Over Time (PLACEHOLDER)"),
+    bslib::card_header("Visit Trends Over Time"),
     shinycssloaders::withSpinner(plotly::plotlyOutput("usage_trend_plot"))
   )
 )
 
 usage_overview_server <- function(input, output, session) {
-  # Generate placeholder data
   usage_data <- shiny::reactive({
-    data.frame(
-      date = seq.Date(Sys.Date() - 90, Sys.Date(), by = "day"),
-      total_visits = 1200 + cumsum(sample(-50:50, 91, replace = TRUE)),
-      unique_visitors = 150 + cumsum(sample(-5:5, 91, replace = TRUE))
+    tryCatch(
+      {
+        chronicle_data("connect/content_visits_totals_by_user", base_path)
+      },
+      error = function(e) {
+        message("Error loading content visits totals by user: ", e$message)
+        NULL
+      }
     )
   })
 
-  # Value boxes
-  output$usage_visits_value <- shiny::renderText({
+  shiny::observe({
     data <- usage_data()
-    prettyNum(tail(data$total_visits, 1), big.mark = ",")
+    if (is.null(data)) {
+      return()
+    }
+
+    date_summary <- data |>
+      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::summarise(
+        min_date = min(.data$date, na.rm = TRUE),
+        max_date = max(.data$date, na.rm = TRUE)
+      ) |>
+      dplyr::collect()
+
+    if (nrow(date_summary) == 0) {
+      return()
+    }
+
+    shiny::updateDateRangeInput(
+      session,
+      "usage_overview_date_range",
+      start = date_summary$min_date,
+      end = date_summary$max_date,
+      min = date_summary$min_date,
+      max = date_summary$max_date
+    )
+  })
+
+  usage_filtered <- shiny::reactive({
+    data <- usage_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    shiny::req(input$usage_overview_date_range)
+
+    data |>
+      dplyr::filter(
+        .data$date >= input$usage_overview_date_range[1],
+        .data$date <= input$usage_overview_date_range[2]
+      ) |>
+      dplyr::collect()
+  })
+
+  output$usage_visits_value <- shiny::renderText({
+    df <- usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0 || !"visits" %in% names(df)) {
+      return("0")
+    }
+
+    total_visits <- sum(df$visits, na.rm = TRUE)
+    prettyNum(total_visits, big.mark = ",")
   })
 
   output$usage_unique_value <- shiny::renderText({
-    data <- usage_data()
-    prettyNum(tail(data$unique_visitors, 1), big.mark = ",")
+    df <- usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0 || !"username" %in% names(df)) {
+      return("0")
+    }
+
+    unique_visitors <- dplyr::n_distinct(df$username)
+    prettyNum(unique_visitors, big.mark = ",")
   })
 
-  # Trend chart
   output$usage_trend_plot <- plotly::renderPlotly({
-    data <- usage_data()
+    df <- usage_filtered()
 
-    # Filter by date range
-    data <- data |>
-      dplyr::filter(
-        date >= input$usage_overview_date_range[1],
-        date <= input$usage_overview_date_range[2]
+    if (is.null(df) || nrow(df) == 0 ||
+      !"visits" %in% names(df) || !"username" %in% names(df)) {
+      return(plotly::plotly_empty())
+    }
+
+    daily <- df |>
+      dplyr::group_by(.data$date) |>
+      dplyr::summarise(
+        total_visits = sum(.data$visits, na.rm = TRUE),
+        unique_visitors = dplyr::n_distinct(.data$username),
+        .groups = "drop"
       )
 
-    plot_data <- data |>
-      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
+    if (nrow(daily) == 0) {
+      return(plotly::plotly_empty())
+    }
+
+    plot_data <- daily |>
+      tidyr::pivot_longer(
+        c("total_visits", "unique_visitors"),
+        names_to = "metric",
+        values_to = "value"
+      ) |>
       dplyr::mutate(
         metric = factor(
           .data$metric,
@@ -1331,16 +1397,11 @@ usage_overview_server <- function(input, output, session) {
 }
 
 # ==============================================
-# Usage - Shiny Apps UI/Server (PLACEHOLDER)
+# Usage - Shiny Apps UI/Server
 # ==============================================
 
 shiny_apps_ui <- bslib::card(
-  bslib::card_header(
-    shiny::tags$div(
-      shiny::tags$span("PLACEHOLDER DATA - Shiny App Usage"),
-      style = "color: #9A4665; font-weight: bold;"
-    )
-  ),
+  bslib::card_header("Shiny App Usage"),
   shiny::dateRangeInput(
     "shiny_apps_date_range",
     "Date Range:",
@@ -1370,73 +1431,169 @@ shiny_apps_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Shiny Session Trends (PLACEHOLDER)"),
+    bslib::card_header("Shiny Session Trends"),
     shinycssloaders::withSpinner(plotly::plotlyOutput("shiny_trend_plot"))
   ),
   bslib::card(
-    bslib::card_header("Per-App Breakdown (PLACEHOLDER)"),
+    bslib::card_header("Per-App Breakdown"),
     shinycssloaders::withSpinner(DT::dataTableOutput("shiny_apps_table"))
   )
 )
 
 shiny_apps_server <- function(input, output, session) {
-  # Generate placeholder data
-  shiny_data <- shiny::reactive({
-    data.frame(
-      date = seq.Date(Sys.Date() - 90, Sys.Date(), by = "day"),
-      total_sessions = 250 + cumsum(sample(-10:10, 91, replace = TRUE)),
-      avg_duration = 8 + rnorm(91, 0, 2),
-      peak_concurrent = 15 + sample(-3:3, 91, replace = TRUE)
+  shiny_usage_data <- shiny::reactive({
+    tryCatch(
+      {
+        chronicle_data("connect/shiny_usage_totals_by_user", base_path)
+      },
+      error = function(e) {
+        message("Error loading shiny usage totals by user: ", e$message)
+        NULL
+      }
     )
   })
 
-  # Per-app data
-  shiny_apps_data <- shiny::reactive({
-    data.frame(
-      app_name = paste("Shiny App", 1:20),
-      total_sessions = sample(50:500, 20),
-      avg_duration = round(runif(20, 5, 15), 1),
-      unique_users = sample(10:100, 20)
+  shiny::observe({
+    data <- shiny_usage_data()
+    if (is.null(data)) {
+      return()
+    }
+
+    date_summary <- data |>
+      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::summarise(
+        min_date = min(.data$date, na.rm = TRUE),
+        max_date = max(.data$date, na.rm = TRUE)
+      ) |>
+      dplyr::collect()
+
+    if (nrow(date_summary) == 0) {
+      return()
+    }
+
+    shiny::updateDateRangeInput(
+      session,
+      "shiny_apps_date_range",
+      start = date_summary$min_date,
+      end = date_summary$max_date,
+      min = date_summary$min_date,
+      max = date_summary$max_date
     )
   })
 
-  # Value boxes
+  shiny_usage_filtered <- shiny::reactive({
+    data <- shiny_usage_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    shiny::req(input$shiny_apps_date_range)
+
+    data |>
+      dplyr::filter(
+        .data$date >= input$shiny_apps_date_range[1],
+        .data$date <= input$shiny_apps_date_range[2]
+      ) |>
+      dplyr::collect()
+  })
+
   output$shiny_sessions_value <- shiny::renderText({
-    data <- shiny_data()
-    prettyNum(tail(data$total_sessions, 1), big.mark = ",")
+    df <- shiny_usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0 || !"sessions" %in% names(df)) {
+      return("0")
+    }
+
+    total_sessions <- sum(df$sessions, na.rm = TRUE)
+    prettyNum(total_sessions, big.mark = ",")
   })
 
   output$shiny_duration_value <- shiny::renderText({
-    data <- shiny_data()
-    round(tail(data$avg_duration, 1), 1)
+    df <- shiny_usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0) {
+      return("")
+    }
+
+    if ("avg_duration_minutes" %in% names(df) && "sessions" %in% names(df)) {
+      total_sessions <- sum(df$sessions, na.rm = TRUE)
+      if (total_sessions == 0) {
+        return("0")
+      }
+
+      weighted_avg <- stats::weighted.mean(
+        df$avg_duration_minutes,
+        df$sessions,
+        na.rm = TRUE
+      )
+      return(round(weighted_avg, 1))
+    }
+
+    ""
   })
 
   output$shiny_concurrent_value <- shiny::renderText({
-    data <- shiny_data()
-    prettyNum(tail(data$peak_concurrent, 1), big.mark = ",")
+    df <- shiny_usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0 || !"peak_concurrent" %in% names(df)) {
+      return("0")
+    }
+
+    peak_val <- suppressWarnings(max(df$peak_concurrent, na.rm = TRUE))
+    if (!is.finite(peak_val)) {
+      peak_val <- 0
+    }
+
+    prettyNum(peak_val, big.mark = ",")
   })
 
-  # Trend chart
   output$shiny_trend_plot <- plotly::renderPlotly({
-    data <- shiny_data()
+    df <- shiny_usage_filtered()
 
-    # Filter by date range
-    data <- data |>
-      dplyr::filter(
-        date >= input$shiny_apps_date_range[1],
-        date <= input$shiny_apps_date_range[2]
+    if (is.null(df) || nrow(df) == 0 || !"sessions" %in% names(df)) {
+      return(plotly::plotly_empty())
+    }
+
+    daily <- df |>
+      dplyr::group_by(.data$date) |>
+      dplyr::summarise(
+        total_sessions = sum(.data$sessions, na.rm = TRUE),
+        peak_concurrent_daily = if ("peak_concurrent" %in% names(df)) {
+          suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
+        } else {
+          NA_real_
+        },
+        .groups = "drop"
       )
 
-    plot_data <- data |>
-      dplyr::select(date, .data$total_sessions, .data$peak_concurrent) |>
-      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
+    if (nrow(daily) == 0) {
+      return(plotly::plotly_empty())
+    }
+
+    metrics <- c("total_sessions")
+    if ("peak_concurrent" %in% names(df)) {
+      metrics <- c(metrics, "peak_concurrent_daily")
+    }
+
+    plot_data <- daily |>
+      tidyr::pivot_longer(
+        dplyr::all_of(metrics),
+        names_to = "metric",
+        values_to = "value"
+      ) |>
       dplyr::mutate(
         metric = factor(
           .data$metric,
-          levels = c("total_sessions", "peak_concurrent"),
+          levels = c("total_sessions", "peak_concurrent_daily"),
           labels = c("Total Sessions", "Peak Concurrent Users")
         )
       )
+
+    plot_data <- plot_data[stats::complete.cases(plot_data$value), , drop = FALSE]
+
+    if (nrow(plot_data) == 0) {
+      return(plotly::plotly_empty())
+    }
 
     p <- ggplot2::ggplot(
       plot_data,
@@ -1462,17 +1619,51 @@ shiny_apps_server <- function(input, output, session) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Per-app table
   output$shiny_apps_table <- DT::renderDataTable({
-    shiny_apps_data() |>
-      DT::datatable(
-        options = list(
-          pageLength = 25,
-          autoWidth = TRUE,
-          scrollX = TRUE
-        ),
-        rownames = FALSE
+    df <- shiny_usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0 ||
+      !"app_name" %in% names(df) ||
+      !"sessions" %in% names(df) ||
+      !"username" %in% names(df)) {
+      return(
+        DT::datatable(
+          data.frame(
+            " " = "Data not available - Check that Chronicle data exists at the configured path."
+          ),
+          options = list(
+            dom = "t",
+            ordering = FALSE,
+            columnDefs = list(list(className = "dt-center", targets = "_all"))
+          ),
+          rownames = FALSE,
+          colnames = ""
+        )
       )
+    }
+
+    app_summary <- df |>
+      dplyr::group_by(.data$app_name) |>
+      dplyr::summarise(
+        total_sessions = sum(.data$sessions, na.rm = TRUE),
+        unique_users = dplyr::n_distinct(.data$username),
+        avg_duration_minutes = if ("avg_duration_minutes" %in% names(df)) {
+          stats::weighted.mean(.data$avg_duration_minutes, .data$sessions, na.rm = TRUE)
+        } else {
+          NA_real_
+        },
+        .groups = "drop"
+      )
+
+    DT::datatable(
+      app_summary,
+      options = list(
+        pageLength = 25,
+        autoWidth = TRUE,
+        scrollX = TRUE
+      ),
+      rownames = FALSE
+    )
   })
 }
 
@@ -1512,22 +1703,11 @@ ui <- bslib::page_navbar(
 # ==============================================
 
 server <- function(input, output, session) {
-  # Users - Overview
   users_overview_server(input, output, session)
-
-  # Users - User List
   users_list_server(input, output, session)
-
-  # Content - Overview (placeholder)
   content_overview_server(input, output, session)
-
-  # Content - Content List (placeholder)
   content_list_server(input, output, session)
-
-  # Usage - Overview (placeholder)
   usage_overview_server(input, output, session)
-
-  # Usage - Shiny Apps (placeholder)
   shiny_apps_server(input, output, session)
 }
 
