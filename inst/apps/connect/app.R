@@ -2074,13 +2074,8 @@ content_by_user_server <- function(input, output, session) {
         )
       )
 
-    if ("username" %in% names(display_df)) {
-      display_df <- display_df |>
-        dplyr::rename(user_name = .data$username)
-    }
-
     cols <- c(
-      if ("user_name" %in% names(display_df)) "user_name" else "user_guid",
+      if ("username" %in% names(display_df)) "username" else "user_guid",
       if ("title" %in% names(display_df)) "title" else "content_guid",
       "environment",
       "total_visits"
@@ -2344,13 +2339,8 @@ shiny_sessions_by_user_server <- function(input, output, session) {
         )
       )
 
-    if ("username" %in% names(display_df)) {
-      display_df <- display_df |>
-        dplyr::rename(user_name = .data$username)
-    }
-
     cols <- c(
-      if ("user_name" %in% names(display_df)) "user_name" else "user_guid",
+      if ("username" %in% names(display_df)) "username" else "user_guid",
       if ("title" %in% names(display_df)) "title" else "content_guid",
       "environment",
       "total_sessions",
