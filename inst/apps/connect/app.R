@@ -1815,13 +1815,12 @@ shiny_apps_server <- function(input, output, session) {
       )
 
     cols <- c(
-      if ("title" %in% names(display_df)) "title" else "content_guid",
+      "title",
       "environment",
       "total_sessions",
       "unique_users",
       "avg_duration_minutes"
     )
-    cols <- intersect(cols, names(display_df))
 
     DT::datatable(
       display_df[, cols, drop = FALSE],
@@ -2075,12 +2074,11 @@ content_by_user_server <- function(input, output, session) {
       )
 
     cols <- c(
-      if ("username" %in% names(display_df)) "username" else "user_guid",
-      if ("title" %in% names(display_df)) "title" else "content_guid",
+      "username",
+      "title",
       "environment",
       "total_visits"
     )
-    cols <- intersect(cols, names(display_df))
 
     DT::datatable(
       display_df[, cols, drop = FALSE],
@@ -2340,13 +2338,12 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       )
 
     cols <- c(
-      if ("username" %in% names(display_df)) "username" else "user_guid",
-      if ("title" %in% names(display_df)) "title" else "content_guid",
+      "username",
+      "title",
       "environment",
       "total_sessions",
       "avg_duration_minutes"
     )
-    cols <- intersect(cols, names(display_df))
 
     DT::datatable(
       display_df[, cols, drop = FALSE],
