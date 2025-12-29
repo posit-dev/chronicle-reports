@@ -129,6 +129,156 @@ sample_connect_user_list_internal <- function() {
 }
 
 #' @noRd
+sample_connect_content_list_internal <- function() {
+  data.frame(
+    date = as.Date(rep("2024-01-03", 3)),
+    environment = c("Production", "Development", "Staging"),
+    id = c("content-001", "content-002", "content-003"),
+    name = c("sales-dashboard", "usage-report", "dev-app"),
+    title = c("Sales Dashboard", "Usage Report", "Development App"),
+    created_time = as.POSIXct(
+      c(
+        "2023-11-01 12:00:00",
+        "2023-11-15 09:30:00",
+        "2023-12-01 14:45:00"
+      ),
+      tz = "UTC"
+    ),
+    last_deployed_time = as.POSIXct(
+      c(
+        "2023-12-20 16:00:00",
+        "2023-12-18 10:15:00",
+        "2023-12-22 08:30:00"
+      ),
+      tz = "UTC"
+    ),
+    type = c("shiny", "rmarkdown", "quarto"),
+    description = c(
+      "Production sales dashboard",
+      "Usage summary report",
+      "Development example application"
+    ),
+    access_type = c("all", "all", "restricted"),
+    locked = c(FALSE, FALSE, TRUE),
+    locked_message = c("", "", "Locked for maintenance"),
+    connection_timeout = as.integer(c(60, 60, 120)),
+    read_timeout = as.integer(c(3600, 3600, 3600)),
+    init_timeout = as.integer(c(300, 300, 300)),
+    idle_timeout = as.integer(c(900, 900, 900)),
+    max_processes = as.integer(c(3, 2, 2)),
+    min_processes = as.integer(c(1, 1, 1)),
+    max_conns_per_process = as.integer(c(20, 20, 10)),
+    load_factor = c(1.0, 1.0, 0.5),
+    cpu_request = c(0.5, 0.5, 0.25),
+    cpu_limit = c(1.0, 1.0, 0.5),
+    memory_request = c(512, 512, 256),
+    memory_limit = c(1024, 1024, 512),
+    amd_gpu_limit = as.integer(c(0, 0, 0)),
+    nvidia_gpu_limit = as.integer(c(0, 0, 0)),
+    bundle_id = c("bundle-001", "bundle-002", "bundle-003"),
+    content_category = c("dashboard", "report", "application"),
+    parameterized = c(FALSE, TRUE, FALSE),
+    cluster_name = c(NA_character_, NA_character_, "on-prem-cluster"),
+    image_name = c(NA_character_, NA_character_, "rstudio/shiny"),
+    default_image_name = c(
+      NA_character_,
+      NA_character_,
+      "rstudio/shiny-default"
+    ),
+    default_r_environment_management = c(TRUE, TRUE, TRUE),
+    default_py_environment_management = c(FALSE, FALSE, TRUE),
+    service_account_name = c(
+      NA_character_,
+      NA_character_,
+      "service-account-dev"
+    ),
+    r_version = c("4.3.0", "4.3.0", NA_character_),
+    r_environment_management = c(TRUE, TRUE, NA),
+    py_version = c(NA_character_, NA_character_, "3.11"),
+    py_environment_management = c(NA, NA, TRUE),
+    quarto_version = c(NA_character_, "1.3.0", NA_character_),
+    run_as = c("rstudio-connect", "rstudio-connect", "service-account"),
+    run_as_current_user = c(FALSE, FALSE, FALSE),
+    owner_guid = c("owner-001", "owner-002", "owner-003"),
+    content_url = c("/content/1", "/content/2", "/content/3"),
+    dashboard_url = c("/dashboard/1", "/dashboard/2", "/dashboard/3"),
+    app_role = c("viewer", "viewer", "editor"),
+    vanity_url = c("/sales", NA_character_, NA_character_),
+    tags = I(list(
+      c("sales", "dashboard"),
+      c("usage", "report"),
+      c("development", "example")
+    )),
+    extension = c(FALSE, FALSE, FALSE),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @noRd
+sample_connect_content_totals_internal <- function() {
+  data.frame(
+    date = as.Date(
+      c(
+        "2024-01-01",
+        "2024-01-01",
+        "2024-01-02",
+        "2024-01-03"
+      )
+    ),
+    count = as.integer(c(10, 5, 12, 7)),
+    type = c("shiny", "rmarkdown", "shiny", "quarto"),
+    environment = c("Production", "Production", "Development", "Staging"),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @noRd
+sample_connect_content_visits_totals_by_user_internal <- function() {
+  data.frame(
+    date = as.Date(rep("2024-01-03", 4)),
+    environment = c("Production", "Production", "Development", "Staging"),
+    content_guid = c(
+      "content-001",
+      "content-001",
+      "content-002",
+      "content-003"
+    ),
+    user_guid = c(
+      "user-guid-001",
+      "user-guid-002",
+      "user-guid-003",
+      "user-guid-004"
+    ),
+    visits = as.integer(c(5, 3, 4, 2)),
+    path = c("/", "/detail", "/usage", NA_character_),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @noRd
+sample_connect_shiny_usage_totals_by_user_internal <- function() {
+  data.frame(
+    date = as.Date(rep("2024-01-03", 4)),
+    environment = c("Production", "Production", "Development", "Staging"),
+    content_guid = c(
+      "content-001",
+      "content-001",
+      "content-002",
+      "content-003"
+    ),
+    user_guid = c(
+      "user-guid-001",
+      "user-guid-002",
+      "user-guid-003",
+      "user-guid-004"
+    ),
+    num_sessions = as.integer(c(3, 2, 4, 1)),
+    duration = as.integer(c(3600, 2400, 5400, 1800)),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @noRd
 sample_workbench_user_totals_internal <- function() {
   data.frame(
     date = as.Date(c("2024-01-01", "2024-01-02", "2024-01-03")),
@@ -266,6 +416,30 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_connect_user_list_internal(),
     base_path,
     "connect/user_list"
+  )
+
+  write_sample_parquet_internal(
+    sample_connect_content_totals_internal(),
+    base_path,
+    "connect/content_totals"
+  )
+
+  write_sample_parquet_internal(
+    sample_connect_content_list_internal(),
+    base_path,
+    "connect/content_list"
+  )
+
+  write_sample_parquet_internal(
+    sample_connect_content_visits_totals_by_user_internal(),
+    base_path,
+    "connect/content_visits_totals_by_user"
+  )
+
+  write_sample_parquet_internal(
+    sample_connect_shiny_usage_totals_by_user_internal(),
+    base_path,
+    "connect/shiny_usage_totals_by_user"
   )
 
   write_sample_parquet_internal(
