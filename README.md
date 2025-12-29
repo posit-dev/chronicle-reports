@@ -123,11 +123,13 @@ A multi-page dashboard for Posit Connect usage analysis with three main sections
   - Overview: Total licensed users, daily active users, publishers with trend visualizations
   - User List: Searchable, filterable table of all users with role and activity details
 - **Content**:
-  - Overview: Content metrics and trends (placeholder data)
-  - Content List: Searchable inventory of all published content (placeholder data)
+  - Overview: Content metrics and trends
+  - Content List: Searchable inventory of all published content
 - **Usage**:
-  - Overview: Visit trends and patterns (placeholder data)
-  - Shiny Apps: Application-specific usage statistics (placeholder data)
+  - Overview: Visit trends and patterns
+  - Shiny Apps: Overall usage trends and a breakdown of usage by app
+  - Content Visits by User: Detailed view of content visits per user
+  - Shiny Sessions by User: Detailed view of Shiny app sessions per user
 
 ### Workbench Dashboard
 
@@ -139,7 +141,7 @@ A multi-page dashboard for Posit Workbench user analytics:
 
 - **Users**:
   - Overview: Licensed users, daily active users, administrators, and super administrators with trend analysis
-  - User List: Filterable table showing all users with role and activity information
+  - User List: Searchable, Filterable table showing all users with role and activity information
 
 ## Publishing to Posit Connect
 
