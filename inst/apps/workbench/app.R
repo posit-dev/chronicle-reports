@@ -385,7 +385,7 @@ users_overview_server <- function(input, output, session) {
 user_list_ui <- bslib::card(
   bslib::card_header("Filters"),
   bslib::layout_columns(
-    col_widths = c(3, 3, 3, 3),
+    col_widths = c(4, 4, 4),
     shiny::selectInput(
       "user_list_environment",
       "Environment:",
@@ -395,11 +395,6 @@ user_list_ui <- bslib::card(
       "user_list_role",
       "Role:",
       choices = c("All", "user", "administrator", "super_administrator")
-    ),
-    shiny::selectInput(
-      "user_list_active",
-      "Active Today:",
-      choices = c("All", "Yes", "No")
     ),
     shiny::textInput(
       "user_list_search",
@@ -496,12 +491,6 @@ user_list_server <- function(input, output, session) {
       data <- data |> dplyr::filter(.data$user_role == input$user_list_role)
     }
 
-    # Active today filter
-    if (input$user_list_active != "All") {
-      active_val <- input$user_list_active == "Yes"
-      data <- data |> dplyr::filter(.data$active_today == active_val)
-    }
-
     # Search filter
     if (nzchar(input$user_list_search)) {
       search_term <- tolower(input$user_list_search)
@@ -551,8 +540,7 @@ user_list_server <- function(input, output, session) {
         "username",
         "user_role",
         "environment",
-        "last_active_at",
-        "active_today"
+        "last_active_at"
       ) |>
       DT::datatable(
         options = list(
