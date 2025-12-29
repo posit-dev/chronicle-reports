@@ -196,9 +196,9 @@ sample_connect_content_list_internal <- function() {
       "service-account-dev"
     ),
     r_version = c("4.3.0", "4.3.0", NA_character_),
-    r_environment_management = c(TRUE, TRUE, NA),
+    r_environment_management = c(TRUE, TRUE, NA_logical_),
     py_version = c(NA_character_, NA_character_, "3.11"),
-    py_environment_management = c(NA, NA, TRUE),
+    py_environment_management = c(NA_logical_, NA_logical_, TRUE),
     quarto_version = c(NA_character_, "1.3.0", NA_character_),
     run_as = c("rstudio-connect", "rstudio-connect", "service-account"),
     run_as_current_user = c(FALSE, FALSE, FALSE),
