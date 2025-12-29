@@ -1361,7 +1361,9 @@ usage_overview_server <- function(input, output, session) {
     df <- data |> dplyr::collect()
 
     # Environment filter
-    if ("environment" %in% names(df) && input$usage_overview_environment != "All") {
+    if (
+      "environment" %in% names(df) && input$usage_overview_environment != "All"
+    ) {
       if (input$usage_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
@@ -1410,8 +1412,12 @@ usage_overview_server <- function(input, output, session) {
   output$usage_trend_plot <- plotly::renderPlotly({
     df <- usage_filtered()
 
-    if (is.null(df) || nrow(df) == 0 ||
-      !"visits" %in% names(df) || !"user_guid" %in% names(df)) {
+    if (
+      is.null(df) ||
+        nrow(df) == 0 ||
+        !"visits" %in% names(df) ||
+        !"user_guid" %in% names(df)
+    ) {
       return(plotly::plotly_empty())
     }
 
@@ -1572,7 +1578,9 @@ shiny_apps_server <- function(input, output, session) {
         dplyr::pull(.data$environment) |>
         unique()
 
-      has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+      has_env_na <- any(
+        is.na(env_values) | env_values == "" | env_values == " "
+      )
       env_values <- env_values[
         !is.na(env_values) & env_values != "" & env_values != " "
       ] |>
@@ -1718,7 +1726,11 @@ shiny_apps_server <- function(input, output, session) {
         )
       )
 
-    plot_data <- plot_data[stats::complete.cases(plot_data$value), , drop = FALSE]
+    plot_data <- plot_data[
+      stats::complete.cases(plot_data$value),
+      ,
+      drop = FALSE
+    ]
 
     if (nrow(plot_data) == 0) {
       return(plotly::plotly_empty())
@@ -1751,10 +1763,13 @@ shiny_apps_server <- function(input, output, session) {
   output$shiny_apps_table <- DT::renderDataTable({
     df <- shiny_usage_filtered()
 
-    if (is.null(df) || nrow(df) == 0 ||
-      !"content_guid" %in% names(df) ||
-      !"num_sessions" %in% names(df) ||
-      !"user_guid" %in% names(df)) {
+    if (
+      is.null(df) ||
+        nrow(df) == 0 ||
+        !"content_guid" %in% names(df) ||
+        !"num_sessions" %in% names(df) ||
+        !"user_guid" %in% names(df)
+    ) {
       return(
         DT::datatable(
           data.frame(
@@ -1986,7 +2001,9 @@ content_by_user_server <- function(input, output, session) {
     df <- data |> dplyr::collect()
 
     # Environment filter
-    if ("environment" %in% names(df) && input$content_by_user_environment != "All") {
+    if (
+      "environment" %in% names(df) && input$content_by_user_environment != "All"
+    ) {
       if (input$content_by_user_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
@@ -2012,10 +2029,13 @@ content_by_user_server <- function(input, output, session) {
   output$content_by_user_table <- DT::renderDataTable({
     df <- visits_filtered()
 
-    if (is.null(df) || nrow(df) == 0 ||
-      !"content_guid" %in% names(df) ||
-      !"user_guid" %in% names(df) ||
-      !"visits" %in% names(df)) {
+    if (
+      is.null(df) ||
+        nrow(df) == 0 ||
+        !"content_guid" %in% names(df) ||
+        !"user_guid" %in% names(df) ||
+        !"visits" %in% names(df)
+    ) {
       return(
         DT::datatable(
           data.frame(
@@ -2051,7 +2071,9 @@ content_by_user_server <- function(input, output, session) {
 
     # Join content titles
     c_df <- content_list_latest_usage()
-    if (!is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))) {
+    if (
+      !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
+    ) {
       content_join <- c_df |>
         dplyr::select(.data$id, .data$environment, .data$title)
 
@@ -2123,7 +2145,10 @@ shiny_sessions_by_user_server <- function(input, output, session) {
         chronicle_data("connect/shiny_usage_totals_by_user", base_path)
       },
       error = function(e) {
-        message("Error loading shiny usage totals by user (user table): ", e$message)
+        message(
+          "Error loading shiny usage totals by user (user table): ",
+          e$message
+        )
         NULL
       }
     )
@@ -2144,7 +2169,10 @@ shiny_sessions_by_user_server <- function(input, output, session) {
         df |> dplyr::filter(.data$date == latest_date)
       },
       error = function(e) {
-        message("Error loading content list for shiny-sessions-by-user: ", e$message)
+        message(
+          "Error loading content list for shiny-sessions-by-user: ",
+          e$message
+        )
         NULL
       }
     )
@@ -2162,7 +2190,10 @@ shiny_sessions_by_user_server <- function(input, output, session) {
         df |> dplyr::filter(.data$date == latest_date)
       },
       error = function(e) {
-        message("Error loading user list for shiny-sessions-by-user: ", e$message)
+        message(
+          "Error loading user list for shiny-sessions-by-user: ",
+          e$message
+        )
         NULL
       }
     )
@@ -2240,7 +2271,11 @@ shiny_sessions_by_user_server <- function(input, output, session) {
 
     df <- data |> dplyr::collect()
 
-    if ("environment" %in% names(df) && input$shiny_sessions_user_environment != "All") {
+    if (
+      "environment" %in%
+        names(df) &&
+        input$shiny_sessions_user_environment != "All"
+    ) {
       if (input$shiny_sessions_user_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
@@ -2250,7 +2285,9 @@ shiny_sessions_by_user_server <- function(input, output, session) {
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$environment == input$shiny_sessions_user_environment)
+          dplyr::filter(
+            .data$environment == input$shiny_sessions_user_environment
+          )
       }
     }
 
@@ -2266,10 +2303,13 @@ shiny_sessions_by_user_server <- function(input, output, session) {
   output$shiny_sessions_user_table <- DT::renderDataTable({
     df <- usage_filtered()
 
-    if (is.null(df) || nrow(df) == 0 ||
-      !"content_guid" %in% names(df) ||
-      !"user_guid" %in% names(df) ||
-      !"num_sessions" %in% names(df)) {
+    if (
+      is.null(df) ||
+        nrow(df) == 0 ||
+        !"content_guid" %in% names(df) ||
+        !"user_guid" %in% names(df) ||
+        !"num_sessions" %in% names(df)
+    ) {
       return(
         DT::datatable(
           data.frame(
@@ -2290,17 +2330,24 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
       dplyr::summarise(
         total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-        total_duration = if ("duration" %in% names(df)) sum(.data$duration, na.rm = TRUE) else NA_real_,
+        total_duration = if ("duration" %in% names(df)) {
+          sum(.data$duration, na.rm = TRUE)
+        } else {
+          NA_real_
+        },
         .groups = "drop"
       )
 
     summary_df <- summary_df |>
       dplyr::mutate(
-        avg_duration_minutes = round(ifelse(
-          is.na(.data$total_duration) | .data$total_sessions == 0,
-          NA_real_,
-          (.data$total_duration / .data$total_sessions) / 60
-        ), 2)
+        avg_duration_minutes = round(
+          ifelse(
+            is.na(.data$total_duration) | .data$total_sessions == 0,
+            NA_real_,
+            (.data$total_duration / .data$total_sessions) / 60
+          ),
+          2
+        )
       )
 
     # Join usernames
@@ -2315,7 +2362,9 @@ shiny_sessions_by_user_server <- function(input, output, session) {
 
     # Join app titles
     c_df <- content_list_latest_usage()
-    if (!is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))) {
+    if (
+      !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
+    ) {
       content_join <- c_df |>
         dplyr::select(.data$id, .data$environment, .data$title)
 
