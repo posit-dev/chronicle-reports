@@ -98,10 +98,7 @@ sample_connect_user_list_internal <- function() {
     date = as.Date(rep("2024-01-03", 26)),
     username = paste0("user", sprintf("%02d", 1:26)),
     id = paste0(
-      "user-guid-001",
-      "user-guid-002",
-      "user-guid-003",
-      "user-guid-004"
+      sprintf("user-guid-%03d", 1:26)
     ),
     email = paste0("user", 1:26, "@example.com"),
     first_name = paste0("First", 1:26),
