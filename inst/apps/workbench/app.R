@@ -84,11 +84,7 @@ users_overview_server <- function(input, output, session) {
         chronicle_data("workbench/user_totals", base_path)
       },
       error = function(e) {
-        shiny::showNotification(
-          paste("Error loading user totals:", e$message),
-          type = "error",
-          duration = NULL
-        )
+        message("Error loading user totals: ", e$message)
         NULL
       }
     )
@@ -430,11 +426,7 @@ user_list_server <- function(input, output, session) {
           dplyr::filter(date == max_date)
       },
       error = function(e) {
-        shiny::showNotification(
-          paste("Error loading user list:", e$message),
-          type = "error",
-          duration = NULL
-        )
+        message("Error loading user list: ", e$message)
         NULL
       }
     )
@@ -448,7 +440,7 @@ user_list_server <- function(input, output, session) {
     }
 
     env_values <- data |>
-      dplyr::pull(environment) |>
+      dplyr::pull(.data$environment) |>
       unique()
 
     has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
@@ -540,11 +532,11 @@ user_list_server <- function(input, output, session) {
     data |>
       dplyr::mutate(
         environment = ifelse(
-          is.na(environment) |
-            environment == "" |
-            environment == " ",
+          is.na(.data$environment) |
+            .data$environment == "" |
+            .data$environment == " ",
           "(Not Set)",
-          environment
+          .data$environment
         )
       ) |>
       dplyr::select(
