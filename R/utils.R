@@ -68,7 +68,7 @@ chronicle_path <- function(
 #' }
 chronicle_raw_data <- function(
   metric,
-  base_path,
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
   frequency = c("daily", "hourly"),
   ymd = NULL,
   schema = NULL
@@ -129,7 +129,7 @@ chronicle_raw_data <- function(
 #' }
 chronicle_data <- function(
   metric,
-  base_path
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   path <- chronicle_path(base_path, metric, "curated")
 
@@ -169,7 +169,9 @@ chronicle_data <- function(
 #' metrics <- chronicle_list_data("/var/lib/posit-chronicle/data")
 #' print(metrics)
 #' }
-chronicle_list_data <- function(base_path) {
+chronicle_list_data <- function(
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
+) {
   data_path <- chronicle_path(base_path, frequency = "curated")
   product_dirs <- list.dirs(data_path, recursive = FALSE, full.names = FALSE)
 
@@ -231,7 +233,7 @@ chronicle_list_data <- function(base_path) {
 #' data <- chronicle_raw_data(hourly_metrics[1], "/var/lib/posit-chronicle/data", frequency = "hourly")
 #' }
 chronicle_list_raw_data <- function(
-  base_path,
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
   frequency = c("daily", "hourly")
 ) {
   frequency <- match.arg(frequency)
