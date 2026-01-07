@@ -366,7 +366,7 @@ users_list_ui <- bslib::card(
     )
   ),
   bslib::layout_columns(
-    col_widths = c(4, 4, 4),
+    col_widths = c(6, 6),
     shiny::selectInput(
       "users_list_environment",
       "Environment:",
@@ -376,11 +376,6 @@ users_list_ui <- bslib::card(
       "users_list_role",
       "Role:",
       choices = c("All", "publisher", "viewer", "administrator")
-    ),
-    shiny::selectInput(
-      "users_list_active",
-      "Active Today:",
-      choices = c("All", "Yes", "No")
     )
   ),
   shinycssloaders::withSpinner(
@@ -470,12 +465,6 @@ users_list_server <- function(input, output, session) {
       data <- data |> dplyr::filter(.data$user_role == input$users_list_role)
     }
 
-    # Active today filter
-    if (input$users_list_active != "All") {
-      active_val <- input$users_list_active == "Yes"
-      data <- data |> dplyr::filter(.data$active_today == active_val)
-    }
-
     data
   })
 
@@ -531,8 +520,7 @@ users_list_server <- function(input, output, session) {
         "last_name",
         "environment",
         "user_role",
-        "last_active_at",
-        "active_today"
+        "last_active_at"
       ) |>
       DT::datatable(
         options = list(
