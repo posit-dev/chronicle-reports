@@ -18,13 +18,10 @@ Depends:
 Imports:
     arrow,
     bslib,
-    dbplyr,
     dplyr,
     DT,
-    duckdb,
     ggplot2,
     glue,
-    lifecycle,
     lubridate,
     plotly,
     rlang,

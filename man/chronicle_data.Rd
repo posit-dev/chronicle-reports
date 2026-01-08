@@ -4,7 +4,10 @@
 \alias{chronicle_data}
 \title{Load Chronicle data}
 \usage{
-chronicle_data(metric, base_path)
+chronicle_data(
+  metric,
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
+)
 }
 \arguments{
 \item{metric}{Name of the curated metric to retrieve (e.g., "connect/user_totals")}

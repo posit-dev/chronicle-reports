@@ -4,7 +4,10 @@
 \alias{chronicle_list_raw_data}
 \title{List available raw Chronicle metrics}
 \usage{
-chronicle_list_raw_data(base_path, frequency = c("daily", "hourly"))
+chronicle_list_raw_data(
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
+  frequency = c("daily", "hourly")
+)
 }
 \arguments{
 \item{base_path}{Base path to Chronicle data directory}

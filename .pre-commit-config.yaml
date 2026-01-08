@@ -8,10 +8,8 @@ repos:
         additional_dependencies:
         - arrow
         - bslib
-        - dbplyr
         - dplyr
         - DT
-        - duckdb
         - ggplot2
         - lubridate
         - plotly
