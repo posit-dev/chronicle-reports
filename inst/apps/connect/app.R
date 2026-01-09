@@ -506,8 +506,8 @@ users_list_server <- function(input, output, session) {
     data |>
       dplyr::mutate(
         environment = ifelse(
-          is.na(.data$environment) ||
-            .data$environment == "" ||
+          is.na(.data$environment) |
+            .data$environment == "" |
             .data$environment == " ",
           "(Not Set)",
           .data$environment
