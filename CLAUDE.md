@@ -36,7 +36,7 @@ All reports are now located in [inst/apps/](inst/apps/) and can be run using `ch
 
 - **Language**: R (>= 4.1.0)
 - **UI Framework**: Shiny with bslib for modern Bootstrap UI
-- **Data Processing**: arrow, duckdb, dplyr, dbplyr
+- **Data Processing**: arrow, dplyr
 - **Visualization**: ggplot2, plotly
 - **Testing**: testthat, shinytest2
 
@@ -150,7 +150,7 @@ Look for functions named `calculate_*_daily_*_counts()` in the app files within 
 
 ## Data Sources
 
-Reports read Chronicle data files using arrow/duckdb from:
+Reports read Chronicle data files using arrow from:
 - Local filesystem: `/var/lib/posit-chronicle/data` (default)
 - S3: `s3://bucket-name/prefix`
 - Custom path: specified via `base_path` parameter or `CHRONICLE_BASE_PATH` env var

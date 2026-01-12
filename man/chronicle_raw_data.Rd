@@ -6,7 +6,7 @@
 \usage{
 chronicle_raw_data(
   metric,
-  base_path,
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
   frequency = c("daily", "hourly"),
   ymd = NULL,
   schema = NULL
