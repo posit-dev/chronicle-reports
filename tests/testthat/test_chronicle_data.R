@@ -19,8 +19,8 @@ test_that("chronicle_data loads curated data successfully", {
   expect_true("active_users_1day" %in% names(collected))
   expect_true("publishers" %in% names(collected))
 
-  # Check expected number of rows (3 days of data)
-  expect_equal(nrow(collected), 3)
+  # Check expected number of rows (30 days of data)
+  expect_equal(nrow(collected), 30)
 
   # Check data types
   expect_s3_class(collected$date, "Date")
@@ -43,7 +43,7 @@ test_that("chronicle_data works with different metrics", {
   collected <- dplyr::collect(data)
   expect_true("administrators" %in% names(collected))
   expect_true("super_administrators" %in% names(collected))
-  expect_equal(nrow(collected), 3) # 3 days
+  expect_equal(nrow(collected), 30) # 30 days
 
   # Test Workbench user list
   data <- chronicle_data("workbench/user_list", base_path)
@@ -58,31 +58,36 @@ test_that("chronicle_data supports date filtering", {
 
   # Load and filter by date
   data <- chronicle_data("connect/user_totals", base_path)
+  collected <- dplyr::collect(data)
+
+  # Filter to first date (dynamically)
+  first_date <- min(collected$date)
   filtered <- data |>
-    dplyr::filter(date == as.Date("2024-01-01")) |>
+    dplyr::filter(date == first_date) |>
     dplyr::collect()
 
   expect_equal(nrow(filtered), 1)
-  expect_equal(filtered$date, as.Date("2024-01-01"))
-  expect_equal(filtered$named_users, 25L)
-  expect_equal(filtered$active_users_1day, 12L)
+  expect_equal(filtered$date, first_date)
+  expect_true(filtered$named_users >= 24) # Started at 24
+  expect_true(filtered$active_users_1day > 0)
 })
 
 test_that("chronicle_data supports date range filtering", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
 
-  # Load and filter by date range
+  # Load and filter by date range (last 5 days)
   data <- chronicle_data("connect/user_totals", base_path)
+  collected <- dplyr::collect(data)
+  max_date <- max(collected$date)
+  min_filter_date <- max_date - 4 # Last 5 days
+
   filtered <- data |>
-    dplyr::filter(
-      date >= as.Date("2024-01-02"),
-      date <= as.Date("2024-01-03")
-    ) |>
+    dplyr::filter(date >= min_filter_date) |>
     dplyr::collect()
 
-  expect_equal(nrow(filtered), 2)
-  expect_true(all(filtered$date >= as.Date("2024-01-02")))
+  expect_equal(nrow(filtered), 5)
+  expect_true(all(filtered$date >= min_filter_date))
 })
 
 test_that("chronicle_data can be used with dplyr operations", {
@@ -103,7 +108,11 @@ test_that("chronicle_data can be used with dplyr operations", {
   result <- data |>
     dplyr::arrange(dplyr::desc(active_users_1day)) |>
     dplyr::collect()
-  expect_equal(result$active_users_1day[1], 15L) # Max value
+  # Check that arrange worked - first row should have highest active users
+  expect_true(
+    result$active_users_1day[1] >= result$active_users_1day[nrow(result)]
+  )
+  expect_true(result$active_users_1day[1] > 0)
 
   # Summarize
   result <- data |>
@@ -114,7 +123,8 @@ test_that("chronicle_data can be used with dplyr operations", {
     dplyr::collect()
   expect_equal(nrow(result), 1)
   expect_true(result$avg_users > 0)
-  expect_equal(result$max_active, 15L)
+  expect_true(result$max_active > 0)
+  expect_true(result$max_active <= result$avg_users) # Max active should be <= avg named users
 })
 
 test_that("chronicle_data handles non-existent metric gracefully", {
@@ -142,17 +152,22 @@ test_that("chronicle_data preserves data integrity", {
     dplyr::arrange(date) |>
     dplyr::collect()
 
-  # Verify first row
-  expect_equal(data$date[1], as.Date("2024-01-01"))
-  expect_equal(data$named_users[1], 25L)
-  expect_equal(data$active_users_1day[1], 12L)
-  expect_equal(data$publishers[1], 5L)
+  # Verify we have 30 days of data
+  expect_equal(nrow(data), 30)
 
-  # Verify last row
-  expect_equal(data$date[3], as.Date("2024-01-03"))
-  expect_equal(data$named_users[3], 26L)
-  expect_equal(data$active_users_1day[3], 10L)
-  expect_equal(data$publishers[3], 6L)
+  # Verify first row (day 1)
+  expect_true(data$named_users[1] >= 24) # Should start at 24
+  expect_true(data$active_users_1day[1] > 0)
+  expect_true(data$publishers[1] >= 5)
+
+  # Verify last row (day 30)
+  expect_true(data$named_users[30] >= data$named_users[1]) # Should grow or stay same
+  expect_true(data$active_users_1day[30] > 0)
+  expect_true(data$publishers[30] >= 5)
+
+  # Verify dates are sequential
+  date_diffs <- diff(as.numeric(data$date))
+  expect_true(all(date_diffs == 1)) # All dates should be 1 day apart
 })
 
 test_that("chronicle_data handles user list data correctly", {

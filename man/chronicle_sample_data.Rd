@@ -14,19 +14,27 @@ Default is FALSE.}
 Character path to the sample Chronicle data directory
 }
 \description{
-This function creates a minimal sample Chronicle data directory for
+This function creates a sample Chronicle data directory for
 exploring package functionality without needing access to real Chronicle
 data. The sample data is created once per R session and cached.
 }
 \details{
 The sample data includes:
 \itemize{
-\item Connect user totals (3 days of data)
+\item Connect user totals (30 days of data ending yesterday)
 \item Connect user list (26 sample users)
-\item Workbench user totals (3 days of data)
+\item Connect content list (150 sample content items)
+\item Connect content totals (30 days by type and environment)
+\item Connect content visits (30 days of user visit data)
+\item Connect Shiny usage (30 days of Shiny session data)
+\item Workbench user totals (30 days of data ending yesterday)
 \item Workbench user list (21 sample users)
-\item Raw Connect users data (3 days)
+\item Raw Connect users data (30 days, 15 users per snapshot)
 }
+
+All sample data uses realistic weekday/weekend patterns and maintains
+referential integrity across datasets. Content items are created gradually
+over the 30-day period and persist once created.
 }
 \examples{
 # Get path to sample data

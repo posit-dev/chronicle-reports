@@ -781,7 +781,7 @@ content_overview_server <- function(input, output, session) {
       dplyr::mutate(
         metric = factor("Total Content", levels = "Total Content")
       ) |>
-      dplyr::rename(value = total_content)
+      dplyr::rename(value = .data$total_content)
 
     if (nrow(plot_data) == 0) {
       return(
@@ -1064,7 +1064,7 @@ content_list_server <- function(input, output, session) {
       owners <- df |>
         dplyr::left_join(
           ulist |>
-            dplyr::select(id, username) |>
+            dplyr::select(.data$id, .data$username) |>
             dplyr::rename(owner_guid = .data$id, owner = .data$username),
           by = "owner_guid"
         ) |>
@@ -1131,7 +1131,7 @@ content_list_server <- function(input, output, session) {
     ulist <- latest_user_list()
     if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
       owner_lookup <- ulist |>
-        dplyr::select(id, username) |>
+        dplyr::select(.data$id, .data$username) |>
         dplyr::rename(owner_guid = .data$id, owner = .data$username)
 
       df <- df |>

@@ -8,6 +8,7 @@ repos:
         additional_dependencies:
         - arrow
         - bslib
+        - charlatan
         - dplyr
         - DT
         - ggplot2

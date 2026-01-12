@@ -45,14 +45,12 @@ chronicle_path <- function(
 #' # View the data
 #' dplyr::collect(data)
 #'
-#' # Filter to a specific date using ymd parameter
-#' data <- chronicle_raw_data(
-#'   "connect_users",
-#'   sample_path,
-#'   frequency = "daily",
-#'   ymd = list(year = 2024, month = 1, day = 1)
-#' )
-#' dplyr::collect(data)
+#' # Filter to a specific date using dplyr
+#' first_date <- min(dplyr::collect(data)$date)
+#' filtered <- data |>
+#'   dplyr::filter(date == first_date) |>
+#'   dplyr::collect()
+#' head(filtered)
 #'
 #' \dontrun{
 #' # Load from production Chronicle data
