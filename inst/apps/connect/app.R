@@ -2077,6 +2077,11 @@ content_by_user_server <- function(input, output, session) {
 
     display_df <- summary_df |>
       dplyr::mutate(
+        username = ifelse(
+          is.na(.data$user_guid) | is.na(.data$username),
+          "(anonymous)",
+          .data$username
+        ),
         environment = ifelse(
           is.na(.data$environment) |
             .data$environment == "" |
@@ -2368,6 +2373,11 @@ shiny_sessions_by_user_server <- function(input, output, session) {
 
     display_df <- summary_df |>
       dplyr::mutate(
+        username = ifelse(
+          is.na(.data$user_guid) | is.na(.data$username),
+          "(anonymous)",
+          .data$username
+        ),
         environment = ifelse(
           is.na(.data$environment) |
             .data$environment == "" |

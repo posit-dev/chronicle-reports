@@ -304,6 +304,15 @@ generate_content_pool <- function(n_content = 150, n_days = 30, user_pool) {
   publishers <- user_pool[user_pool$user_role == "publisher", ]
   owner_guids <- sample(publishers$user_guid, n_content, replace = TRUE)
 
+  # Access type distribution: 60% all (public), 30% logged_in, 10% acl
+  set.seed(150)
+  access_types <- sample(
+    c("all", "logged_in", "acl"),
+    size = n_content,
+    replace = TRUE,
+    prob = c(0.6, 0.3, 0.1)
+  )
+
   data.frame(
     content_id = 1:n_content,
     content_guid = sprintf("content-guid-%03d", 1:n_content),
@@ -315,6 +324,7 @@ generate_content_pool <- function(n_content = 150, n_days = 30, user_pool) {
     creation_day = creation_days,
     popularity_tier = popularity_tier,
     long_session = long_session,
+    access_type = access_types,
     stringsAsFactors = FALSE
   )
 }
@@ -463,12 +473,7 @@ sample_connect_content_list_internal <- function() {
       sample(3600 * 8:18, nrow(content_pool), replace = TRUE),
     type = content_pool$type,
     description = paste("Sample", content_pool$type, "content"),
-    access_type = sample(
-      c("all", "logged_in", "acl"),
-      nrow(content_pool),
-      replace = TRUE,
-      prob = c(0.6, 0.3, 0.1)
-    ),
+    access_type = content_pool$access_type,
     locked = sample(
       c(FALSE, TRUE),
       nrow(content_pool),
@@ -626,7 +631,51 @@ sample_connect_visits_by_user_internal <- function() {
       )
     })
 
-    do.call(rbind, visits_list)
+    authenticated_visits <- do.call(rbind, visits_list)
+
+    # Generate anonymous visits for public content
+    # Filter for public content that has been created by this day
+    public_content <- content_pool[
+      content_pool$access_type == "all" &
+        content_pool$creation_day <= i,
+    ]
+
+    anonymous_visits <- NULL
+    if (nrow(public_content) > 0) {
+      # 30-40% of public content gets anonymous visits
+      set.seed(5500 + i)
+      n_anon_content <- max(1, round(nrow(public_content) * runif(1, 0.3, 0.4)))
+
+      # Favor high popularity content for anonymous visits
+      anon_probs <- ifelse(
+        public_content$popularity_tier == "high",
+        0.5,
+        ifelse(public_content$popularity_tier == "medium", 0.3, 0.2)
+      )
+      anon_probs <- anon_probs / sum(anon_probs)
+
+      anon_content_guids <- sample(
+        public_content$content_guid,
+        size = min(n_anon_content, nrow(public_content)),
+        prob = anon_probs
+      )
+
+      # Generate visits for anonymous users (lower volume than authenticated)
+      anonymous_visits <- data.frame(
+        date = date,
+        user_guid = NA_character_,
+        content_guid = anon_content_guids,
+        visits = sample(1:8, length(anon_content_guids), replace = TRUE),
+        stringsAsFactors = FALSE
+      )
+    }
+
+    # Combine authenticated and anonymous visits
+    if (!is.null(anonymous_visits)) {
+      rbind(authenticated_visits, anonymous_visits)
+    } else {
+      authenticated_visits
+    }
   })
 
   result <- do.call(rbind, Filter(Negate(is.null), daily_visits))
@@ -727,7 +776,52 @@ sample_connect_shiny_by_user_internal <- function() {
       )
     })
 
-    do.call(rbind, usage_list)
+    authenticated_usage <- do.call(rbind, usage_list)
+
+    # Generate anonymous sessions for public Shiny apps
+    public_shiny <- available_shiny[available_shiny$access_type == "all", ]
+
+    anonymous_usage <- NULL
+    if (nrow(public_shiny) > 0) {
+      # 20-30% of public Shiny apps get anonymous sessions
+      set.seed(6500 + i)
+      n_anon_apps <- max(1, round(nrow(public_shiny) * runif(1, 0.2, 0.3)))
+
+      # Favor high popularity apps for anonymous usage
+      anon_probs <- ifelse(
+        public_shiny$popularity_tier == "high",
+        0.5,
+        ifelse(public_shiny$popularity_tier == "medium", 0.3, 0.2)
+      )
+      anon_probs <- anon_probs / sum(anon_probs)
+
+      anon_app_guids <- sample(
+        public_shiny$content_guid,
+        size = min(n_anon_apps, nrow(public_shiny)),
+        prob = anon_probs
+      )
+
+      # Anonymous sessions: shorter duration (5-30 min) and fewer sessions
+      anonymous_usage <- data.frame(
+        date = date,
+        user_guid = NA_character_,
+        content_guid = anon_app_guids,
+        num_sessions = sample(1:2, length(anon_app_guids), replace = TRUE),
+        duration = as.integer(sample(
+          300:1800,
+          length(anon_app_guids),
+          replace = TRUE
+        )),
+        stringsAsFactors = FALSE
+      )
+    }
+
+    # Combine authenticated and anonymous usage
+    if (!is.null(anonymous_usage)) {
+      rbind(authenticated_usage, anonymous_usage)
+    } else {
+      authenticated_usage
+    }
   })
 
   result <- do.call(rbind, Filter(Negate(is.null), daily_usage))
