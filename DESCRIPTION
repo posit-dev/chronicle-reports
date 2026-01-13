@@ -18,6 +18,7 @@ Depends:
 Imports:
     arrow,
     bslib,
+    charlatan,
     dplyr,
     DT,
     ggplot2,

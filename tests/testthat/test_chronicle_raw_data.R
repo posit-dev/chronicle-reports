@@ -19,8 +19,8 @@ test_that("chronicle_raw_data loads raw daily data successfully", {
   expect_true("user_role" %in% names(collected))
   expect_true("locked" %in% names(collected))
 
-  # Should have data from multiple days (3 days × 15 users = 45 rows)
-  expect_equal(nrow(collected), 45)
+  # Should have data from multiple days (30 days × 15 users = 450 rows)
+  expect_equal(nrow(collected), 450)
 })
 
 test_that("chronicle_raw_data defaults to daily frequency", {
@@ -39,61 +39,95 @@ test_that("chronicle_raw_data supports date filtering", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
 
-  # Load and filter by specific date
+  # Load all data and get the first date dynamically
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
+  all_data <- dplyr::collect(data)
+  first_date <- min(all_data$date)
+
+  # Filter by specific date
   filtered <- data |>
-    dplyr::filter(date == as.Date("2024-01-01")) |>
+    dplyr::filter(date == first_date) |>
     dplyr::collect()
 
   expect_equal(nrow(filtered), 15) # 15 users for that day
-  expect_true(all(filtered$date == as.Date("2024-01-01")))
+  expect_true(all(filtered$date == first_date))
 })
 
 test_that("chronicle_raw_data supports ymd filtering", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
 
+  # First, get the actual dates in the sample data
+  all_data <- chronicle_raw_data(
+    "connect_users",
+    base_path,
+    frequency = "daily"
+  ) |>
+    dplyr::collect()
+  first_date <- min(all_data$date)
+
   # Load data for a specific date using ymd parameter
   data <- chronicle_raw_data(
     "connect_users",
     base_path,
     frequency = "daily",
-    ymd = list(year = 2024, month = 1, day = 1)
+    ymd = list(
+      year = as.integer(format(first_date, "%Y")),
+      month = as.integer(format(first_date, "%m")),
+      day = as.integer(format(first_date, "%d"))
+    )
   )
 
   collected <- dplyr::collect(data)
 
-  # Should only have data from 2024-01-01
+  # Should only have data from that date
   expect_equal(nrow(collected), 15) # 15 users
-  expect_true(all(collected$date == as.Date("2024-01-01")))
+  expect_true(all(collected$date == first_date))
 })
 
 test_that("chronicle_raw_data ymd filtering with different dates", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
 
-  # Load data for 2024-01-03
+  # First, get the actual dates in the sample data
+  all_data <- chronicle_raw_data(
+    "connect_users",
+    base_path,
+    frequency = "daily"
+  ) |>
+    dplyr::collect()
+  sorted_dates <- sort(unique(all_data$date))
+  third_date <- sorted_dates[3] # Day 3
+
+  # Load data for day 3
   data <- chronicle_raw_data(
     "connect_users",
     base_path,
     frequency = "daily",
-    ymd = list(year = 2024, month = 1, day = 3)
+    ymd = list(
+      year = as.integer(format(third_date, "%Y")),
+      month = as.integer(format(third_date, "%m")),
+      day = as.integer(format(third_date, "%d"))
+    )
   )
 
   collected <- dplyr::collect(data)
   expect_equal(nrow(collected), 15)
-  expect_true(all(collected$date == as.Date("2024-01-03")))
+  expect_true(all(collected$date == third_date))
 })
 
 test_that("chronicle_raw_data preserves data integrity", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
 
-  # Load and check specific data values
+  # Load all data and get the first date dynamically
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
-  collected <- data |>
-    dplyr::filter(date == as.Date("2024-01-01")) |>
-    dplyr::collect()
+  all_data <- dplyr::collect(data)
+  first_date <- min(all_data$date)
+
+  # Filter to first date
+  collected <- all_data |>
+    dplyr::filter(date == first_date)
 
   # Verify we have all 15 users
   expect_equal(nrow(collected), 15)
@@ -104,36 +138,39 @@ test_that("chronicle_raw_data preserves data integrity", {
     as.POSIXct("2023-06-01 10:00:00", tz = "UTC")
   )
 
-  # Check that user1@example.com specifically exists with correct data
-  user1_row <- collected[collected$email == "user1@example.com", ]
-  expect_equal(nrow(user1_row), 1)
-  expect_equal(user1_row$user_role, "viewer")
-  expect_false(user1_row$locked)
+  # Check that all emails are valid (should end with @example.com)
+  expect_true(all(grepl("@example.com$", collected$email)))
 
-  # Check that all expected emails exist
-  expected_emails <- paste0("user", 1:15, "@example.com")
-  expect_true(all(expected_emails %in% collected$email))
+  # Check that we have various user roles
+  expect_true("viewer" %in% collected$user_role)
+  expect_true("publisher" %in% collected$user_role)
 
-  # Check that locked column is all FALSE
-  expect_true(all(collected$locked == FALSE))
+  # Check that most users are not locked (allow up to 2 locked)
+  locked_count <- sum(collected$locked)
+  expect_true(locked_count <= 2)
 })
 
 test_that("chronicle_raw_data includes expected user roles", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
 
-  # Load data and check role distribution
+  # Load all data and get the first date dynamically
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
-  collected <- data |>
-    dplyr::filter(date == as.Date("2024-01-01")) |>
-    dplyr::collect()
+  all_data <- dplyr::collect(data)
+  first_date <- min(all_data$date)
 
+  # Filter to first date
+  collected <- all_data |>
+    dplyr::filter(date == first_date)
+
+  # Check that we have role variety (since we're sampling 15 from 26 users)
+  # We should see at least viewers and publishers
   role_counts <- table(collected$user_role)
+  expect_true("viewer" %in% names(role_counts))
+  expect_true("publisher" %in% names(role_counts))
 
-  # Check expected distribution (per our sample data)
-  expect_equal(as.integer(role_counts["viewer"]), 10L)
-  expect_equal(as.integer(role_counts["publisher"]), 4L)
-  expect_equal(as.integer(role_counts["administrator"]), 1L)
+  # Total should be 15 users
+  expect_equal(sum(role_counts), 15)
 })
 
 test_that("chronicle_raw_data can be used with dplyr operations", {
@@ -154,7 +191,7 @@ test_that("chronicle_raw_data can be used with dplyr operations", {
     dplyr::summarise(user_count = dplyr::n()) |>
     dplyr::collect()
 
-  expect_equal(nrow(result), 3) # 3 days
+  expect_equal(nrow(result), 30) # 30 days
   expect_true(all(result$user_count == 15)) # 15 users per day
 })
 
@@ -177,12 +214,14 @@ test_that("chronicle_raw_data handles multiple days correctly", {
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
   collected <- dplyr::collect(data)
 
-  # Check that we have 3 distinct dates
+  # Check that we have 30 distinct dates
   dates <- unique(collected$date)
-  expect_equal(length(dates), 3)
-  expect_true(as.Date("2024-01-01") %in% dates)
-  expect_true(as.Date("2024-01-02") %in% dates)
-  expect_true(as.Date("2024-01-03") %in% dates)
+  expect_equal(length(dates), 30)
+
+  # Verify dates are sequential (30 days ending yesterday)
+  sorted_dates <- sort(dates)
+  date_diffs <- diff(as.numeric(sorted_dates))
+  expect_true(all(date_diffs == 1)) # All dates should be 1 day apart
 
   # Each date should have 15 users
   for (d in dates) {
