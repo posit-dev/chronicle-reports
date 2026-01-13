@@ -6,6 +6,18 @@ library(bslib)
 library(chronicle.reports)
 library(rlang)
 
+# Common application configuration
+APP_CONFIG <- list(
+  # Default Chronicle data path
+  DEFAULT_BASE_PATH = "/var/lib/posit-chronicle/data"
+)
+
+# Get base path from environment variable
+base_path <- Sys.getenv(
+  "CHRONICLE_BASE_PATH",
+  APP_CONFIG$DEFAULT_BASE_PATH
+)
+
 # Brand colors
 BRAND_COLORS <- list(
   BLUE = "#447099",
@@ -14,14 +26,6 @@ BRAND_COLORS <- list(
   GRAY = "#404041"
 )
 
-# Load app constants
-source("../constants.R")
-
-# Get base path from environment variable
-base_path <- Sys.getenv(
-  "CHRONICLE_BASE_PATH",
-  APP_CONFIG$DEFAULT_BASE_PATH
-)
 
 # ==============================================
 # Users → Overview UI/Server
