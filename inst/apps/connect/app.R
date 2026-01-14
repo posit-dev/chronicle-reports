@@ -917,21 +917,22 @@ content_overview_server <- function(input, output, session) {
       return(plotly::plotly_empty())
     }
 
-    # Order by total desc for nicer bars
+    # Order by total asc so after coord_flip highest are at top
     type_summary <- type_summary |>
-      dplyr::arrange(dplyr::desc(total))
+      dplyr::arrange(total) |>
+      dplyr::mutate(content_type = factor(content_type, levels = content_type))
 
     p <- ggplot2::ggplot(
       type_summary,
       ggplot2::aes(
-        x = stats::reorder(content_type, total),
+        x = content_type,
         y = total
       )
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$GREEN) +
       ggplot2::coord_flip() +
       ggplot2::theme_minimal() +
-      ggplot2::labs(x = "Content Type", y = "Count")
+      ggplot2::labs(x = NULL, y = "Count")
 
     plotly::ggplotly(p) |>
       plotly::layout(
