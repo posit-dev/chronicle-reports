@@ -204,11 +204,11 @@ users_overview_server <- function(input, output, session) {
       dplyr::select("date", "named_users", "active_users_1day", "publishers") |>
       dplyr::filter(!is.na(date)) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
-      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
+      dplyr::filter(!is.na(value), is.finite(value)) |>
       dplyr::arrange(date) |>
       dplyr::mutate(
         metric = factor(
-          .data$metric,
+          metric,
           levels = c("named_users", "active_users_1day", "publishers"),
           labels = c("Licensed Users", "Daily Users", "Publishers")
         )
@@ -237,7 +237,7 @@ users_overview_server <- function(input, output, session) {
 
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
+      ggplot2::aes(x = date, y = value, color = metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(
@@ -245,9 +245,9 @@ users_overview_server <- function(input, output, session) {
           text = paste0(
             format(date, "%B %d, %Y"),
             "<br>",
-            prettyNum(.data$value, big.mark = ","),
+            prettyNum(value, big.mark = ","),
             " ",
-            .data$metric
+            metric
           )
         ),
         size = 0.5
@@ -309,9 +309,9 @@ users_overview_server <- function(input, output, session) {
       dplyr::mutate(
         day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
       ) |>
-      dplyr::group_by(.data$day_of_week) |>
+      dplyr::group_by(day_of_week) |>
       dplyr::summarise(
-        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
+        avg_active_users = mean(active_users_1day, na.rm = TRUE),
         .groups = "drop"
       )
 
@@ -338,7 +338,7 @@ users_overview_server <- function(input, output, session) {
 
     p <- ggplot2::ggplot(
       day_summary,
-      ggplot2::aes(x = .data$day_of_week, y = .data$avg_active_users)
+      ggplot2::aes(x = day_of_week, y = avg_active_users)
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$BLUE) +
       ggplot2::theme_minimal() +
@@ -453,19 +453,19 @@ users_list_server <- function(input, output, session) {
       if (input$users_list_environment == "(Not Set)") {
         data <- data |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         data <- data |>
-          dplyr::filter(.data$environment == input$users_list_environment)
+          dplyr::filter(environment == input$users_list_environment)
       }
     }
 
     # Role filter
     if (input$users_list_role != "All") {
-      data <- data |> dplyr::filter(.data$user_role == input$users_list_role)
+      data <- data |> dplyr::filter(user_role == input$users_list_role)
     }
 
     data
@@ -509,11 +509,11 @@ users_list_server <- function(input, output, session) {
     data |>
       dplyr::mutate(
         environment = ifelse(
-          is.na(.data$environment) |
-            .data$environment == "" |
-            .data$environment == " ",
+          is.na(environment) |
+            environment == "" |
+            environment == " ",
           "(Not Set)",
-          .data$environment
+          environment
         )
       ) |>
       dplyr::select(
@@ -596,7 +596,7 @@ content_overview_server <- function(input, output, session) {
     df <- data |> dplyr::collect()
     # Environment column is always `environment`
     env_values <- df |>
-      dplyr::pull(.data$environment) |>
+      dplyr::pull(environment) |>
       unique()
 
     has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
@@ -643,10 +643,10 @@ content_overview_server <- function(input, output, session) {
     shiny::req(contents_data())
 
     date_summary <- contents_data() |>
-      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
-        min_date = min(.data$date, na.rm = TRUE),
-        max_date = max(.data$date, na.rm = TRUE)
+        min_date = min(date, na.rm = TRUE),
+        max_date = max(date, na.rm = TRUE)
       ) |>
       dplyr::collect()
 
@@ -673,13 +673,13 @@ content_overview_server <- function(input, output, session) {
       if (input$content_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$environment == input$content_overview_environment)
+          dplyr::filter(environment == input$content_overview_environment)
       }
     }
 
@@ -688,11 +688,11 @@ content_overview_server <- function(input, output, session) {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$type) | .data$type == "" | .data$type == " "
+            is.na(type) | type == "" | type == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$type == input$content_overview_type)
+          dplyr::filter(type == input$content_overview_type)
       }
     }
 
@@ -709,8 +709,8 @@ content_overview_server <- function(input, output, session) {
 
     df |>
       dplyr::filter(
-        .data$date >= input$content_overview_date_range[1],
-        .data$date <= input$content_overview_date_range[2]
+        date >= input$content_overview_date_range[1],
+        date <= input$content_overview_date_range[2]
       )
   })
 
@@ -773,9 +773,9 @@ content_overview_server <- function(input, output, session) {
 
     # Aggregate by date using canonical `count` column
     total_by_date <- df |>
-      dplyr::group_by(.data$date) |>
+      dplyr::group_by(date) |>
       dplyr::summarise(
-        total_content = sum(.data$count, na.rm = TRUE),
+        total_content = sum(count, na.rm = TRUE),
         .groups = "drop"
       )
 
@@ -784,7 +784,7 @@ content_overview_server <- function(input, output, session) {
       dplyr::mutate(
         metric = factor("Total Content", levels = "Total Content")
       ) |>
-      dplyr::rename(value = .data$total_content)
+      dplyr::rename(value = total_content)
 
     if (nrow(plot_data) == 0) {
       return(
@@ -809,7 +809,7 @@ content_overview_server <- function(input, output, session) {
 
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
+      ggplot2::aes(x = date, y = value, color = metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(
@@ -817,9 +817,9 @@ content_overview_server <- function(input, output, session) {
           text = paste0(
             format(date, "%B %d, %Y"),
             "<br>",
-            prettyNum(.data$value, big.mark = ","),
+            prettyNum(value, big.mark = ","),
             " ",
-            .data$metric
+            metric
           )
         ),
         size = 0.5
@@ -902,13 +902,13 @@ content_overview_server <- function(input, output, session) {
 
     latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
     df <- df |>
-      dplyr::filter(.data$date == latest_date)
+      dplyr::filter(date == latest_date)
 
     # Latest-day totals are not cumulative; just use that day's counts
     type_summary <- df |>
-      dplyr::group_by(.data$type) |>
+      dplyr::group_by(type) |>
       dplyr::summarise(
-        total = sum(.data$count, na.rm = TRUE),
+        total = sum(count, na.rm = TRUE),
         .groups = "drop"
       )
     names(type_summary)[1] <- "content_type"
@@ -919,13 +919,13 @@ content_overview_server <- function(input, output, session) {
 
     # Order by total desc for nicer bars
     type_summary <- type_summary |>
-      dplyr::arrange(dplyr::desc(.data$total))
+      dplyr::arrange(dplyr::desc(total))
 
     p <- ggplot2::ggplot(
       type_summary,
       ggplot2::aes(
-        x = stats::reorder(.data$content_type, .data$total),
-        y = .data$total
+        x = stats::reorder(content_type, total),
+        y = total
       )
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$GREEN) +
@@ -984,7 +984,7 @@ content_list_server <- function(input, output, session) {
         }
 
         latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(.data$date == latest_date)
+        df |> dplyr::filter(date == latest_date)
       },
       error = function(e) {
         message("Error loading content list: ", e$message)
@@ -1003,7 +1003,7 @@ content_list_server <- function(input, output, session) {
           return(NULL)
         }
         latest_date <- suppressWarnings(max(udf$date, na.rm = TRUE))
-        udf |> dplyr::filter(.data$date == latest_date)
+        udf |> dplyr::filter(date == latest_date)
       },
       error = function(e) {
         message("Error loading user list for owner resolution: ", e$message)
@@ -1041,7 +1041,7 @@ content_list_server <- function(input, output, session) {
 
     # Environment choices (environment column is guaranteed)
     env_values <- df |>
-      dplyr::pull(.data$environment) |>
+      dplyr::pull(environment) |>
       unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
@@ -1067,11 +1067,11 @@ content_list_server <- function(input, output, session) {
       owners <- df |>
         dplyr::left_join(
           ulist |>
-            dplyr::select(.data$id, .data$username) |>
-            dplyr::rename(owner_guid = .data$id, owner = .data$username),
+            dplyr::select(id, username) |>
+            dplyr::rename(owner_guid = id, owner = username),
           by = "owner_guid"
         ) |>
-        dplyr::pull(.data$owner) |>
+        dplyr::pull(owner) |>
         unique()
 
       has_na <- any(is.na(owners) | owners == "" | owners == " ")
@@ -1120,13 +1120,13 @@ content_list_server <- function(input, output, session) {
       if (input$content_list_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$environment == input$content_list_environment)
+          dplyr::filter(environment == input$content_list_environment)
       }
     }
 
@@ -1134,8 +1134,8 @@ content_list_server <- function(input, output, session) {
     ulist <- latest_user_list()
     if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
       owner_lookup <- ulist |>
-        dplyr::select(.data$id, .data$username) |>
-        dplyr::rename(owner_guid = .data$id, owner = .data$username)
+        dplyr::select(id, username) |>
+        dplyr::rename(owner_guid = id, owner = username)
 
       df <- df |>
         dplyr::left_join(owner_lookup, by = "owner_guid")
@@ -1146,10 +1146,10 @@ content_list_server <- function(input, output, session) {
       if (input$content_list_owner == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$owner) | .data$owner == "" | .data$owner == " "
+            is.na(owner) | owner == "" | owner == " "
           )
       } else {
-        df <- df |> dplyr::filter(.data$owner == input$content_list_owner)
+        df <- df |> dplyr::filter(owner == input$content_list_owner)
       }
     }
 
@@ -1158,13 +1158,13 @@ content_list_server <- function(input, output, session) {
       if (input$content_list_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$type) |
-              .data$type == "" |
-              .data$type == " "
+            is.na(type) |
+              type == "" |
+              type == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$type == input$content_list_type)
+          dplyr::filter(type == input$content_list_type)
       }
     }
 
@@ -1295,7 +1295,7 @@ usage_overview_server <- function(input, output, session) {
     }
 
     env_values <- df |>
-      dplyr::pull(.data$environment) |>
+      dplyr::pull(environment) |>
       unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
@@ -1322,10 +1322,10 @@ usage_overview_server <- function(input, output, session) {
     }
 
     date_summary <- data |>
-      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
-        min_date = min(.data$date, na.rm = TRUE),
-        max_date = max(.data$date, na.rm = TRUE)
+        min_date = min(date, na.rm = TRUE),
+        max_date = max(date, na.rm = TRUE)
       ) |>
       dplyr::collect()
 
@@ -1358,13 +1358,13 @@ usage_overview_server <- function(input, output, session) {
       if (input$usage_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$environment == input$usage_overview_environment)
+          dplyr::filter(environment == input$usage_overview_environment)
       }
     }
 
@@ -1372,8 +1372,8 @@ usage_overview_server <- function(input, output, session) {
 
     df |>
       dplyr::filter(
-        .data$date >= input$usage_overview_date_range[1],
-        .data$date <= input$usage_overview_date_range[2]
+        date >= input$usage_overview_date_range[1],
+        date <= input$usage_overview_date_range[2]
       ) |>
       dplyr::collect()
   })
@@ -1413,10 +1413,10 @@ usage_overview_server <- function(input, output, session) {
     }
 
     daily <- df |>
-      dplyr::group_by(.data$date) |>
+      dplyr::group_by(date) |>
       dplyr::summarise(
-        total_visits = sum(.data$visits, na.rm = TRUE),
-        unique_visitors = dplyr::n_distinct(.data$user_guid),
+        total_visits = sum(visits, na.rm = TRUE),
+        unique_visitors = dplyr::n_distinct(user_guid),
         .groups = "drop"
       )
 
@@ -1432,7 +1432,7 @@ usage_overview_server <- function(input, output, session) {
       ) |>
       dplyr::mutate(
         metric = factor(
-          .data$metric,
+          metric,
           levels = c("total_visits", "unique_visitors"),
           labels = c("Total Visits", "Unique Visitors")
         )
@@ -1440,7 +1440,7 @@ usage_overview_server <- function(input, output, session) {
 
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
+      ggplot2::aes(x = date, y = value, color = metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(size = 0.5) +
@@ -1534,7 +1534,7 @@ shiny_apps_server <- function(input, output, session) {
         }
 
         latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(.data$date == latest_date)
+        df |> dplyr::filter(date == latest_date)
       },
       error = function(e) {
         message("Error loading content list for shiny usage: ", e$message)
@@ -1566,7 +1566,7 @@ shiny_apps_server <- function(input, output, session) {
       )
     } else {
       env_values <- df |>
-        dplyr::pull(.data$environment) |>
+        dplyr::pull(environment) |>
         unique()
 
       has_env_na <- any(
@@ -1589,10 +1589,10 @@ shiny_apps_server <- function(input, output, session) {
     }
 
     date_summary <- data |>
-      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
-        min_date = min(.data$date, na.rm = TRUE),
-        max_date = max(.data$date, na.rm = TRUE)
+        min_date = min(date, na.rm = TRUE),
+        max_date = max(date, na.rm = TRUE)
       ) |>
       dplyr::collect()
 
@@ -1623,13 +1623,13 @@ shiny_apps_server <- function(input, output, session) {
       if (input$shiny_apps_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$environment == input$shiny_apps_environment)
+          dplyr::filter(environment == input$shiny_apps_environment)
       }
     }
 
@@ -1637,8 +1637,8 @@ shiny_apps_server <- function(input, output, session) {
 
     df |>
       dplyr::filter(
-        .data$date >= input$shiny_apps_date_range[1],
-        .data$date <= input$shiny_apps_date_range[2]
+        date >= input$shiny_apps_date_range[1],
+        date <= input$shiny_apps_date_range[2]
       ) |>
       dplyr::collect()
   })
@@ -1683,11 +1683,11 @@ shiny_apps_server <- function(input, output, session) {
     }
 
     daily <- df |>
-      dplyr::group_by(.data$date) |>
+      dplyr::group_by(date) |>
       dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
+        total_sessions = sum(num_sessions, na.rm = TRUE),
         peak_concurrent_daily = if ("peak_concurrent" %in% names(df)) {
-          suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
+          suppressWarnings(max(peak_concurrent, na.rm = TRUE))
         } else {
           NA_real_
         },
@@ -1711,7 +1711,7 @@ shiny_apps_server <- function(input, output, session) {
       ) |>
       dplyr::mutate(
         metric = factor(
-          .data$metric,
+          metric,
           levels = c("total_sessions", "peak_concurrent_daily"),
           labels = c("Total Sessions", "Peak Concurrent Users")
         )
@@ -1729,7 +1729,7 @@ shiny_apps_server <- function(input, output, session) {
 
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
+      ggplot2::aes(x = date, y = value, color = metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(size = 0.5) +
@@ -1778,13 +1778,13 @@ shiny_apps_server <- function(input, output, session) {
     }
 
     app_summary <- df |>
-      dplyr::group_by(.data$environment, .data$content_guid) |>
+      dplyr::group_by(environment, content_guid) |>
       dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-        unique_users = dplyr::n_distinct(.data$user_guid),
+        total_sessions = sum(num_sessions, na.rm = TRUE),
+        unique_users = dplyr::n_distinct(user_guid),
         avg_duration_minutes = if ("duration" %in% names(df)) {
-          total_duration <- sum(.data$duration, na.rm = TRUE)
-          total_sessions_inner <- sum(.data$num_sessions, na.rm = TRUE)
+          total_duration <- sum(duration, na.rm = TRUE)
+          total_sessions_inner <- sum(num_sessions, na.rm = TRUE)
           if (total_sessions_inner > 0) {
             round((total_duration / total_sessions_inner) / 60, 2)
           } else {
@@ -1800,7 +1800,7 @@ shiny_apps_server <- function(input, output, session) {
     content_df <- shiny_content_list_latest()
     if (!is.null(content_df)) {
       content_join <- content_df |>
-        dplyr::select(.data$id, .data$environment, .data$title)
+        dplyr::select(id, environment, title)
 
       app_summary <- app_summary |>
         dplyr::left_join(
@@ -1812,11 +1812,11 @@ shiny_apps_server <- function(input, output, session) {
     display_df <- app_summary |>
       dplyr::mutate(
         environment = ifelse(
-          is.na(.data$environment) |
-            .data$environment == "" |
-            .data$environment == " ",
+          is.na(environment) |
+            environment == "" |
+            environment == " ",
           "(Not Set)",
-          .data$environment
+          environment
         )
       )
 
@@ -1889,7 +1889,7 @@ content_by_user_server <- function(input, output, session) {
         }
 
         latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(.data$date == latest_date)
+        df |> dplyr::filter(date == latest_date)
       },
       error = function(e) {
         message("Error loading content list for content-by-user: ", e$message)
@@ -1908,7 +1908,7 @@ content_by_user_server <- function(input, output, session) {
           return(NULL)
         }
         latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(.data$date == latest_date)
+        df |> dplyr::filter(date == latest_date)
       },
       error = function(e) {
         message("Error loading user list for content-by-user: ", e$message)
@@ -1942,7 +1942,7 @@ content_by_user_server <- function(input, output, session) {
 
     # Environment choices
     env_values <- df |>
-      dplyr::pull(.data$environment) |>
+      dplyr::pull(environment) |>
       unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
@@ -1963,10 +1963,10 @@ content_by_user_server <- function(input, output, session) {
 
     # Date range
     date_summary <- df |>
-      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
-        min_date = min(.data$date, na.rm = TRUE),
-        max_date = max(.data$date, na.rm = TRUE)
+        min_date = min(date, na.rm = TRUE),
+        max_date = max(date, na.rm = TRUE)
       )
 
     if (nrow(date_summary) == 0) {
@@ -1998,13 +1998,13 @@ content_by_user_server <- function(input, output, session) {
       if (input$content_by_user_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(.data$environment == input$content_by_user_environment)
+          dplyr::filter(environment == input$content_by_user_environment)
       }
     }
 
@@ -2012,8 +2012,8 @@ content_by_user_server <- function(input, output, session) {
 
     df |>
       dplyr::filter(
-        .data$date >= input$content_by_user_date_range[1],
-        .data$date <= input$content_by_user_date_range[2]
+        date >= input$content_by_user_date_range[1],
+        date <= input$content_by_user_date_range[2]
       )
   })
 
@@ -2044,9 +2044,9 @@ content_by_user_server <- function(input, output, session) {
     }
 
     summary_df <- df |>
-      dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
+      dplyr::group_by(environment, user_guid, content_guid) |>
       dplyr::summarise(
-        total_visits = sum(.data$visits, na.rm = TRUE),
+        total_visits = sum(visits, na.rm = TRUE),
         .groups = "drop"
       )
 
@@ -2054,7 +2054,7 @@ content_by_user_server <- function(input, output, session) {
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
       user_join <- u_df |>
-        dplyr::select(.data$id, .data$username)
+        dplyr::select(id, username)
 
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
@@ -2066,7 +2066,7 @@ content_by_user_server <- function(input, output, session) {
       !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
     ) {
       content_join <- c_df |>
-        dplyr::select(.data$id, .data$environment, .data$title)
+        dplyr::select(id, environment, title)
 
       summary_df <- summary_df |>
         dplyr::left_join(
@@ -2078,16 +2078,16 @@ content_by_user_server <- function(input, output, session) {
     display_df <- summary_df |>
       dplyr::mutate(
         username = ifelse(
-          is.na(.data$user_guid) | is.na(.data$username),
+          is.na(user_guid) | is.na(username),
           "(anonymous)",
-          .data$username
+          username
         ),
         environment = ifelse(
-          is.na(.data$environment) |
-            .data$environment == "" |
-            .data$environment == " ",
+          is.na(environment) |
+            environment == "" |
+            environment == " ",
           "(Not Set)",
-          .data$environment
+          environment
         )
       )
 
@@ -2162,7 +2162,7 @@ shiny_sessions_by_user_server <- function(input, output, session) {
         }
 
         latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(.data$date == latest_date)
+        df |> dplyr::filter(date == latest_date)
       },
       error = function(e) {
         message(
@@ -2183,7 +2183,7 @@ shiny_sessions_by_user_server <- function(input, output, session) {
           return(NULL)
         }
         latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(.data$date == latest_date)
+        df |> dplyr::filter(date == latest_date)
       },
       error = function(e) {
         message(
@@ -2219,7 +2219,7 @@ shiny_sessions_by_user_server <- function(input, output, session) {
     }
 
     env_values <- df |>
-      dplyr::pull(.data$environment) |>
+      dplyr::pull(environment) |>
       unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
@@ -2239,10 +2239,10 @@ shiny_sessions_by_user_server <- function(input, output, session) {
     )
 
     date_summary <- df |>
-      dplyr::filter(!is.na(.data$date)) |>
+      dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
-        min_date = min(.data$date, na.rm = TRUE),
-        max_date = max(.data$date, na.rm = TRUE)
+        min_date = min(date, na.rm = TRUE),
+        max_date = max(date, na.rm = TRUE)
       )
 
     if (nrow(date_summary) == 0) {
@@ -2275,14 +2275,14 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       if (input$shiny_sessions_user_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " "
+            is.na(environment) |
+              environment == "" |
+              environment == " "
           )
       } else {
         df <- df |>
           dplyr::filter(
-            .data$environment == input$shiny_sessions_user_environment
+            environment == input$shiny_sessions_user_environment
           )
       }
     }
@@ -2291,8 +2291,8 @@ shiny_sessions_by_user_server <- function(input, output, session) {
 
     df |>
       dplyr::filter(
-        .data$date >= input$shiny_sessions_user_date_range[1],
-        .data$date <= input$shiny_sessions_user_date_range[2]
+        date >= input$shiny_sessions_user_date_range[1],
+        date <= input$shiny_sessions_user_date_range[2]
       )
   })
 
@@ -2323,11 +2323,11 @@ shiny_sessions_by_user_server <- function(input, output, session) {
     }
 
     summary_df <- df |>
-      dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
+      dplyr::group_by(environment, user_guid, content_guid) |>
       dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
+        total_sessions = sum(num_sessions, na.rm = TRUE),
         total_duration = if ("duration" %in% names(df)) {
-          sum(.data$duration, na.rm = TRUE)
+          sum(duration, na.rm = TRUE)
         } else {
           NA_real_
         },
@@ -2338,9 +2338,9 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       dplyr::mutate(
         avg_duration_minutes = round(
           ifelse(
-            is.na(.data$total_duration) | .data$total_sessions == 0,
+            is.na(total_duration) | total_sessions == 0,
             NA_real_,
-            (.data$total_duration / .data$total_sessions) / 60
+            (total_duration / total_sessions) / 60
           ),
           2
         )
@@ -2350,7 +2350,7 @@ shiny_sessions_by_user_server <- function(input, output, session) {
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
       user_join <- u_df |>
-        dplyr::select(.data$id, .data$username)
+        dplyr::select(id, username)
 
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
@@ -2362,7 +2362,7 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
     ) {
       content_join <- c_df |>
-        dplyr::select(.data$id, .data$environment, .data$title)
+        dplyr::select(id, environment, title)
 
       summary_df <- summary_df |>
         dplyr::left_join(
@@ -2374,16 +2374,16 @@ shiny_sessions_by_user_server <- function(input, output, session) {
     display_df <- summary_df |>
       dplyr::mutate(
         username = ifelse(
-          is.na(.data$user_guid) | is.na(.data$username),
+          is.na(user_guid) | is.na(username),
           "(anonymous)",
-          .data$username
+          username
         ),
         environment = ifelse(
-          is.na(.data$environment) |
-            .data$environment == "" |
-            .data$environment == " ",
+          is.na(environment) |
+            environment == "" |
+            environment == " ",
           "(Not Set)",
-          .data$environment
+          environment
         )
       )
 
