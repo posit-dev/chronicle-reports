@@ -1411,6 +1411,28 @@ usage_overview_server <- function(input, output, session) {
     prettyNum(unique_visitors, big.mark = ",")
   })
 
+  output$usage_avg_daily_value <- shiny::renderText({
+    df <- usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0 || !"visits" %in% names(df)) {
+      return("0")
+    }
+
+    shiny::req(input$usage_overview_date_range)
+
+    total_visits <- sum(df$visits, na.rm = TRUE)
+    num_days <- as.numeric(
+      input$usage_overview_date_range[2] - input$usage_overview_date_range[1]
+    ) + 1
+
+    if (num_days <= 0) {
+      return("0")
+    }
+
+    avg_daily <- total_visits / num_days
+    prettyNum(round(avg_daily), big.mark = ",")
+  })
+
   output$usage_total_visits_plot <- plotly::renderPlotly({
     df <- usage_filtered()
 
