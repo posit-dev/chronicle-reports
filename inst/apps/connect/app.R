@@ -1252,8 +1252,12 @@ usage_overview_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Visit Trends Over Time"),
-    shinycssloaders::withSpinner(plotly::plotlyOutput("usage_trend_plot"))
+    bslib::card_header("Total Visits by Day"),
+    shinycssloaders::withSpinner(plotly::plotlyOutput("usage_total_visits_plot"))
+  ),
+  bslib::card(
+    bslib::card_header("Unique Visitors by Day"),
+    shinycssloaders::withSpinner(plotly::plotlyOutput("usage_unique_visitors_plot"))
   )
 )
 
@@ -1400,14 +1404,13 @@ usage_overview_server <- function(input, output, session) {
     prettyNum(unique_visitors, big.mark = ",")
   })
 
-  output$usage_trend_plot <- plotly::renderPlotly({
+  output$usage_total_visits_plot <- plotly::renderPlotly({
     df <- usage_filtered()
 
     if (
       is.null(df) ||
         nrow(df) == 0 ||
-        !"visits" %in% names(df) ||
-        !"user_guid" %in% names(df)
+        !"visits" %in% names(df)
     ) {
       return(plotly::plotly_empty())
     }
@@ -1416,6 +1419,44 @@ usage_overview_server <- function(input, output, session) {
       dplyr::group_by(date) |>
       dplyr::summarise(
         total_visits = sum(visits, na.rm = TRUE),
+        .groups = "drop"
+      )
+
+    if (nrow(daily) == 0) {
+      return(plotly::plotly_empty())
+    }
+
+    p <- ggplot2::ggplot(
+      daily,
+      ggplot2::aes(x = date, y = total_visits)
+    ) +
+      ggplot2::geom_line(linewidth = 0.5, color = BRAND_COLORS$GREEN) +
+      ggplot2::geom_point(size = 0.5, color = BRAND_COLORS$GREEN) +
+      ggplot2::theme_minimal() +
+      ggplot2::labs(x = "", y = "Total Visits")
+
+    plotly::ggplotly(p) |>
+      plotly::layout(
+        xaxis = list(fixedrange = TRUE),
+        yaxis = list(fixedrange = TRUE)
+      ) |>
+      plotly::config(displayModeBar = FALSE)
+  })
+
+  output$usage_unique_visitors_plot <- plotly::renderPlotly({
+    df <- usage_filtered()
+
+    if (
+      is.null(df) ||
+        nrow(df) == 0 ||
+        !"user_guid" %in% names(df)
+    ) {
+      return(plotly::plotly_empty())
+    }
+
+    daily <- df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
         unique_visitors = dplyr::n_distinct(user_guid),
         .groups = "drop"
       )
@@ -1424,40 +1465,19 @@ usage_overview_server <- function(input, output, session) {
       return(plotly::plotly_empty())
     }
 
-    plot_data <- daily |>
-      tidyr::pivot_longer(
-        c("total_visits", "unique_visitors"),
-        names_to = "metric",
-        values_to = "value"
-      ) |>
-      dplyr::mutate(
-        metric = factor(
-          metric,
-          levels = c("total_visits", "unique_visitors"),
-          labels = c("Total Visits", "Unique Visitors")
-        )
-      )
-
     p <- ggplot2::ggplot(
-      plot_data,
-      ggplot2::aes(x = date, y = value, color = metric)
+      daily,
+      ggplot2::aes(x = date, y = unique_visitors)
     ) +
-      ggplot2::geom_line(linewidth = 0.5) +
-      ggplot2::geom_point(size = 0.5) +
+      ggplot2::geom_line(linewidth = 0.5, color = BRAND_COLORS$BLUE) +
+      ggplot2::geom_point(size = 0.5, color = BRAND_COLORS$BLUE) +
       ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Visits", color = "") +
-      ggplot2::scale_color_manual(
-        values = c(
-          "Total Visits" = BRAND_COLORS$GREEN,
-          "Unique Visitors" = BRAND_COLORS$BLUE
-        )
-      )
+      ggplot2::labs(x = "", y = "Unique Visitors")
 
     plotly::ggplotly(p) |>
       plotly::layout(
         xaxis = list(fixedrange = TRUE),
-        yaxis = list(fixedrange = TRUE),
-        legend = list(orientation = "h", x = 0.5, xanchor = "center")
+        yaxis = list(fixedrange = TRUE)
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
