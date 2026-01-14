@@ -1529,7 +1529,7 @@ shiny_apps_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Shiny Session Trends"),
+    bslib::card_header("Shiny Sessions by Day"),
     shinycssloaders::withSpinner(plotly::plotlyOutput("shiny_trend_plot"))
   ),
   bslib::card(
@@ -1763,7 +1763,7 @@ shiny_apps_server <- function(input, output, session) {
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(size = 0.5) +
       ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Count", color = "") +
+      ggplot2::labs(x = "", y = "Sessions", color = "") +
       ggplot2::scale_color_manual(
         values = c(
           "Total Sessions" = BRAND_COLORS$BURGUNDY,
