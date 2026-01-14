@@ -917,14 +917,15 @@ content_overview_server <- function(input, output, session) {
       return(plotly::plotly_empty())
     }
 
-    # Order by total desc for nicer bars
+    # Order by total asc so after coord_flip highest are at top
     type_summary <- type_summary |>
-      dplyr::arrange(dplyr::desc(total))
+      dplyr::arrange(total) |>
+      dplyr::mutate(content_type = factor(content_type, levels = content_type))
 
     p <- ggplot2::ggplot(
       type_summary,
       ggplot2::aes(
-        x = stats::reorder(content_type, total),
+        x = content_type,
         y = total
       )
     ) +
@@ -1237,7 +1238,7 @@ usage_overview_ui <- bslib::card(
     )
   ),
   bslib::layout_columns(
-    col_widths = c(6, 6),
+    col_widths = c(4, 4, 4),
     bslib::value_box(
       title = "Total Visits",
       max_height = "120px",
@@ -1249,6 +1250,12 @@ usage_overview_ui <- bslib::card(
       max_height = "120px",
       value = shiny::textOutput("usage_unique_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
+    ),
+    bslib::value_box(
+      title = "Avg Daily Visits",
+      max_height = "120px",
+      value = shiny::textOutput("usage_avg_daily_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
     )
   ),
   bslib::card(
@@ -1398,6 +1405,28 @@ usage_overview_server <- function(input, output, session) {
 
     unique_visitors <- dplyr::n_distinct(df$user_guid)
     prettyNum(unique_visitors, big.mark = ",")
+  })
+
+  output$usage_avg_daily_value <- shiny::renderText({
+    df <- usage_filtered()
+
+    if (is.null(df) || nrow(df) == 0 || !"visits" %in% names(df)) {
+      return("0")
+    }
+
+    shiny::req(input$usage_overview_date_range)
+
+    total_visits <- sum(df$visits, na.rm = TRUE)
+    num_days <- as.numeric(
+      input$usage_overview_date_range[2] - input$usage_overview_date_range[1]
+    ) + 1
+
+    if (num_days <= 0) {
+      return("0")
+    }
+
+    avg_daily <- total_visits / num_days
+    prettyNum(round(avg_daily), big.mark = ",")
   })
 
   output$usage_trend_plot <- plotly::renderPlotly({
