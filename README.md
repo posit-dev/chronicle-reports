@@ -103,7 +103,7 @@ chronicle.reports::chronicle_run_app(
 
 #### Environment Variable
 
-Set `CHRONICLE_BASE_PATH` to avoid hard the need to pass in the path every time:
+Set `CHRONICLE_BASE_PATH` to avoid the need to pass in the path every time:
 
 ```r
 Sys.setenv(CHRONICLE_BASE_PATH = "/path/to/chronicle/data")
