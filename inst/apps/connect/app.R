@@ -932,7 +932,7 @@ content_overview_server <- function(input, output, session) {
       ggplot2::geom_col(fill = BRAND_COLORS$GREEN) +
       ggplot2::coord_flip() +
       ggplot2::theme_minimal() +
-      ggplot2::labs(x = NULL, y = "Count")
+      ggplot2::labs(x = "Content Type", y = "Count")
 
     plotly::ggplotly(p) |>
       plotly::layout(
