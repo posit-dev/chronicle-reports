@@ -62,7 +62,15 @@ options(repos = c(
 
 ### Basic Usage
 
-Run any report using `chronicle_run_app()`:
+
+Discover which apps are available using `chronicle_list_apps()`:
+
+```r
+# With default data path (/var/lib/posit-chronicle/data)
+chronicle.reports::chronicle_list_apps()
+```
+
+Run any report application using `chronicle_run_app()`:
 
 ```r
 # With default data path (/var/lib/posit-chronicle/data)
@@ -95,7 +103,7 @@ chronicle.reports::chronicle_run_app(
 
 #### Environment Variable
 
-Set `CHRONICLE_BASE_PATH` to avoid hard coding the path:
+Set `CHRONICLE_BASE_PATH` to avoid hard the need to pass in the path every time:
 
 ```r
 Sys.setenv(CHRONICLE_BASE_PATH = "/path/to/chronicle/data")
@@ -113,10 +121,6 @@ chronicle.reports::chronicle_list_apps()
 
 ### Connect Dashboard
 
-**Run it**: `chronicle_run_app("connect")`
-
-<img width="2509" height="1296" alt="Connect Dashboard showing user overview, content metrics, and usage statistics" src="https://github.com/user-attachments/assets/9a9726ea-22e0-44a5-ae1c-c5a0ea1f1ffa" />
-
 A multi-page dashboard for Posit Connect usage analysis with three main sections:
 
 - **Users**:
@@ -131,11 +135,12 @@ A multi-page dashboard for Posit Connect usage analysis with three main sections
   - Content Visits by User: Detailed view of content visits per user
   - Shiny Sessions by User: Detailed view of Shiny app sessions per user
 
+Run it: `chronicle_run_app("connect")`
+
+<img width="2509" height="1296" alt="Connect Dashboard showing user overview, content metrics, and usage statistics" src="https://github.com/user-attachments/assets/9a9726ea-22e0-44a5-ae1c-c5a0ea1f1ffa" />
+
+
 ### Workbench Dashboard
-
-**Run it**: `chronicle_run_app("workbench")`
-
-<img width="2005" height="1236" alt="Workbench Dashboard displaying user analytics and activity trends" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
 
 A multi-page dashboard for Posit Workbench user analytics:
 
@@ -143,11 +148,27 @@ A multi-page dashboard for Posit Workbench user analytics:
   - Overview: Licensed users, daily active users, administrators, and super administrators with trend analysis
   - User List: Searchable, Filterable table showing all users with role and activity information
 
+Run it: `chronicle_run_app("workbench")`
+
+<img width="2005" height="1236" alt="Workbench Dashboard displaying user analytics and activity trends" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
+
+
 ## Publishing to Posit Connect
 
 Deploy Chronicle Reports dashboards to Posit Connect for organization-wide access.
 
-### Step 1: Create Project Directory
+### Deploy directly from GitHub
+
+The chronicle-reports repository includes manifest files for direct deployment from GitHub to Posit Connect. Refer to the [Posit Connect documentation](https://docs.posit.co/connect/admin/deploy-from-github/) for detailed instructions.
+
+You will need to define the `CHRONICLE_BASE_PATH` environment variable in Connect to point to your Chronicle data location. This may be set [globally](https://docs.posit.co/connect/admin/process-management/#example-environment-variables) or [per-application](https://docs.posit.co/connect/user/content-settings/#content-vars).
+
+
+### Create your own deployment
+
+Alternatively, create a custom Shiny application and deploy it to Posit Connect.
+
+#### Step 1: Create Project Directory
 
 Create a directory with an `app.R` file:
 
@@ -166,7 +187,7 @@ chronicle.reports::chronicle_run_app(
 )
 ```
 
-### Step 2: Deploy to Connect
+#### Step 2: Deploy to Connect
 
 ```r
 # install.packages("rsconnect")
@@ -176,7 +197,7 @@ rsconnect::deployApp(
 )
 ```
 
-### Step 3: Configure Environment Variable (Recommended)
+#### Step 3: Configure Environment Variable (Recommended)
 
 Instead of hard coding the path, configure it in the Posit Connect UI:
 
@@ -195,13 +216,7 @@ chronicle.reports::chronicle_run_app("connect")
 
 Use `chronicle_sample_data()` to explore Chronicle Reports without access to real Chronicle data. This function creates a temporary directory with minimal sample metrics for both Connect and Workbench.
 
-### What's Included
-
-- **Connect metrics**: User totals and user list with 26 sample users across 3 days
-- **Workbench metrics**: User totals and user list with 21 sample users across 3 days
-- **Raw data examples**: Sample raw Connect user data
-
-Sample data includes realistic user roles (viewers, publishers, administrators), environments (Production, Development, Staging), and activity patterns.
+Sample data includes realistic user roles (viewers, publishers, administrators), environments (Production, Development, Staging), and usage data.
 
 ### Using Sample Data
 
@@ -244,16 +259,20 @@ data |>
   collect()
 ```
 
-**Available curated metrics**:
-- `connect/user_totals` - Daily user totals and activity metrics
-- `connect/user_list` - Current user list with roles and activity
-- `workbench/user_totals` - Daily Workbench user totals
-- `workbench/user_list` - Current Workbench user list
-
 List all available curated metrics:
 
 ```r
 chronicle.reports::chronicle_list_data(base_path = "/path/to/chronicle/data")
+
+# Returns:
+[1] "connect/content_list"
+[2] "connect/content_totals"
+[3] "connect/content_visits_totals_by_user"
+[4] "connect/shiny_usage_totals_by_user"
+[5] "connect/user_list"
+[6] "connect/user_totals"
+[7] "workbench/user_list"
+[8] "workbench/user_totals"
 ```
 
 ### Raw Metrics (Advanced)
@@ -286,10 +305,6 @@ chronicle.reports::chronicle_list_raw_data(
 )
 ```
 
-### Additional Documentation
-
-For detailed information about Chronicle data structure, metrics, and analysis patterns, see the [Chronicle Cookbook](https://docs.posit.co/chronicle/reports/).
-
 ## Building Custom Reports
 
 Power users can build custom reports by copying and modifying existing dashboards.
@@ -309,37 +324,6 @@ file.copy(
 # Test your custom app
 shiny::runApp("my-custom-report")
 ```
-
-### Key Patterns
-
-Existing apps in [`inst/apps/`](inst/apps/) demonstrate:
-- Shiny app structure using `bslib` for modern UI
-- Reactive data loading with error handling
-- Value boxes, cards, and responsive layouts
-- Interactive plots with plotly
-- Filterable data tables with DT
-
-Refer to the [Connect](inst/apps/connect/app.R) and [Workbench](inst/apps/workbench/app.R) dashboards as reference implementations.
-
-### Extending the Package
-
-Contributors can add apps directly to the package:
-
-```r
-library(devtools)
-
-# Clone repository and add custom app to inst/apps/my_custom_app/app.R
-load_all()
-chronicle.reports::chronicle_run_app("my_custom_app", base_path = "/path/to/chronicle/data")
-```
-
-## Resources
-
-- **GitHub Repository**: [posit-dev/chronicle-reports](https://github.com/posit-dev/chronicle-reports)
-- **Chronicle Cookbook**: [docs.posit.co/chronicle/reports](https://docs.posit.co/chronicle/reports/) - Detailed data documentation and report examples
-- **Example Report**: [Example Chronicle Cookbook Report](https://pub.current.posit.team/public/example-chronicle-cookbook/) with mock data
-- **Bug Reports**: [GitHub Issues](https://github.com/posit-dev/chronicle-reports/issues)
-- **Contact**: [Posit Support](https://posit.co/support/) for assistance with Chronicle
 
 ## License
 
