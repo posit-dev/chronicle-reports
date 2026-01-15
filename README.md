@@ -159,7 +159,7 @@ Deploy Chronicle Reports dashboards to Posit Connect for organization-wide acces
 
 ### Deploy directly from GitHub
 
-The chronicle-reports repository includes manifest files for direct deployment from GitHub to Posit Connect. Refer to the [Posit Connect documentation](https://docs.posit.co/connect/admin/deploy-from-github/) for detailed instructions.
+The chronicle-reports repository includes manifest files for direct deployment from GitHub to Posit Connect. Refer to the [Posit Connect documentation](https://docs.posit.co/connect/user/git-backed) for detailed instructions.
 
 You will need to define the `CHRONICLE_BASE_PATH` environment variable in Connect to point to your Chronicle data location. This may be set [globally](https://docs.posit.co/connect/admin/process-management/#example-environment-variables) or [per-application](https://docs.posit.co/connect/user/content-settings/#content-vars).
 
