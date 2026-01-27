@@ -5,3 +5,6 @@
 .DS_Store
 .quarto
 .DS_Store
+
+R/.posit/
+.claude-notes/

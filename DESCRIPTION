@@ -1,6 +1,6 @@
 Package: chronicle.reports
 Title: Posit Chronicle Reports
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Mark", "Tucker", , "mark.tucker@posit.co", role = c("aut", "cre")),
     person("Matt", "Urbina", , "matt.urbina@posit.co", role = c("aut")),
@@ -18,9 +18,9 @@ Depends:
 Imports:
     arrow,
     bslib,
-    dbplyr,
+    charlatan,
     dplyr,
-    duckdb,
+    DT,
     ggplot2,
     glue,
     lubridate,
@@ -28,11 +28,18 @@ Imports:
     rlang,
     shiny,
     shinycssloaders,
-    tidyr
+    tidyr,
+    withr (>= 3.0.2)
 Suggests:
+    devtools (>= 2.4.6),
     shinytest2,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    tibble (>= 3.3.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Remotes:
+    r-lib/devtools,
+    tidyverse/tibble,
+    r-lib/withr

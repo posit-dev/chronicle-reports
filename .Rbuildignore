@@ -1,6 +1,14 @@
 ^.*\.Rproj$
+^CLAUDE\.md$
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.Rproj\.user$
+^\.claude$
+^\.claude-notes$
+^\.github$
+^\.lintr$
 ^\.pre-commit-config\.yaml$
+^chronicle-reports\.Rproj$
+^justfile$
+^notes\.txt$
 ^user-examples$
