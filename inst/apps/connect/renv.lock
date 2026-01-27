@@ -489,7 +489,7 @@
     },
     "chronicle.reports": {
       "Package": "chronicle.reports",
-      "Version": "0.1.0",
+      "Version": "0.2.0",
       "Source": "GitHub",
       "Title": "Posit Chronicle Reports",
       "Authors@R": "c( person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")), person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
