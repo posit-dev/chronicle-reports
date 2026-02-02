@@ -388,21 +388,38 @@ sample_connect_user_totals_internal <- function() {
     # Named users: gradual growth from 24 to 26
     named_users <- min(24 + floor(i / 15), 26)
 
-    # Active users: 40-60% of named, affected by weekday
+    # Active users (1 day): 40-60% of named, affected by weekday
     base_active_rate <- 0.50
-    active_users <- round(
+    active_users_1day <- round(
       named_users * base_active_rate * weekday_factor * runif(1, 0.9, 1.1)
     )
-    active_users <- max(1, min(active_users, named_users))
+    active_users_1day <- max(1, min(active_users_1day, named_users))
+
+    # Active users (30 days): 70-85% of named users (rolling window)
+    active_users_30days <- round(named_users * runif(1, 0.70, 0.85))
+    active_users_30days <- max(active_users_1day, active_users_30days)
+
+    # Administrators: ~10-15% of named users
+    administrators <- max(2, min(4, round(named_users * 0.12)))
 
     # Publishers: ~20-25% of named users
     publishers <- max(5, min(8, round(named_users * 0.25)))
 
+    # Viewers: remaining users after administrators and publishers
+    viewers <- named_users - administrators - publishers
+
+    # Licensed user seats: typically >= named_users (some buffer)
+    licensed_user_seats <- named_users + sample(0:5, 1)
+
     data.frame(
-      date = date,
       named_users = as.integer(named_users),
-      active_users_1day = as.integer(active_users),
+      active_users_30days = as.integer(active_users_30days),
+      active_users_1day = as.integer(active_users_1day),
+      administrators = as.integer(administrators),
       publishers = as.integer(publishers),
+      viewers = as.integer(viewers),
+      licensed_user_seats = as.integer(licensed_user_seats),
+      date = date,
       stringsAsFactors = FALSE
     )
   })
@@ -414,6 +431,7 @@ sample_connect_user_totals_internal <- function() {
 sample_connect_user_list_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   last_date <- max(dates)
+  first_date <- min(dates)
   user_pool <- generate_user_pool(26)
 
   # Calculate last active times relative to last_date
@@ -426,21 +444,33 @@ sample_connect_user_list_internal <- function() {
     prob = c(0.35, 0.20, 0.15, 0.10, 0.10, 0.05, 0.05)
   )
 
+  # Calculate created_at times (users created within first 5 days of the period)
+  created_dates <- first_date + (user_pool$created_day - 1)
+
+  # Calculate updated_at times (between created and last_date)
+  set.seed(501)
+  days_since_update <- sample(0:10, nrow(user_pool), replace = TRUE)
+  updated_dates <- pmin(last_date, created_dates + days_since_update)
+
   data.frame(
-    date = last_date,
-    username = user_pool$username,
+    environment = user_pool$environment,
     id = user_pool$user_guid,
+    username = user_pool$username,
     email = user_pool$email,
     first_name = user_pool$first_name,
     last_name = user_pool$last_name,
-    environment = user_pool$environment,
     user_role = user_pool$user_role,
+    created_at = as.POSIXct(created_dates, tz = "UTC") +
+      sample(3600 * 8:18, nrow(user_pool), replace = TRUE),
+    updated_at = as.POSIXct(updated_dates, tz = "UTC") +
+      sample(3600 * 8:18, nrow(user_pool), replace = TRUE),
     last_active_at = as.POSIXct(
       last_date - days_since_active,
       tz = "UTC"
     ) +
       sample(3600 * 8:18, nrow(user_pool), replace = TRUE), # Random time 8am-6pm
     active_today = days_since_active == 0,
+    date = last_date,
     stringsAsFactors = FALSE
   )
 }
@@ -462,7 +492,6 @@ sample_connect_content_list_internal <- function() {
   last_deployed_dates <- pmin(last_date, created_dates + days_since_deploy)
 
   data.frame(
-    date = last_date,
     environment = content_pool$environment,
     id = content_pool$content_guid,
     name = content_pool$name,
@@ -550,6 +579,7 @@ sample_connect_content_list_internal <- function() {
       c(content_pool$type[i], content_pool$environment[i])
     })),
     extension = FALSE,
+    date = last_date,
     stringsAsFactors = FALSE
   )
 }
@@ -578,7 +608,7 @@ sample_connect_content_totals_internal <- function() {
     names(agg)[3] <- "count"
     agg$date <- dates[i]
 
-    agg[, c("date", "count", "type", "environment")]
+    agg[, c("count", "type", "environment", "date")]
   })
 
   do.call(rbind, Filter(Negate(is.null), daily_totals))
@@ -694,12 +724,12 @@ sample_connect_visits_by_user_internal <- function() {
   )
 
   result[, c(
-    "date",
     "environment",
     "content_guid",
     "user_guid",
     "visits",
-    "path"
+    "path",
+    "date"
   )]
 }
 
@@ -833,12 +863,12 @@ sample_connect_shiny_by_user_internal <- function() {
   )]
 
   result[, c(
-    "date",
     "environment",
     "content_guid",
     "user_guid",
     "num_sessions",
-    "duration"
+    "duration",
+    "date"
   )]
 }
 
@@ -853,12 +883,16 @@ sample_workbench_user_totals_internal <- function() {
     # Named users: gradual growth from 19 to 21
     named_users <- min(19 + floor(i / 15), 21)
 
-    # Active users: 35-45% of named, affected by weekday
+    # Active users (1 day): 35-45% of named, affected by weekday
     base_active_rate <- 0.40
-    active_users <- round(
+    active_users_1day <- round(
       named_users * base_active_rate * weekday_factor * runif(1, 0.9, 1.1)
     )
-    active_users <- max(1, min(active_users, named_users))
+    active_users_1day <- max(1, min(active_users_1day, named_users))
+
+    # Active users (30 days): 70-85% of named users (rolling window)
+    active_users_30days <- round(named_users * runif(1, 0.70, 0.85))
+    active_users_30days <- max(active_users_1day, active_users_30days)
 
     # Administrators: ~20% of named
     administrators <- max(3, min(5, round(named_users * 0.20)))
@@ -866,12 +900,21 @@ sample_workbench_user_totals_internal <- function() {
     # Super admins: always 1
     super_administrators <- 1L
 
+    # Users: remaining users after administrators and super_administrators
+    users <- named_users - administrators - super_administrators
+
+    # Licensed user seats: typically >= named_users (some buffer)
+    licensed_user_seats <- named_users + sample(0:5, 1)
+
     data.frame(
-      date = date,
       named_users = as.integer(named_users),
-      active_users_1day = as.integer(active_users),
+      active_users_30days = as.integer(active_users_30days),
+      active_users_1day = as.integer(active_users_1day),
       administrators = as.integer(administrators),
       super_administrators = as.integer(super_administrators),
+      users = as.integer(users),
+      licensed_user_seats = as.integer(licensed_user_seats),
+      date = date,
       stringsAsFactors = FALSE
     )
   })
@@ -883,9 +926,29 @@ sample_workbench_user_totals_internal <- function() {
 sample_workbench_user_list_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   last_date <- max(dates)
+  first_date <- min(dates)
   n_users <- 21
 
   set.seed(50)
+
+  # Generate fake names using charlatan for usernames
+  fake <- charlatan::PersonProvider_en_US$new()
+  names_list <- lapply(1:n_users, function(i) {
+    list(
+      first = fake$first_name(),
+      last = fake$last_name()
+    )
+  })
+
+  # Create usernames from first.last format
+  usernames <- tolower(sprintf(
+    "%s.%s",
+    sapply(names_list, function(x) x$first),
+    sapply(names_list, function(x) x$last)
+  ))
+
+  # Create emails from username@example.com
+  emails <- sprintf("%s@example.com", usernames)
 
   # Workbench role distribution
   roles <- c(
@@ -908,17 +971,25 @@ sample_workbench_user_list_internal <- function() {
     prob = c(0.30, 0.20, 0.15, 0.15, 0.15, 0.05)
   )
 
+  # Calculate created_at times (users created within first 5 days of the period)
+  created_days <- sample(1:5, n_users, replace = TRUE)
+  created_dates <- first_date + (created_days - 1)
+
   data.frame(
-    date = last_date,
-    username = sprintf("wbuser%02d", 1:n_users),
-    user_role = roles,
     environment = envs,
+    id = sprintf("wb-user-guid-%03d", 1:n_users),
+    username = usernames,
+    email = emails,
+    user_role = roles,
+    created_at = as.POSIXct(created_dates, tz = "UTC") +
+      sample(3600 * 8:18, n_users, replace = TRUE),
     last_active_at = as.POSIXct(
       last_date - days_since_active,
       tz = "UTC"
     ) +
       sample(3600 * 8:18, n_users, replace = TRUE),
     active_today = days_since_active == 0,
+    date = last_date,
     stringsAsFactors = FALSE
   )
 }
