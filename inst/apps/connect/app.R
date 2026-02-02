@@ -2444,7 +2444,7 @@ shiny_sessions_by_user_server <- function(
     display_df <- summary_df |>
       dplyr::mutate(
         username = ifelse(
-          is.na("user_guid") | is.na("username"),
+          is.na(.data$user_guid) | is.na(.data$username),
           "(anonymous)",
           .data$username
         ),
