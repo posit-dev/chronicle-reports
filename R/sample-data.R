@@ -1109,42 +1109,6 @@ write_sample_parquet_internal <- function(
 }
 
 #' @noRd
-write_raw_parquet_internal <- function(
-  data,
-  base_path,
-  metric,
-  frequency = "daily"
-) {
-  dates <- unique(data$date)
-
-  for (d in dates) {
-    date_obj <- as.Date(d, origin = "1970-01-01")
-    year <- format(date_obj, "%Y")
-    month <- format(date_obj, "%m")
-    day <- format(date_obj, "%d")
-
-    subset_data <- data[data$date == d, ]
-
-    metric_path <- file.path(
-      base_path,
-      frequency,
-      "v2",
-      metric,
-      year,
-      month,
-      day
-    )
-
-    dir.create(metric_path, recursive = TRUE, showWarnings = FALSE)
-
-    arrow::write_parquet(
-      subset_data,
-      file.path(metric_path, "data.parquet")
-    )
-  }
-}
-
-#' @noRd
 create_sample_chronicle_data_internal <- function(base_path) {
   dir.create(base_path, recursive = TRUE, showWarnings = FALSE)
 
@@ -1195,14 +1159,6 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_workbench_user_list_internal(),
     base_path,
     "workbench/user_list"
-  )
-
-  # Create raw data
-  write_raw_parquet_internal(
-    sample_raw_connect_users_internal(),
-    base_path,
-    "connect_users",
-    frequency = "daily"
   )
 
   base_path
