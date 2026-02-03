@@ -201,11 +201,11 @@ users_overview_server <- function(input, output, session, user_totals) {
       dplyr::select("date", "named_users", "active_users_1day", "publishers") |>
       dplyr::filter(!is.na(date)) |>
       tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
-      dplyr::filter(!is.na(value), is.finite(value)) |>
+      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
       dplyr::arrange(date) |>
       dplyr::mutate(
         metric = factor(
-          metric,
+          .data$metric,
           levels = c("named_users", "active_users_1day", "publishers"),
           labels = c("Licensed Users", "Daily Users", "Publishers")
         )
@@ -234,7 +234,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = value, color = metric)
+      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(
@@ -242,9 +242,9 @@ users_overview_server <- function(input, output, session, user_totals) {
           text = paste0(
             format(date, "%B %d, %Y"),
             "<br>",
-            prettyNum(value, big.mark = ","),
+            prettyNum(.data$value, big.mark = ","),
             " ",
-            metric
+            .data$metric
           )
         ),
         size = 0.5
@@ -306,9 +306,9 @@ users_overview_server <- function(input, output, session, user_totals) {
       dplyr::mutate(
         day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
       ) |>
-      dplyr::group_by(day_of_week) |>
+      dplyr::group_by(.data$day_of_week) |>
       dplyr::summarise(
-        avg_active_users = mean(active_users_1day, na.rm = TRUE),
+        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
         .groups = "drop"
       )
 
@@ -335,7 +335,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     p <- ggplot2::ggplot(
       day_summary,
-      ggplot2::aes(x = day_of_week, y = avg_active_users)
+      ggplot2::aes(x = .data$day_of_week, y = .data$avg_active_users)
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$BLUE) +
       ggplot2::theme_minimal() +
@@ -464,7 +464,7 @@ users_list_server <- function(input, output, session, user_list) {
 
     # Role filter
     if (input$users_list_role != "All") {
-      data <- data |> dplyr::filter(user_role == input$users_list_role)
+      data <- data |> dplyr::filter(.data$user_role == input$users_list_role)
     }
 
     data
@@ -686,11 +686,11 @@ content_overview_server <- function(input, output, session, content_totals) {
       if (input$content_overview_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(type) | type == "" | type == " "
+            is.na(.data$type) | .data$type == "" | .data$type == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(type == input$content_overview_type)
+          dplyr::filter(.data$type == input$content_overview_type)
       }
     }
 
@@ -773,7 +773,7 @@ content_overview_server <- function(input, output, session, content_totals) {
     total_by_date <- df |>
       dplyr::group_by(date) |>
       dplyr::summarise(
-        total_content = sum(count, na.rm = TRUE),
+        total_content = sum(.data$count, na.rm = TRUE),
         .groups = "drop"
       )
 
@@ -782,7 +782,7 @@ content_overview_server <- function(input, output, session, content_totals) {
       dplyr::mutate(
         metric = factor("Total Content", levels = "Total Content")
       ) |>
-      dplyr::rename(value = total_content)
+      dplyr::rename(value = .data$total_content)
 
     if (nrow(plot_data) == 0) {
       return(
@@ -807,7 +807,7 @@ content_overview_server <- function(input, output, session, content_totals) {
 
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = value, color = metric)
+      ggplot2::aes(x = .data$date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(
@@ -815,9 +815,9 @@ content_overview_server <- function(input, output, session, content_totals) {
           text = paste0(
             format(date, "%B %d, %Y"),
             "<br>",
-            prettyNum(value, big.mark = ","),
+            prettyNum(.data$value, big.mark = ","),
             " ",
-            metric
+            .data$metric
           )
         ),
         size = 0.5
@@ -904,9 +904,9 @@ content_overview_server <- function(input, output, session, content_totals) {
 
     # Latest-day totals are not cumulative; just use that day's counts
     type_summary <- df |>
-      dplyr::group_by(type) |>
+      dplyr::group_by(.data$type) |>
       dplyr::summarise(
-        total = sum(count, na.rm = TRUE),
+        total = sum(.data$count, na.rm = TRUE),
         .groups = "drop"
       )
     names(type_summary)[1] <- "content_type"
@@ -917,14 +917,16 @@ content_overview_server <- function(input, output, session, content_totals) {
 
     # Order by total asc so after coord_flip highest are at top
     type_summary <- type_summary |>
-      dplyr::arrange(total) |>
-      dplyr::mutate(content_type = factor(content_type, levels = content_type))
+      dplyr::arrange(.data$total) |>
+      dplyr::mutate(
+        content_type = factor(.data$content_type, levels = .data$content_type)
+      )
 
     p <- ggplot2::ggplot(
       type_summary,
       ggplot2::aes(
-        x = content_type,
-        y = total
+        x = .data$content_type,
+        y = .data$total
       )
     ) +
       ggplot2::geom_col(fill = BRAND_COLORS$GREEN) +
@@ -970,7 +972,13 @@ content_list_ui <- bslib::card(
   )
 )
 
-content_list_server <- function(input, output, session, user_list, content_list) {
+content_list_server <- function(
+  input,
+  output,
+  session,
+  user_list,
+  content_list
+) {
   # Use shared content_list data (snapshot at latest day)
   content_list_data <- shiny::reactive({
     tryCatch(
@@ -1063,11 +1071,11 @@ content_list_server <- function(input, output, session, user_list, content_list)
       owners <- df |>
         dplyr::left_join(
           ulist |>
-            dplyr::select(id, username) |>
-            dplyr::rename(owner_guid = id, owner = username),
+            dplyr::select(.data$id, .data$username) |>
+            dplyr::rename(owner_guid = .data$id, owner = .data$username),
           by = "owner_guid"
         ) |>
-        dplyr::pull(owner) |>
+        dplyr::pull(.data$owner) |>
         unique()
 
       has_na <- any(is.na(owners) | owners == "" | owners == " ")
@@ -1130,8 +1138,8 @@ content_list_server <- function(input, output, session, user_list, content_list)
     ulist <- latest_user_list()
     if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
       owner_lookup <- ulist |>
-        dplyr::select(id, username) |>
-        dplyr::rename(owner_guid = id, owner = username)
+        dplyr::select(.data$id, .data$username) |>
+        dplyr::rename(owner_guid = .data$id, owner = .data$username)
 
       df <- df |>
         dplyr::left_join(owner_lookup, by = "owner_guid")
@@ -1142,10 +1150,10 @@ content_list_server <- function(input, output, session, user_list, content_list)
       if (input$content_list_owner == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(owner) | owner == "" | owner == " "
+            is.na(.data$owner) | .data$owner == "" | .data$owner == " "
           )
       } else {
-        df <- df |> dplyr::filter(owner == input$content_list_owner)
+        df <- df |> dplyr::filter(.data$owner == input$content_list_owner)
       }
     }
 
@@ -1154,13 +1162,13 @@ content_list_server <- function(input, output, session, user_list, content_list)
       if (input$content_list_type == "(Not Set)") {
         df <- df |>
           dplyr::filter(
-            is.na(type) |
-              type == "" |
-              type == " "
+            is.na(.data$type) |
+              .data$type == "" |
+              .data$type == " "
           )
       } else {
         df <- df |>
-          dplyr::filter(type == input$content_list_type)
+          dplyr::filter(.data$type == input$content_list_type)
       }
     }
 
@@ -1255,11 +1263,15 @@ usage_overview_ui <- bslib::card(
   ),
   bslib::card(
     bslib::card_header("Total Visits by Day"),
-    shinycssloaders::withSpinner(plotly::plotlyOutput("usage_total_visits_plot"))
+    shinycssloaders::withSpinner(plotly::plotlyOutput(
+      "usage_total_visits_plot"
+    ))
   ),
   bslib::card(
     bslib::card_header("Unique Visitors by Day"),
-    shinycssloaders::withSpinner(plotly::plotlyOutput("usage_unique_visitors_plot"))
+    shinycssloaders::withSpinner(plotly::plotlyOutput(
+      "usage_unique_visitors_plot"
+    ))
   )
 )
 
@@ -1418,7 +1430,8 @@ usage_overview_server <- function(input, output, session, content_visits) {
     total_visits <- sum(df$visits, na.rm = TRUE)
     num_days <- as.numeric(
       input$usage_overview_date_range[2] - input$usage_overview_date_range[1]
-    ) + 1
+    ) +
+      1
 
     if (num_days <= 0) {
       return("0")
@@ -1442,7 +1455,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
     daily <- df |>
       dplyr::group_by(date) |>
       dplyr::summarise(
-        total_visits = sum(visits, na.rm = TRUE),
+        total_visits = sum(.data$visits, na.rm = TRUE),
         .groups = "drop"
       )
 
@@ -1481,7 +1494,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
     daily <- df |>
       dplyr::group_by(date) |>
       dplyr::summarise(
-        unique_visitors = dplyr::n_distinct(user_guid),
+        unique_visitors = dplyr::n_distinct(.data$user_guid),
         .groups = "drop"
       )
 
@@ -1553,7 +1566,13 @@ shiny_apps_ui <- bslib::card(
   )
 )
 
-shiny_apps_server <- function(input, output, session, shiny_usage, content_list) {
+shiny_apps_server <- function(
+  input,
+  output,
+  session,
+  shiny_usage,
+  content_list
+) {
   shiny_usage_data <- shiny::reactive({
     tryCatch(
       {
@@ -1727,9 +1746,9 @@ shiny_apps_server <- function(input, output, session, shiny_usage, content_list)
     daily <- df |>
       dplyr::group_by(date) |>
       dplyr::summarise(
-        total_sessions = sum(num_sessions, na.rm = TRUE),
+        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
         peak_concurrent_daily = if ("peak_concurrent" %in% names(df)) {
-          suppressWarnings(max(peak_concurrent, na.rm = TRUE))
+          suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
         } else {
           NA_real_
         },
@@ -1753,14 +1772,15 @@ shiny_apps_server <- function(input, output, session, shiny_usage, content_list)
       ) |>
       dplyr::mutate(
         metric = factor(
-          metric,
+          .data$metric,
           levels = c("total_sessions", "peak_concurrent_daily"),
           labels = c("Total Sessions", "Peak Concurrent Users")
         )
       )
 
     plot_data <- plot_data[
-      stats::complete.cases(plot_data$value), ,
+      stats::complete.cases(plot_data$value),
+      ,
       drop = FALSE
     ]
 
@@ -1770,7 +1790,7 @@ shiny_apps_server <- function(input, output, session, shiny_usage, content_list)
 
     p <- ggplot2::ggplot(
       plot_data,
-      ggplot2::aes(x = date, y = value, color = metric)
+      ggplot2::aes(x = .data$date, y = .data$value, color = .data$metric)
     ) +
       ggplot2::geom_line(linewidth = 0.5) +
       ggplot2::geom_point(size = 0.5) +
@@ -1819,13 +1839,13 @@ shiny_apps_server <- function(input, output, session, shiny_usage, content_list)
     }
 
     app_summary <- df |>
-      dplyr::group_by(environment, content_guid) |>
+      dplyr::group_by(.data$environment, .data$content_guid) |>
       dplyr::summarise(
-        total_sessions = sum(num_sessions, na.rm = TRUE),
-        unique_users = dplyr::n_distinct(user_guid),
+        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
+        unique_users = dplyr::n_distinct(.data$user_guid),
         avg_duration_minutes = if ("duration" %in% names(df)) {
-          total_duration <- sum(duration, na.rm = TRUE)
-          total_sessions_inner <- sum(num_sessions, na.rm = TRUE)
+          total_duration <- sum(.data$duration, na.rm = TRUE)
+          total_sessions_inner <- sum(.data$num_sessions, na.rm = TRUE)
           if (total_sessions_inner > 0) {
             round((total_duration / total_sessions_inner) / 60, 2)
           } else {
@@ -1841,7 +1861,7 @@ shiny_apps_server <- function(input, output, session, shiny_usage, content_list)
     content_df <- shiny_content_list_latest()
     if (!is.null(content_df)) {
       content_join <- content_df |>
-        dplyr::select(id, environment, title)
+        dplyr::select(.data$id, .data$environment, .data$title)
 
       app_summary <- app_summary |>
         dplyr::left_join(
@@ -1905,7 +1925,14 @@ content_by_user_ui <- bslib::card(
   shinycssloaders::withSpinner(DT::dataTableOutput("content_by_user_table"))
 )
 
-content_by_user_server <- function(input, output, session, content_visits, content_list, user_list) {
+content_by_user_server <- function(
+  input,
+  output,
+  session,
+  content_visits,
+  content_list,
+  user_list
+) {
   visits_data <- shiny::reactive({
     tryCatch(
       {
@@ -2082,9 +2109,9 @@ content_by_user_server <- function(input, output, session, content_visits, conte
     }
 
     summary_df <- df |>
-      dplyr::group_by(environment, user_guid, content_guid) |>
+      dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
       dplyr::summarise(
-        total_visits = sum(visits, na.rm = TRUE),
+        total_visits = sum(.data$visits, na.rm = TRUE),
         .groups = "drop"
       )
 
@@ -2092,7 +2119,7 @@ content_by_user_server <- function(input, output, session, content_visits, conte
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
       user_join <- u_df |>
-        dplyr::select(id, username)
+        dplyr::select(.data$id, .data$username)
 
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
@@ -2104,7 +2131,7 @@ content_by_user_server <- function(input, output, session, content_visits, conte
       !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
     ) {
       content_join <- c_df |>
-        dplyr::select(id, environment, title)
+        dplyr::select(.data$id, .data$environment, .data$title)
 
       summary_df <- summary_df |>
         dplyr::left_join(
@@ -2116,9 +2143,9 @@ content_by_user_server <- function(input, output, session, content_visits, conte
     display_df <- summary_df |>
       dplyr::mutate(
         username = ifelse(
-          is.na(user_guid) | is.na(username),
+          is.na(.data$user_guid) | is.na(.data$username),
           "(anonymous)",
-          username
+          .data$username
         ),
         environment = ifelse(
           is.na(environment) |
@@ -2172,7 +2199,14 @@ shiny_sessions_by_user_ui <- bslib::card(
   shinycssloaders::withSpinner(DT::dataTableOutput("shiny_sessions_user_table"))
 )
 
-shiny_sessions_by_user_server <- function(input, output, session, shiny_usage, content_list, user_list) {
+shiny_sessions_by_user_server <- function(
+  input,
+  output,
+  session,
+  shiny_usage,
+  content_list,
+  user_list
+) {
   usage_data <- shiny::reactive({
     tryCatch(
       {
@@ -2359,11 +2393,11 @@ shiny_sessions_by_user_server <- function(input, output, session, shiny_usage, c
     }
 
     summary_df <- df |>
-      dplyr::group_by(environment, user_guid, content_guid) |>
+      dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
       dplyr::summarise(
-        total_sessions = sum(num_sessions, na.rm = TRUE),
+        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
         total_duration = if ("duration" %in% names(df)) {
-          sum(duration, na.rm = TRUE)
+          sum(.data$duration, na.rm = TRUE)
         } else {
           NA_real_
         },
@@ -2374,9 +2408,9 @@ shiny_sessions_by_user_server <- function(input, output, session, shiny_usage, c
       dplyr::mutate(
         avg_duration_minutes = round(
           ifelse(
-            is.na(total_duration) | total_sessions == 0,
+            is.na(.data$total_duration) | .data$total_sessions == 0,
             NA_real_,
-            (total_duration / total_sessions) / 60
+            (.data$total_duration / .data$total_sessions) / 60
           ),
           2
         )
@@ -2386,7 +2420,7 @@ shiny_sessions_by_user_server <- function(input, output, session, shiny_usage, c
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
       user_join <- u_df |>
-        dplyr::select(id, username)
+        dplyr::select(.data$id, .data$username)
 
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
@@ -2398,7 +2432,7 @@ shiny_sessions_by_user_server <- function(input, output, session, shiny_usage, c
       !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
     ) {
       content_join <- c_df |>
-        dplyr::select(id, environment, title)
+        dplyr::select(.data$id, .data$environment, .data$title)
 
       summary_df <- summary_df |>
         dplyr::left_join(
@@ -2410,9 +2444,9 @@ shiny_sessions_by_user_server <- function(input, output, session, shiny_usage, c
     display_df <- summary_df |>
       dplyr::mutate(
         username = ifelse(
-          is.na(user_guid) | is.na(username),
+          is.na(.data$user_guid) | is.na(.data$username),
           "(anonymous)",
-          username
+          .data$username
         ),
         environment = ifelse(
           is.na(environment) |
@@ -2501,11 +2535,13 @@ server <- function(input, output, session) {
   })
 
   all_content_visits <- shiny::reactive({
-    chronicle_data("connect/content_visits_totals_by_user", base_path) |> dplyr::collect()
+    chronicle_data("connect/content_visits_totals_by_user", base_path) |>
+      dplyr::collect()
   })
 
   all_shiny_usage <- shiny::reactive({
-    chronicle_data("connect/shiny_usage_totals_by_user", base_path) |> dplyr::collect()
+    chronicle_data("connect/shiny_usage_totals_by_user", base_path) |>
+      dplyr::collect()
   })
 
   # ============================================
@@ -2517,8 +2553,22 @@ server <- function(input, output, session) {
   content_list_server(input, output, session, all_user_list, all_content_list)
   usage_overview_server(input, output, session, all_content_visits)
   shiny_apps_server(input, output, session, all_shiny_usage, all_content_list)
-  content_by_user_server(input, output, session, all_content_visits, all_content_list, all_user_list)
-  shiny_sessions_by_user_server(input, output, session, all_shiny_usage, all_content_list, all_user_list)
+  content_by_user_server(
+    input,
+    output,
+    session,
+    all_content_visits,
+    all_content_list,
+    all_user_list
+  )
+  shiny_sessions_by_user_server(
+    input,
+    output,
+    session,
+    all_shiny_usage,
+    all_content_list,
+    all_user_list
+  )
 }
 
 shinyApp(ui, server)
