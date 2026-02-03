@@ -1,3 +1,13 @@
+# Helper to create raw sample data for tests
+create_raw_test_data <- function(base_path) {
+  write_raw_parquet_internal(
+    sample_raw_connect_users_internal(),
+    base_path,
+    "connect_users",
+    frequency = "daily"
+  )
+}
+
 test_that("chronicle_list_data returns available curated metrics", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
@@ -72,6 +82,7 @@ test_that("chronicle_list_data handles empty directory gracefully", {
 test_that("chronicle_list_raw_data returns available raw metrics", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # List available daily raw metrics
   metrics <- chronicle_list_raw_data(base_path, frequency = "daily")
@@ -89,6 +100,7 @@ test_that("chronicle_list_raw_data returns available raw metrics", {
 test_that("chronicle_list_raw_data returns metric names without product prefix", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   metrics <- chronicle_list_raw_data(base_path, frequency = "daily")
 
@@ -101,6 +113,7 @@ test_that("chronicle_list_raw_data returns metric names without product prefix",
 test_that("chronicle_list_raw_data defaults to daily frequency", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Call without frequency parameter (should default to "daily")
   metrics <- chronicle_list_raw_data(base_path)
@@ -134,6 +147,7 @@ test_that("chronicle_list_raw_data validates frequency parameter", {
 test_that("chronicle_list_data and chronicle_list_raw_data are distinct", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   curated <- chronicle_list_data(base_path)
   raw <- chronicle_list_raw_data(base_path, frequency = "daily")
