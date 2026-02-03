@@ -27,15 +27,36 @@
 #' over the 30-day period and persist once created.
 #'
 #' @param refresh Logical. If TRUE, regenerate sample data even if cached.
-#'   Default is FALSE.
+#'   Default is FALSE. When FALSE, the function reuses existing valid data for
+#'   both default temp directories and custom paths. When TRUE, data is always
+#'   regenerated to ensure freshness.
+#' @param base_path Character path to directory where sample data should be
+#'   created. If NULL (default), creates in a temporary directory that is
+#'   cached and automatically cleaned up at session end. If specified, creates
+#'   data at the given path with no automatic cleanup. When \code{refresh=FALSE}
+#'   and the directory exists, the function validates the structure and reuses
+#'   existing data if valid, otherwise regenerates.
 #'
 #' @return Character path to the sample Chronicle data directory
 #'
 #' @export
 #'
 #' @examples
-#' # Get path to sample data
+#' # Get path to sample data (default temp directory)
 #' sample_path <- chronicle_sample_data()
+#'
+#' # Reuse cached sample data (fast)
+#' sample_path <- chronicle_sample_data()
+#'
+#' # Force refresh of sample data
+#' sample_path <- chronicle_sample_data(refresh = TRUE)
+#'
+#' # Create sample data in a custom directory
+#' custom_dir <- tempfile("chronicle-custom-")
+#' sample_path <- chronicle_sample_data(base_path = custom_dir)
+#'
+#' # Reuse existing custom directory data
+#' sample_path <- chronicle_sample_data(base_path = custom_dir)
 #'
 #' # List available metrics
 #' chronicle_list_data(sample_path)
@@ -44,19 +65,41 @@
 #' data <- chronicle_data("connect/user_totals", sample_path)
 #' dplyr::collect(data)
 #'
-#' # Clean up (optional - automatically cleaned at session end)
-#' unlink(sample_path, recursive = TRUE)
-chronicle_sample_data <- function(refresh = FALSE) {
-  # Check if we have a cached path and it still exists
-  if (!refresh && exists("sample_path", envir = .chronicle_sample_env)) {
+#' # Clean up (default temp dir cleaned automatically at session end)
+#' # For custom directories, manual cleanup is needed
+#' unlink(custom_dir, recursive = TRUE)
+chronicle_sample_data <- function(refresh = FALSE, base_path = NULL) {
+  # Check if we have a cached path and it still exists (default paths only)
+  if (
+    !refresh &&
+      is.null(base_path) &&
+      exists("sample_path", envir = .chronicle_sample_env)
+  ) {
     cached_path <- get("sample_path", envir = .chronicle_sample_env)
     if (dir.exists(cached_path)) {
       return(cached_path)
     }
   }
 
-  # Create new sample data directory
-  sample_dir <- file.path(tempdir(), "chronicle-sample-data")
+  # Determine which directory to use
+  if (is.null(base_path)) {
+    sample_dir <- file.path(tempdir(), "chronicle-sample-data")
+  } else {
+    sample_dir <- base_path
+  }
+
+  # For custom paths with refresh=FALSE, check if we can reuse existing data
+  if (!is.null(base_path) && !refresh) {
+    if (validate_sample_data_structure(sample_dir)) {
+      # Valid existing data, return path without regenerating
+      message("Using existing sample data at: ", sample_dir)
+      return(sample_dir)
+    }
+    # Invalid or missing structure, will regenerate below
+    if (dir.exists(sample_dir)) {
+      message("Invalid sample data structure detected, regenerating...")
+    }
+  }
 
   # Remove if it exists (in case of refresh)
   if (dir.exists(sample_dir)) {
@@ -69,21 +112,45 @@ chronicle_sample_data <- function(refresh = FALSE) {
   # Cache the path
   assign("sample_path", sample_dir, envir = .chronicle_sample_env)
 
-  # Register cleanup on exit
-  reg.finalizer(
-    .chronicle_sample_env,
-    function(e) {
-      if (exists("sample_path", envir = e)) {
-        path <- get("sample_path", envir = e)
-        if (dir.exists(path)) {
-          unlink(path, recursive = TRUE)
+  # Register cleanup on exit (only for default paths)
+  if (is.null(base_path)) {
+    reg.finalizer(
+      .chronicle_sample_env,
+      function(e) {
+        if (exists("sample_path", envir = e)) {
+          path <- get("sample_path", envir = e)
+          if (dir.exists(path)) {
+            unlink(path, recursive = TRUE)
+          }
         }
-      }
-    },
-    onexit = TRUE
-  )
+      },
+      onexit = TRUE
+    )
+  }
 
   sample_dir
+}
+
+#' Validate sample data directory structure
+#' @noRd
+validate_sample_data_structure <- function(path) {
+  if (!dir.exists(path)) {
+    return(FALSE)
+  }
+
+  # Check for expected curated/v2 structure
+  curated_path <- file.path(path, "curated", "v2")
+  if (!dir.exists(curated_path)) {
+    return(FALSE)
+  }
+
+  # Check for at least one expected metric directory
+  expected_metrics <- c("connect", "workbench")
+  has_metric <- any(sapply(expected_metrics, function(m) {
+    dir.exists(file.path(curated_path, m))
+  }))
+
+  has_metric
 }
 
 # Internal helper functions for creating sample data
