@@ -1,13 +1,3 @@
-# Helper to create raw sample data for tests
-create_raw_test_data <- function(base_path) {
-  write_raw_parquet_internal(
-    sample_raw_connect_users_internal(),
-    base_path,
-    "connect_users",
-    frequency = "daily"
-  )
-}
-
 test_that("chronicle_list_data returns available curated metrics", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
