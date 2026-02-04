@@ -73,9 +73,12 @@ users_overview_ui <- bslib::card(
   )
 )
 
-users_overview_server <- function(input, output, session) {
-  # Load user_totals data
+users_overview_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load user_totals data (lazy - only when tab is visited)
   users_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         chronicle_data("connect/user_totals", base_path)
@@ -99,31 +102,41 @@ users_overview_server <- function(input, output, session) {
       ) |>
       dplyr::collect()
 
+    # Default to last 3 months (90 days) for better performance
+    start_date <- max(date_summary$max_date - 90, date_summary$min_date)
     shiny::updateDateRangeInput(
       session,
       "users_overview_date_range",
-      start = date_summary$min_date,
+      start = start_date,
       end = date_summary$max_date,
       min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
 
+
   # Get latest data (for value boxes - always max_date)
+  # Cached: persists across tab switches within session
   latest_users_data <- shiny::reactive({
     data <- users_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    # Collect first, then get the latest row
-    data |>
+    # Get max_date efficiently using Arrow pushdown, then filter before collect
+    max_date <- data |>
+      dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
       dplyr::collect() |>
-      dplyr::arrange(dplyr::desc(date)) |>
+      dplyr::pull(max_date)
+
+    data |>
+      dplyr::filter(date == max_date) |>
+      dplyr::collect() |>
       dplyr::slice(1)
-  })
+  }) |> shiny::bindCache(base_path, "users_latest")
 
   # Filter data by date range (for charts only)
+  # Cached: persists across tab switches for same date range
   filtered_users_data <- shiny::reactive({
     data <- users_data()
     if (is.null(data)) {
@@ -139,7 +152,11 @@ users_overview_server <- function(input, output, session) {
         date <= input$users_overview_date_range[2]
       ) |>
       dplyr::collect()
-  })
+  }) |> shiny::bindCache(
+    base_path, "users_filtered",
+    input$users_overview_date_range[1],
+    input$users_overview_date_range[2]
+  )
 
   # Value boxes (always latest data)
   output$users_licensed_value <- shiny::renderText({
@@ -386,26 +403,33 @@ users_list_ui <- bslib::card(
   )
 )
 
-users_list_server <- function(input, output, session) {
-  # Load user_list data (snapshot at max_date)
+users_list_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load user_list data (lazy - only when tab is visited)
+  # Cached: persists across tab switches within session
   users_list_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("connect/user_list", base_path)
 
-        # Get max_date snapshot - collect first, then filter to all users from max date
-        collected_data <- data |> dplyr::collect()
-        max_date <- max(collected_data$date, na.rm = TRUE)
+        # Get max_date efficiently using Arrow pushdown, then filter before collect
+        max_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
 
-        collected_data |>
-          dplyr::filter(date == max_date)
+        data |>
+          dplyr::filter(date == max_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading user list: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "user_list")
 
   # Populate environment filter dynamically
   shiny::observe({
@@ -572,9 +596,12 @@ content_overview_ui <- bslib::card(
   )
 )
 
-content_overview_server <- function(input, output, session) {
-  # Load curated content totals data
+content_overview_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load curated content totals data (lazy - only when tab is visited)
   contents_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         # Curated daily totals for content metrics
@@ -588,16 +615,18 @@ content_overview_server <- function(input, output, session) {
   })
 
   # Populate environment filter dynamically based on curated data
+  # Optimized: use distinct() to avoid downloading entire dataset
   shiny::observe({
     data <- contents_data()
     if (is.null(data)) {
       return()
     }
-    df <- data |> dplyr::collect()
-    # Environment column is always `environment`
-    env_values <- df |>
-      dplyr::pull(environment) |>
-      unique()
+
+    # Only fetch distinct environment values - much faster than collecting all
+    env_values <- data |>
+      dplyr::distinct(environment) |>
+      dplyr::collect() |>
+      dplyr::pull(environment)
 
     has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
     env_values <- env_values[
@@ -615,9 +644,11 @@ content_overview_server <- function(input, output, session) {
       selected = "All"
     )
 
-    type_values <- df |>
-      dplyr::pull("type") |>
-      unique()
+    # Only fetch distinct type values
+    type_values <- data |>
+      dplyr::distinct(type) |>
+      dplyr::collect() |>
+      dplyr::pull(type)
 
     has_type_na <- any(
       is.na(type_values) | type_values == "" | type_values == " "
@@ -650,55 +681,67 @@ content_overview_server <- function(input, output, session) {
       ) |>
       dplyr::collect()
 
+    # Default to last 3 months (90 days) for better performance
+    start_date <- max(date_summary$max_date - 90, date_summary$min_date)
     shiny::updateDateRangeInput(
       session,
       "content_overview_date_range",
-      start = date_summary$min_date,
+      start = start_date,
       end = date_summary$max_date,
       min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
 
+  # Optimized: push filters to Arrow before collect for better S3 performance
   filtered_contents <- shiny::reactive({
     data <- contents_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    # Build filter query on Arrow dataset (not collected yet)
+    filtered <- data
 
-    # Environment filter
+    # Environment filter - pushed to Arrow
     if (input$content_overview_environment != "All") {
       if (input$content_overview_environment == "(Not Set)") {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(
             is.na(environment) |
               environment == "" |
               environment == " "
           )
       } else {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(environment == input$content_overview_environment)
       }
     }
 
-    # Content Type filter
+    # Content Type filter - pushed to Arrow
     if (input$content_overview_type != "All") {
       if (input$content_overview_type == "(Not Set)") {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(
             is.na(type) | type == "" | type == " "
           )
       } else {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(type == input$content_overview_type)
       }
     }
 
-    df
-  })
+    # Select only needed columns and collect
+    filtered |>
+      dplyr::select(date, environment, type, count) |>
+      dplyr::collect()
+  }) |> shiny::bindCache(
+    base_path, "content_filtered",
+    input$content_overview_environment,
+    input$content_overview_type
+  )
 
+  # Cached: persists across tab switches for same filters
   filtered_contents_in_range <- shiny::reactive({
     df <- filtered_contents()
     if (is.null(df)) {
@@ -712,7 +755,13 @@ content_overview_server <- function(input, output, session) {
         date >= input$content_overview_date_range[1],
         date <= input$content_overview_date_range[2]
       )
-  })
+  }) |> shiny::bindCache(
+    base_path, "content_in_range",
+    input$content_overview_environment,
+    input$content_overview_type,
+    input$content_overview_date_range[1],
+    input$content_overview_date_range[2]
+  )
 
   # Trend chart (filtered by date range)
   output$content_trend_plot <- plotly::renderPlotly({
@@ -972,39 +1021,57 @@ content_list_ui <- bslib::card(
   )
 )
 
-content_list_server <- function(input, output, session) {
-  # Load real content list data (snapshot at latest day)
+content_list_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load real content list data (lazy - only when tab is visited)
+  # Cached: persists across tab switches within session
   content_list_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("connect/content_list", base_path)
 
-        df <- data |> dplyr::collect()
-        if (!"date" %in% names(df) || nrow(df) == 0) {
+        # Get max_date efficiently using Arrow pushdown, then filter before collect
+        latest_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
+
+        if (is.na(latest_date)) {
           return(NULL)
         }
 
-        latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(date == latest_date)
+        data |>
+          dplyr::filter(date == latest_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading content list: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "content_list")
 
   # Load latest user list for owner name resolution
   latest_user_list <- shiny::reactive({
     tryCatch(
       {
         udata <- chronicle_data("connect/user_list", base_path)
-        udf <- udata |> dplyr::collect()
-        if (!"date" %in% names(udf) || nrow(udf) == 0) {
+
+        # Get max_date efficiently using Arrow pushdown, then filter before collect
+        latest_date <- udata |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
+
+        if (is.na(latest_date)) {
           return(NULL)
         }
-        latest_date <- suppressWarnings(max(udf$date, na.rm = TRUE))
-        udf |> dplyr::filter(date == latest_date)
+
+        udata |>
+          dplyr::filter(date == latest_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading user list for owner resolution: ", e$message)
@@ -1268,8 +1335,12 @@ usage_overview_ui <- bslib::card(
   )
 )
 
-usage_overview_server <- function(input, output, session) {
+usage_overview_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load content visits data (lazy - only when tab is visited)
   usage_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         chronicle_data("connect/content_visits_totals_by_user", base_path)
@@ -1282,6 +1353,7 @@ usage_overview_server <- function(input, output, session) {
   })
 
   # Populate environment filter dynamically
+  # Optimized: use distinct() to avoid downloading entire dataset
   shiny::observe({
     data <- usage_data()
     if (is.null(data)) {
@@ -1294,8 +1366,18 @@ usage_overview_server <- function(input, output, session) {
       return()
     }
 
-    df <- data |> dplyr::collect()
-    if (!"environment" %in% names(df) || nrow(df) == 0) {
+    # Only fetch distinct environment values - much faster than collecting all
+    env_values <- tryCatch(
+      {
+        data |>
+          dplyr::distinct(environment) |>
+          dplyr::collect() |>
+          dplyr::pull(environment)
+      },
+      error = function(e) character(0)
+    )
+
+    if (length(env_values) == 0) {
       shiny::updateSelectInput(
         session,
         "usage_overview_environment",
@@ -1304,10 +1386,6 @@ usage_overview_server <- function(input, output, session) {
       )
       return()
     }
-
-    env_values <- df |>
-      dplyr::pull(environment) |>
-      unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
     env_values <- env_values[
@@ -1344,50 +1422,59 @@ usage_overview_server <- function(input, output, session) {
       return()
     }
 
+    # Default to last 3 months (90 days) for better performance
+    start_date <- max(date_summary$max_date - 90, date_summary$min_date)
     shiny::updateDateRangeInput(
       session,
       "usage_overview_date_range",
-      start = date_summary$min_date,
+      start = start_date,
       end = date_summary$max_date,
       min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
 
+  # Optimized: push all filters to Arrow before collect for better S3 performance
   usage_filtered <- shiny::reactive({
     data <- usage_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    shiny::req(input$usage_overview_date_range)
 
-    # Environment filter
-    if (
-      "environment" %in% names(df) && input$usage_overview_environment != "All"
-    ) {
+    # Build filter query on Arrow dataset (not collected yet)
+    filtered <- data |>
+      dplyr::filter(
+        date >= input$usage_overview_date_range[1],
+        date <= input$usage_overview_date_range[2]
+      )
+
+    # Environment filter - pushed to Arrow
+    if (input$usage_overview_environment != "All") {
       if (input$usage_overview_environment == "(Not Set)") {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(
             is.na(environment) |
               environment == "" |
               environment == " "
           )
       } else {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(environment == input$usage_overview_environment)
       }
     }
 
-    shiny::req(input$usage_overview_date_range)
-
-    df |>
-      dplyr::filter(
-        date >= input$usage_overview_date_range[1],
-        date <= input$usage_overview_date_range[2]
-      ) |>
+    # Select only needed columns and collect
+    filtered |>
+      dplyr::select(date, environment, visits, user_guid) |>
       dplyr::collect()
-  })
+  }) |> shiny::bindCache(
+    base_path, "usage_filtered",
+    input$usage_overview_date_range[1],
+    input$usage_overview_date_range[2],
+    input$usage_overview_environment
+  )
 
   output$usage_visits_value <- shiny::renderText({
     df <- usage_filtered()
@@ -1558,8 +1645,12 @@ shiny_apps_ui <- bslib::card(
   )
 )
 
-shiny_apps_server <- function(input, output, session) {
+shiny_apps_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load shiny usage data (lazy - only when tab is visited)
   shiny_usage_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         chronicle_data("connect/shiny_usage_totals_by_user", base_path)
@@ -1571,27 +1662,37 @@ shiny_apps_server <- function(input, output, session) {
     )
   })
 
-  # Load latest content list snapshot for app name resolution
+  # Load latest content list snapshot for app name resolution (lazy)
+  # Cached: persists across tab switches within session
   shiny_content_list_latest <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("connect/content_list", base_path)
 
-        df <- data |> dplyr::collect()
-        if (!"date" %in% names(df) || nrow(df) == 0) {
+        # Get max_date efficiently using Arrow pushdown
+        latest_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
+
+        if (is.na(latest_date)) {
           return(NULL)
         }
 
-        latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(date == latest_date)
+        data |>
+          dplyr::filter(date == latest_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading content list for shiny usage: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "shiny_content_list")
 
+  # Optimized: use distinct() to avoid downloading entire dataset
   shiny::observe({
     data <- shiny_usage_data()
     if (is.null(data)) {
@@ -1604,9 +1705,18 @@ shiny_apps_server <- function(input, output, session) {
       return()
     }
 
-    df <- data |> dplyr::collect()
+    # Only fetch distinct environment values - much faster than collecting all
+    env_values <- tryCatch(
+      {
+        data |>
+          dplyr::distinct(environment) |>
+          dplyr::collect() |>
+          dplyr::pull(environment)
+      },
+      error = function(e) character(0)
+    )
 
-    if (!"environment" %in% names(df) || nrow(df) == 0) {
+    if (length(env_values) == 0) {
       shiny::updateSelectInput(
         session,
         "shiny_apps_environment",
@@ -1614,10 +1724,6 @@ shiny_apps_server <- function(input, output, session) {
         selected = "All"
       )
     } else {
-      env_values <- df |>
-        dplyr::pull(environment) |>
-        unique()
-
       has_env_na <- any(
         is.na(env_values) | env_values == "" | env_values == " "
       )
@@ -1649,48 +1755,62 @@ shiny_apps_server <- function(input, output, session) {
       return()
     }
 
+    # Default to last 3 months (90 days) for better performance
+    start_date <- max(date_summary$max_date - 90, date_summary$min_date)
     shiny::updateDateRangeInput(
       session,
       "shiny_apps_date_range",
-      start = date_summary$min_date,
+      start = start_date,
       end = date_summary$max_date,
       min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
 
+  # Optimized: push all filters to Arrow before collect for better S3 performance
   shiny_usage_filtered <- shiny::reactive({
     data <- shiny_usage_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    shiny::req(input$shiny_apps_date_range)
 
-    # Environment filter
-    if ("environment" %in% names(df) && input$shiny_apps_environment != "All") {
+    # Build filter query on Arrow dataset (not collected yet)
+    filtered <- data |>
+      dplyr::filter(
+        date >= input$shiny_apps_date_range[1],
+        date <= input$shiny_apps_date_range[2]
+      )
+
+    # Environment filter - pushed to Arrow
+    if (input$shiny_apps_environment != "All") {
       if (input$shiny_apps_environment == "(Not Set)") {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(
             is.na(environment) |
               environment == "" |
               environment == " "
           )
       } else {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(environment == input$shiny_apps_environment)
       }
     }
 
-    shiny::req(input$shiny_apps_date_range)
-
-    df |>
-      dplyr::filter(
-        date >= input$shiny_apps_date_range[1],
-        date <= input$shiny_apps_date_range[2]
+    # Select only needed columns and collect
+    filtered |>
+      dplyr::select(
+        date, environment, content_guid, user_guid,
+        num_sessions, duration, peak_concurrent
       ) |>
       dplyr::collect()
-  })
+  }) |> shiny::bindCache(
+    base_path, "shiny_usage_filtered",
+    input$shiny_apps_date_range[1],
+    input$shiny_apps_date_range[2],
+    input$shiny_apps_environment
+  )
 
   output$shiny_sessions_value <- shiny::renderText({
     df <- shiny_usage_filtered()
@@ -1913,8 +2033,12 @@ content_by_user_ui <- bslib::card(
   shinycssloaders::withSpinner(DT::dataTableOutput("content_by_user_table"))
 )
 
-content_by_user_server <- function(input, output, session) {
+content_by_user_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load content visits data (lazy - only when tab is visited)
   visits_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         chronicle_data("connect/content_visits_totals_by_user", base_path)
@@ -1926,46 +2050,67 @@ content_by_user_server <- function(input, output, session) {
     )
   })
 
-  # Latest content list snapshot for titles
+  # Latest content list snapshot for titles (lazy)
+  # Cached: persists across tab switches within session
   content_list_latest_usage <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("connect/content_list", base_path)
 
-        df <- data |> dplyr::collect()
-        if (!"date" %in% names(df) || nrow(df) == 0) {
+        # Get max_date efficiently using Arrow pushdown
+        latest_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
+
+        if (is.na(latest_date)) {
           return(NULL)
         }
 
-        latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(date == latest_date)
+        data |>
+          dplyr::filter(date == latest_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading content list for content-by-user: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "content_list_usage")
 
-  # Latest user list snapshot for usernames
+  # Latest user list snapshot for usernames (lazy)
+  # Cached: persists across tab switches within session
   user_list_latest_usage <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("connect/user_list", base_path)
-        df <- data |> dplyr::collect()
-        if (!"date" %in% names(df) || nrow(df) == 0) {
+
+        # Get max_date efficiently using Arrow pushdown
+        latest_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
+
+        if (is.na(latest_date)) {
           return(NULL)
         }
-        latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(date == latest_date)
+
+        data |>
+          dplyr::filter(date == latest_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading user list for content-by-user: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "user_list_usage")
 
+  # Optimized: use distinct() and summarise() to avoid downloading entire dataset
   shiny::observe({
     data <- visits_data()
     if (is.null(data)) {
@@ -1978,8 +2123,18 @@ content_by_user_server <- function(input, output, session) {
       return()
     }
 
-    df <- data |> dplyr::collect()
-    if (!"date" %in% names(df) || nrow(df) == 0) {
+    # Only fetch distinct environment values - much faster than collecting all
+    env_values <- tryCatch(
+      {
+        data |>
+          dplyr::distinct(environment) |>
+          dplyr::collect() |>
+          dplyr::pull(environment)
+      },
+      error = function(e) character(0)
+    )
+
+    if (length(env_values) == 0) {
       shiny::updateSelectInput(
         session,
         "content_by_user_environment",
@@ -1988,11 +2143,6 @@ content_by_user_server <- function(input, output, session) {
       )
       return()
     }
-
-    # Environment choices
-    env_values <- df |>
-      dplyr::pull(environment) |>
-      unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
     env_values <- env_values[
@@ -2010,61 +2160,73 @@ content_by_user_server <- function(input, output, session) {
       selected = "All"
     )
 
-    # Date range
-    date_summary <- df |>
+    # Date range - use Arrow summarise for efficiency
+    date_summary <- data |>
       dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      )
+      ) |>
+      dplyr::collect()
 
     if (nrow(date_summary) == 0) {
       return()
     }
 
+    # Default to last 3 months (90 days) for better performance
+    start_date <- max(date_summary$max_date - 90, date_summary$min_date)
     shiny::updateDateRangeInput(
       session,
       "content_by_user_date_range",
-      start = date_summary$min_date,
+      start = start_date,
       end = date_summary$max_date,
       min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
 
+  # Optimized: push all filters to Arrow before collect for better S3 performance
+  # Cached: persists across tab switches for same filters
   visits_filtered <- shiny::reactive({
     data <- visits_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    shiny::req(input$content_by_user_date_range)
 
-    # Environment filter
-    if (
-      "environment" %in% names(df) && input$content_by_user_environment != "All"
-    ) {
+    # Build filter query on Arrow dataset (not collected yet)
+    filtered <- data |>
+      dplyr::filter(
+        date >= input$content_by_user_date_range[1],
+        date <= input$content_by_user_date_range[2]
+      )
+
+    # Environment filter - pushed to Arrow
+    if (input$content_by_user_environment != "All") {
       if (input$content_by_user_environment == "(Not Set)") {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(
             is.na(environment) |
               environment == "" |
               environment == " "
           )
       } else {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(environment == input$content_by_user_environment)
       }
     }
 
-    shiny::req(input$content_by_user_date_range)
-
-    df |>
-      dplyr::filter(
-        date >= input$content_by_user_date_range[1],
-        date <= input$content_by_user_date_range[2]
-      )
-  })
+    # Select only needed columns and collect
+    filtered |>
+      dplyr::select(date, environment, content_guid, user_guid, visits) |>
+      dplyr::collect()
+  }) |> shiny::bindCache(
+    base_path, "visits_filtered",
+    input$content_by_user_date_range[1],
+    input$content_by_user_date_range[2],
+    input$content_by_user_environment
+  )
 
   output$content_by_user_table <- DT::renderDataTable({
     df <- visits_filtered()
@@ -2183,8 +2345,12 @@ shiny_sessions_by_user_ui <- bslib::card(
   shinycssloaders::withSpinner(DT::dataTableOutput("shiny_sessions_user_table"))
 )
 
-shiny_sessions_by_user_server <- function(input, output, session) {
+shiny_sessions_by_user_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load shiny usage data (lazy - only when tab is visited)
   usage_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         chronicle_data("connect/shiny_usage_totals_by_user", base_path)
@@ -2199,19 +2365,28 @@ shiny_sessions_by_user_server <- function(input, output, session) {
     )
   })
 
-  # Reuse content and user list helpers
+  # Reuse content and user list helpers (lazy)
+  # Cached: persists across tab switches within session
   content_list_latest_usage <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("connect/content_list", base_path)
 
-        df <- data |> dplyr::collect()
-        if (!"date" %in% names(df) || nrow(df) == 0) {
+        # Get max_date efficiently using Arrow pushdown
+        latest_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
+
+        if (is.na(latest_date)) {
           return(NULL)
         }
 
-        latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(date == latest_date)
+        data |>
+          dplyr::filter(date == latest_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message(
@@ -2221,18 +2396,30 @@ shiny_sessions_by_user_server <- function(input, output, session) {
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "content_list_sessions")
 
+  # Latest user list (lazy)
+  # Cached: persists across tab switches within session
   user_list_latest_usage <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("connect/user_list", base_path)
-        df <- data |> dplyr::collect()
-        if (!"date" %in% names(df) || nrow(df) == 0) {
+
+        # Get max_date efficiently using Arrow pushdown
+        latest_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
+
+        if (is.na(latest_date)) {
           return(NULL)
         }
-        latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-        df |> dplyr::filter(date == latest_date)
+
+        data |>
+          dplyr::filter(date == latest_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message(
@@ -2242,8 +2429,9 @@ shiny_sessions_by_user_server <- function(input, output, session) {
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "user_list_sessions")
 
+  # Optimized: use distinct() and summarise() to avoid downloading entire dataset
   shiny::observe({
     data <- usage_data()
     if (is.null(data)) {
@@ -2256,8 +2444,18 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       return()
     }
 
-    df <- data |> dplyr::collect()
-    if (!"date" %in% names(df) || nrow(df) == 0) {
+    # Only fetch distinct environment values - much faster than collecting all
+    env_values <- tryCatch(
+      {
+        data |>
+          dplyr::distinct(environment) |>
+          dplyr::collect() |>
+          dplyr::pull(environment)
+      },
+      error = function(e) character(0)
+    )
+
+    if (length(env_values) == 0) {
       shiny::updateSelectInput(
         session,
         "shiny_sessions_user_environment",
@@ -2266,10 +2464,6 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       )
       return()
     }
-
-    env_values <- df |>
-      dplyr::pull(environment) |>
-      unique()
 
     has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
     env_values <- env_values[
@@ -2287,63 +2481,76 @@ shiny_sessions_by_user_server <- function(input, output, session) {
       selected = "All"
     )
 
-    date_summary <- df |>
+    # Date range - use Arrow summarise for efficiency
+    date_summary <- data |>
       dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      )
+      ) |>
+      dplyr::collect()
 
     if (nrow(date_summary) == 0) {
       return()
     }
 
+    # Default to last 3 months (90 days) for better performance
+    start_date <- max(date_summary$max_date - 90, date_summary$min_date)
     shiny::updateDateRangeInput(
       session,
       "shiny_sessions_user_date_range",
-      start = date_summary$min_date,
+      start = start_date,
       end = date_summary$max_date,
       min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
 
+  # Optimized: push all filters to Arrow before collect for better S3 performance
   usage_filtered <- shiny::reactive({
     data <- usage_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    shiny::req(input$shiny_sessions_user_date_range)
 
-    if (
-      "environment" %in%
-        names(df) &&
-        input$shiny_sessions_user_environment != "All"
-    ) {
+    # Build filter query on Arrow dataset (not collected yet)
+    filtered <- data |>
+      dplyr::filter(
+        date >= input$shiny_sessions_user_date_range[1],
+        date <= input$shiny_sessions_user_date_range[2]
+      )
+
+    # Environment filter - pushed to Arrow
+    if (input$shiny_sessions_user_environment != "All") {
       if (input$shiny_sessions_user_environment == "(Not Set)") {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(
             is.na(environment) |
               environment == "" |
               environment == " "
           )
       } else {
-        df <- df |>
+        filtered <- filtered |>
           dplyr::filter(
             environment == input$shiny_sessions_user_environment
           )
       }
     }
 
-    shiny::req(input$shiny_sessions_user_date_range)
-
-    df |>
-      dplyr::filter(
-        date >= input$shiny_sessions_user_date_range[1],
-        date <= input$shiny_sessions_user_date_range[2]
-      )
-  })
+    # Select only needed columns and collect
+    filtered |>
+      dplyr::select(
+        date, environment, content_guid, user_guid, num_sessions, duration
+      ) |>
+      dplyr::collect()
+  }) |> shiny::bindCache(
+    base_path, "shiny_sessions_filtered",
+    input$shiny_sessions_user_date_range[1],
+    input$shiny_sessions_user_date_range[2],
+    input$shiny_sessions_user_environment
+  )
 
   output$shiny_sessions_user_table <- DT::renderDataTable({
     df <- usage_filtered()
@@ -2461,6 +2668,7 @@ shiny_sessions_by_user_server <- function(input, output, session) {
 # ==============================================
 
 ui <- bslib::page_navbar(
+  id = "main_navbar",
   title = "Posit Connect Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE,
@@ -2468,24 +2676,24 @@ ui <- bslib::page_navbar(
   # Users dropdown
   bslib::nav_menu(
     "Users",
-    bslib::nav_panel("Overview", users_overview_ui),
-    bslib::nav_panel("User List", users_list_ui)
+    bslib::nav_panel("Overview", value = "users_overview", users_overview_ui),
+    bslib::nav_panel("User List", value = "users_list", users_list_ui)
   ),
 
   # Content dropdown
   bslib::nav_menu(
     "Content",
-    bslib::nav_panel("Overview", content_overview_ui),
-    bslib::nav_panel("Content List", content_list_ui)
+    bslib::nav_panel("Overview", value = "content_overview", content_overview_ui),
+    bslib::nav_panel("Content List", value = "content_list", content_list_ui)
   ),
 
   # Usage dropdown
   bslib::nav_menu(
     "Usage",
-    bslib::nav_panel("Overview", usage_overview_ui),
-    bslib::nav_panel("Shiny Apps", shiny_apps_ui),
-    bslib::nav_panel("Content Visits by User", content_by_user_ui),
-    bslib::nav_panel("Shiny Sessions by User", shiny_sessions_by_user_ui)
+    bslib::nav_panel("Overview", value = "usage_overview", usage_overview_ui),
+    bslib::nav_panel("Shiny Apps", value = "shiny_apps", shiny_apps_ui),
+    bslib::nav_panel("Content Visits by User", value = "content_by_user", content_by_user_ui),
+    bslib::nav_panel("Shiny Sessions by User", value = "shiny_sessions_by_user", shiny_sessions_by_user_ui)
   )
 )
 
@@ -2494,14 +2702,30 @@ ui <- bslib::page_navbar(
 # ==============================================
 
 server <- function(input, output, session) {
-  users_overview_server(input, output, session)
-  users_list_server(input, output, session)
-  content_overview_server(input, output, session)
-  content_list_server(input, output, session)
-  usage_overview_server(input, output, session)
-  shiny_apps_server(input, output, session)
-  content_by_user_server(input, output, session)
-  shiny_sessions_by_user_server(input, output, session)
+  # Track which tabs have been visited (for lazy loading)
+  visited_tabs <- shiny::reactiveValues()
+
+  # Helper to check if a tab has been visited
+  tab_visited <- function(tab_name) {
+    shiny::reactive({
+      # Mark as visited when tab is selected
+      if (isTRUE(input$main_navbar == tab_name)) {
+        visited_tabs[[tab_name]] <- TRUE
+      }
+      # Return TRUE if tab has ever been visited
+      isTRUE(visited_tabs[[tab_name]])
+    })
+  }
+
+  # Pass tab_visited helpers to each server
+  users_overview_server(input, output, session, tab_visited("users_overview"))
+  users_list_server(input, output, session, tab_visited("users_list"))
+  content_overview_server(input, output, session, tab_visited("content_overview"))
+  content_list_server(input, output, session, tab_visited("content_list"))
+  usage_overview_server(input, output, session, tab_visited("usage_overview"))
+  shiny_apps_server(input, output, session, tab_visited("shiny_apps"))
+  content_by_user_server(input, output, session, tab_visited("content_by_user"))
+  shiny_sessions_by_user_server(input, output, session, tab_visited("shiny_sessions_by_user"))
 }
 
 shinyApp(ui, server)

@@ -80,9 +80,12 @@ users_overview_ui <- bslib::card(
   )
 )
 
-users_overview_server <- function(input, output, session) {
-  # Load user_totals data
+users_overview_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load user_totals data (lazy - only when tab is visited)
   users_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         chronicle_data("workbench/user_totals", base_path)
@@ -106,10 +109,12 @@ users_overview_server <- function(input, output, session) {
       ) |>
       dplyr::collect()
 
+    # Default to last 3 months (90 days) for better performance
+    start_date <- max(date_summary$max_date - 90, date_summary$min_date)
     shiny::updateDateRangeInput(
       session,
       "users_overview_date_range",
-      start = date_summary$min_date,
+      start = start_date,
       end = date_summary$max_date,
       min = date_summary$min_date,
       max = date_summary$max_date
@@ -117,19 +122,28 @@ users_overview_server <- function(input, output, session) {
   })
 
   # Get latest data (for value boxes - always max_date)
+  # Cached: persists across tab switches within session
   latest_users_data <- shiny::reactive({
     data <- users_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    data |>
+    # Get max_date efficiently using Arrow pushdown, then filter before collect
+    max_date <- data |>
+      dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
       dplyr::collect() |>
-      dplyr::arrange(dplyr::desc(date)) |>
+      dplyr::pull(max_date)
+
+    data |>
+      dplyr::filter(date == max_date) |>
+      dplyr::collect() |>
       dplyr::slice(1)
-  })
+  }) |> shiny::bindCache(base_path, "wb_users_latest")
 
   # Filter data by date range (for charts only)
+  # Optimized: select only needed columns before collect
+  # Cached: persists across tab switches for same date range
   filtered_users_data <- shiny::reactive({
     data <- users_data()
     if (is.null(data)) {
@@ -143,8 +157,15 @@ users_overview_server <- function(input, output, session) {
         date >= input$users_overview_date_range[1],
         date <= input$users_overview_date_range[2]
       ) |>
+      dplyr::select(
+        date, named_users, active_users_1day, administrators, super_administrators
+      ) |>
       dplyr::collect()
-  })
+  }) |> shiny::bindCache(
+    base_path, "wb_users_filtered",
+    input$users_overview_date_range[1],
+    input$users_overview_date_range[2]
+  )
 
   # Value boxes (always latest data)
   output$users_licensed_value <- shiny::renderText({
@@ -407,40 +428,51 @@ user_list_ui <- bslib::card(
   )
 )
 
-user_list_server <- function(input, output, session) {
-  # Load user_list data (snapshot at max_date)
+user_list_server <- function(input, output, session, tab_visited = NULL) {
+
+  # Load user_list data (lazy - only when tab is visited)
+  # Optimized: select only needed columns before collect
+  # Cached: persists across tab switches within session
   user_list_data <- shiny::reactive({
+    # Wait for tab to be visited before loading data
+    if (!is.null(tab_visited)) shiny::req(tab_visited())
     tryCatch(
       {
         data <- chronicle_data("workbench/user_list", base_path)
 
-        # Get max_date snapshot - collect first, then filter to all users from max date
-        collected_data <- data |> dplyr::collect()
-        if (nrow(collected_data) == 0) {
-          return(collected_data)
-        }
-        max_date <- max(collected_data$date, na.rm = TRUE)
+        # Get max_date efficiently using Arrow pushdown, then filter before collect
+        max_date <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect() |>
+          dplyr::pull(max_date)
 
-        collected_data |>
-          dplyr::filter(date == max_date)
+        if (is.na(max_date)) {
+          return(data.frame())
+        }
+
+        data |>
+          dplyr::filter(date == max_date) |>
+          dplyr::select(username, user_role, environment, last_active_at) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading user list: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache(base_path, "wb_user_list")
 
   # Populate environment filter dynamically
+  # Optimized: environment values are already collected in user_list_data()
+  # so we just use distinct on the collected data
   shiny::observe({
     data <- user_list_data()
     if (is.null(data) || nrow(data) == 0) {
       return()
     }
 
-    env_values <- data |>
-      dplyr::pull(.data$environment) |>
-      unique()
+    # Data is already collected, just get unique values efficiently
+    env_values <- unique(data$environment)
 
     has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
 
@@ -554,6 +586,7 @@ user_list_server <- function(input, output, session) {
 # ==============================================
 
 ui <- bslib::page_navbar(
+  id = "main_navbar",
   title = "Posit Workbench Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE,
@@ -561,8 +594,8 @@ ui <- bslib::page_navbar(
   # Users dropdown
   bslib::nav_menu(
     "Users",
-    bslib::nav_panel("Overview", users_overview_ui),
-    bslib::nav_panel("User List", user_list_ui)
+    bslib::nav_panel("Overview", value = "users_overview", users_overview_ui),
+    bslib::nav_panel("User List", value = "users_list", user_list_ui)
   )
 )
 
@@ -571,11 +604,24 @@ ui <- bslib::page_navbar(
 # ==============================================
 
 server <- function(input, output, session) {
-  # Users → Overview
-  users_overview_server(input, output, session)
+  # Track which tabs have been visited (for lazy loading)
+  visited_tabs <- shiny::reactiveValues()
 
-  # Users → User List
-  user_list_server(input, output, session)
+  # Helper to check if a tab has been visited
+  tab_visited <- function(tab_name) {
+    shiny::reactive({
+      # Mark as visited when tab is selected
+      if (isTRUE(input$main_navbar == tab_name)) {
+        visited_tabs[[tab_name]] <- TRUE
+      }
+      # Return TRUE if tab has ever been visited
+      isTRUE(visited_tabs[[tab_name]])
+    })
+  }
+
+  # Pass tab_visited helpers to each server
+  users_overview_server(input, output, session, tab_visited("users_overview"))
+  user_list_server(input, output, session, tab_visited("users_list"))
 }
 
 shinyApp(ui, server)
