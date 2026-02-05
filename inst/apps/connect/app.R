@@ -2432,25 +2432,11 @@ server <- function(input, output, session) {
   default_start <- default_end - DEFAULT_DAYS_BACK
 
   # ============================================
-  # user_totals - load on-demand via reactive (needed for first tab)
-  # This is small and loads quickly, so we don't background it
-  # ============================================
-  all_user_totals <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("connect/user_totals", base_path) |> dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading user totals: ", e$message)
-        NULL
-      }
-    )
-  })
-
-  # ============================================
   # Reactive values for background-loaded data
   # Track both data and loaded state to distinguish "still loading" from "error"
   # ============================================
+  user_totals_rv <- shiny::reactiveVal(NULL)
+  user_totals_loaded <- shiny::reactiveVal(FALSE)
   user_list_rv <- shiny::reactiveVal(NULL)
   user_list_loaded <- shiny::reactiveVal(FALSE)
   content_totals_rv <- shiny::reactiveVal(NULL)
@@ -2463,10 +2449,24 @@ server <- function(input, output, session) {
   shiny_usage_loaded <- shiny::reactiveVal(FALSE)
 
   # ============================================
-  # Load remaining datasets in background after first render
+  # Load all datasets in background after first render
   # ============================================
   session$onFlushed(function() {
     # Schedule background loading with later:: to not block UI
+    # Load user_totals first (needed for first tab) - no date filter needed
+    later::later(function() {
+      user_totals_rv(tryCatch(
+        {
+          chronicle_data("connect/user_totals", base_path) |> dplyr::collect()
+        },
+        error = function(e) {
+          message("Error loading user totals: ", e$message)
+          NULL
+        }
+      ))
+      user_totals_loaded(TRUE)
+    }, delay = 0)
+
     later::later(function() {
       user_list_rv(
         load_with_date_filter("connect/user_list", default_start, default_end)
@@ -2516,6 +2516,10 @@ server <- function(input, output, session) {
   # Use req() to prevent rendering while data is still loading
   # This keeps the spinner visible until data is available
   # ============================================
+  all_user_totals <- shiny::reactive({
+    shiny::req(user_totals_loaded())
+    user_totals_rv()
+  })
   all_user_list <- shiny::reactive({
     shiny::req(user_list_loaded())
     user_list_rv()
