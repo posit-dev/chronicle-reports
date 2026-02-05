@@ -86,12 +86,12 @@ users_overview_ui <- bslib::card(
   )
 )
 
-users_overview_server <- function(input, output, session, user_totals, user_totals_loaded) {
+users_overview_server <- function(input, output, session, user_totals, user_totals_loaded, default_start_date, default_end_date) {
   # Use shared user_totals data (error handling in main server)
   users_data <- user_totals
   data_loaded <- user_totals_loaded
 
-  # Set default date range when data loads
+  # Set default date range when data loads (default to last 90 days)
   shiny::observe({
     shiny::req(users_data())
 
@@ -102,11 +102,15 @@ users_overview_server <- function(input, output, session, user_totals, user_tota
         max_date = max(date, na.rm = TRUE)
       )
 
+    # Use default 90-day range, but clamp to available data
+    start_date <- max(date_summary$min_date, default_start_date)
+    end_date <- min(date_summary$max_date, default_end_date)
+
     shiny::updateDateRangeInput(
       session,
       "users_overview_date_range",
-      start = date_summary$min_date,
-      end = date_summary$max_date,
+      start = start_date,
+      end = end_date,
       min = date_summary$min_date,
       max = date_summary$max_date
     )
@@ -179,10 +183,13 @@ users_overview_server <- function(input, output, session, user_totals, user_tota
   # Trend chart (filtered data)
   output$users_trend_plot <- plotly::renderPlotly({
     # Keep spinner until data has loaded
-    shiny::req(data_loaded())
+    shiny::validate(
+      shiny::need(data_loaded(), "Loading...")
+    )
 
     data <- filtered_users_data()
 
+    # Only show "Data not available" after loading completes with no data
     if (is.null(data) || nrow(data) == 0) {
       return(
         plotly::plotly_empty() |>
@@ -299,10 +306,13 @@ users_overview_server <- function(input, output, session, user_totals, user_tota
   # Day of week chart (filtered data)
   output$users_dow_plot <- plotly::renderPlotly({
     # Keep spinner until data has loaded
-    shiny::req(data_loaded())
+    shiny::validate(
+      shiny::need(data_loaded(), "Loading...")
+    )
 
     data <- filtered_users_data()
 
+    # Only show "Data not available" after loading completes with no data
     if (is.null(data) || nrow(data) == 0) {
       return(
         plotly::plotly_empty() |>
@@ -612,11 +622,17 @@ server <- function(input, output, session) {
   # Load all datasets in background after first render
   # ============================================
   session$onFlushed(function() {
-    # Load user_totals first (needed for first tab)
+    # Load user_totals first (needed for first tab) - load all data, date picker will limit view
     later::later(function() {
-      user_totals_rv(
-        load_with_date_filter("workbench/user_totals", default_start, default_end)
-      )
+      user_totals_rv(tryCatch(
+        {
+          chronicle_data("workbench/user_totals", base_path) |> dplyr::collect()
+        },
+        error = function(e) {
+          message("Error loading user totals: ", e$message)
+          NULL
+        }
+      ))
       user_totals_loaded(TRUE)
     }, delay = 0)
 
@@ -645,7 +661,7 @@ server <- function(input, output, session) {
   # ============================================
   # Call sub-servers with data
   # ============================================
-  users_overview_server(input, output, session, all_user_totals, user_totals_loaded)
+  users_overview_server(input, output, session, all_user_totals, user_totals_loaded, default_start, default_end)
   user_list_server(input, output, session, all_user_list)
 }
 
