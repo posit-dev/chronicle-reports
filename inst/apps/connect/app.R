@@ -2449,12 +2449,18 @@ server <- function(input, output, session) {
 
   # ============================================
   # Reactive values for background-loaded data
+  # Track both data and loaded state to distinguish "still loading" from "error"
   # ============================================
   user_list_rv <- shiny::reactiveVal(NULL)
+  user_list_loaded <- shiny::reactiveVal(FALSE)
   content_totals_rv <- shiny::reactiveVal(NULL)
+  content_totals_loaded <- shiny::reactiveVal(FALSE)
   content_list_rv <- shiny::reactiveVal(NULL)
+  content_list_loaded <- shiny::reactiveVal(FALSE)
   content_visits_rv <- shiny::reactiveVal(NULL)
+  content_visits_loaded <- shiny::reactiveVal(FALSE)
   shiny_usage_rv <- shiny::reactiveVal(NULL)
+  shiny_usage_loaded <- shiny::reactiveVal(FALSE)
 
   # ============================================
   # Load remaining datasets in background after first render
@@ -2465,18 +2471,21 @@ server <- function(input, output, session) {
       user_list_rv(
         load_with_date_filter("connect/user_list", default_start, default_end)
       )
+      user_list_loaded(TRUE)
     }, delay = 0)
 
     later::later(function() {
       content_totals_rv(
         load_with_date_filter("connect/content_totals", default_start, default_end)
       )
+      content_totals_loaded(TRUE)
     }, delay = 0)
 
     later::later(function() {
       content_list_rv(
         load_with_date_filter("connect/content_list", default_start, default_end)
       )
+      content_list_loaded(TRUE)
     }, delay = 0)
 
     later::later(function() {
@@ -2487,6 +2496,7 @@ server <- function(input, output, session) {
           default_end
         )
       )
+      content_visits_loaded(TRUE)
     }, delay = 0)
 
     later::later(function() {
@@ -2497,17 +2507,35 @@ server <- function(input, output, session) {
           default_end
         )
       )
+      shiny_usage_loaded(TRUE)
     }, delay = 0)
   }, once = TRUE)
 
   # ============================================
   # Wrapper reactives for sub-servers
+  # Use req() to prevent rendering while data is still loading
+  # This keeps the spinner visible until data is available
   # ============================================
-  all_user_list <- shiny::reactive({ user_list_rv() })
-  all_content_totals <- shiny::reactive({ content_totals_rv() })
-  all_content_list <- shiny::reactive({ content_list_rv() })
-  all_content_visits <- shiny::reactive({ content_visits_rv() })
-  all_shiny_usage <- shiny::reactive({ shiny_usage_rv() })
+  all_user_list <- shiny::reactive({
+    shiny::req(user_list_loaded())
+    user_list_rv()
+  })
+  all_content_totals <- shiny::reactive({
+    shiny::req(content_totals_loaded())
+    content_totals_rv()
+  })
+  all_content_list <- shiny::reactive({
+    shiny::req(content_list_loaded())
+    content_list_rv()
+  })
+  all_content_visits <- shiny::reactive({
+    shiny::req(content_visits_loaded())
+    content_visits_rv()
+  })
+  all_shiny_usage <- shiny::reactive({
+    shiny::req(shiny_usage_loaded())
+    shiny_usage_rv()
+  })
 
   # ============================================
   # Call sub-servers with data

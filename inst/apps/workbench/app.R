@@ -610,8 +610,10 @@ server <- function(input, output, session) {
 
   # ============================================
   # Reactive values for background-loaded data
+  # Track both data and loaded state to distinguish "still loading" from "error"
   # ============================================
   user_list_rv <- shiny::reactiveVal(NULL)
+  user_list_loaded <- shiny::reactiveVal(FALSE)
 
   # ============================================
   # Load remaining datasets in background after first render
@@ -621,13 +623,19 @@ server <- function(input, output, session) {
       user_list_rv(
         load_with_date_filter("workbench/user_list", default_start, default_end)
       )
+      user_list_loaded(TRUE)
     }, delay = 0)
   }, once = TRUE)
 
   # ============================================
   # Wrapper reactives for sub-servers
+  # Use req() to prevent rendering while data is still loading
+  # This keeps the spinner visible until data is available
   # ============================================
-  all_user_list <- shiny::reactive({ user_list_rv() })
+  all_user_list <- shiny::reactive({
+    shiny::req(user_list_loaded())
+    user_list_rv()
+  })
 
   # ============================================
   # Call sub-servers with data
