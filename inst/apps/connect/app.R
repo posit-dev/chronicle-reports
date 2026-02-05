@@ -2393,115 +2393,84 @@ ui <- bslib::page_navbar(
 # Main Server
 # ==============================================
 
-# Helper function to safely open a dataset (lazy - no data transfer)
-safe_open_dataset <- function(metric, base_path) {
-  tryCatch(
-    {
-      chronicle_data(metric, base_path)
-    },
-    error = function(e) {
-      message("Error opening dataset ", metric, ": ", e$message)
-      NULL
-    }
-  )
-}
-
 server <- function(input, output, session) {
   # ============================================
-  # Connect Data - open datasets lazily (no S3 transfer yet)
-  # These are Arrow dataset objects, not collected data frames
+  # Connect Data - load each dataset once (inside reactives for lazy loading)
+  # Data is only fetched from S3 when the reactive is first accessed
   # ============================================
-
-  # Open datasets once at startup (lazy - only lists files, no data transfer)
-  user_totals_ds <- safe_open_dataset("connect/user_totals", base_path)
-  user_list_ds <- safe_open_dataset("connect/user_list", base_path)
-  content_totals_ds <- safe_open_dataset("connect/content_totals", base_path)
-  content_list_ds <- safe_open_dataset("connect/content_list", base_path)
-  content_visits_ds <- safe_open_dataset(
-    "connect/content_visits_totals_by_user",
-    base_path
-  )
-  shiny_usage_ds <- safe_open_dataset(
-    "connect/shiny_usage_totals_by_user",
-    base_path
-  )
-
-  # ============================================
-  # Reactive wrappers that collect data with filters applied
-  # This enables predicate pushdown - only transfer filtered data from S3
-  # ============================================
-
-  # User totals - collected once, filtered in sub-server
   all_user_totals <- shiny::reactive({
-    if (is.null(user_totals_ds)) return(NULL)
     tryCatch(
-      user_totals_ds |> dplyr::collect(),
+      {
+        chronicle_data("connect/user_totals", base_path) |> dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting user totals: ", e$message)
+        message("Error loading user totals: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("user_totals")
+  })
 
-  # User list - collected once
   all_user_list <- shiny::reactive({
-    if (is.null(user_list_ds)) return(NULL)
     tryCatch(
-      user_list_ds |> dplyr::collect(),
+      {
+        chronicle_data("connect/user_list", base_path) |> dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting user list: ", e$message)
+        message("Error loading user list: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("user_list")
+  })
 
-  # Content totals - collected once
   all_content_totals <- shiny::reactive({
-    if (is.null(content_totals_ds)) return(NULL)
     tryCatch(
-      content_totals_ds |> dplyr::collect(),
+      {
+        chronicle_data("connect/content_totals", base_path) |> dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting content totals: ", e$message)
+        message("Error loading content totals: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("content_totals")
+  })
 
-  # Content list - collected once
   all_content_list <- shiny::reactive({
-    if (is.null(content_list_ds)) return(NULL)
     tryCatch(
-      content_list_ds |> dplyr::collect(),
+      {
+        chronicle_data("connect/content_list", base_path) |> dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting content list: ", e$message)
+        message("Error loading content list: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("content_list")
+  })
 
-  # Content visits - collected once
   all_content_visits <- shiny::reactive({
-    if (is.null(content_visits_ds)) return(NULL)
     tryCatch(
-      content_visits_ds |> dplyr::collect(),
+      {
+        chronicle_data("connect/content_visits_totals_by_user", base_path) |>
+          dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting content visits: ", e$message)
+        message("Error loading content visits: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("content_visits")
+  })
 
-  # Shiny usage - collected once
   all_shiny_usage <- shiny::reactive({
-    if (is.null(shiny_usage_ds)) return(NULL)
     tryCatch(
-      shiny_usage_ds |> dplyr::collect(),
+      {
+        chronicle_data("connect/shiny_usage_totals_by_user", base_path) |>
+          dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting shiny usage: ", e$message)
+        message("Error loading shiny usage: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("shiny_usage")
+  })
 
   # ============================================
   # Call sub-servers with data

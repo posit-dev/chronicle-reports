@@ -553,55 +553,35 @@ ui <- bslib::page_navbar(
 # Main Server
 # ==============================================
 
-# Helper function to safely open a dataset (lazy - no data transfer)
-safe_open_dataset <- function(metric, base_path) {
-  tryCatch(
-    {
-      chronicle_data(metric, base_path)
-    },
-    error = function(e) {
-      message("Error opening dataset ", metric, ": ", e$message)
-      NULL
-    }
-  )
-}
-
 server <- function(input, output, session) {
   # ============================================
-  # Workbench Data - open datasets lazily (no S3 transfer yet)
+  # Workbench Data - load each dataset once (inside reactives for lazy loading)
+  # Data is only fetched from S3 when the reactive is first accessed
   # ============================================
 
-  # Open datasets once at startup (lazy - only lists files, no data transfer)
-  user_totals_ds <- safe_open_dataset("workbench/user_totals", base_path)
-  user_list_ds <- safe_open_dataset("workbench/user_list", base_path)
-
-  # ============================================
-  # Reactive wrappers that collect data
-  # ============================================
-
-  # User totals - collected once
   all_user_totals <- shiny::reactive({
-    if (is.null(user_totals_ds)) return(NULL)
     tryCatch(
-      user_totals_ds |> dplyr::collect(),
+      {
+        chronicle_data("workbench/user_totals", base_path) |> dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting user totals: ", e$message)
+        message("Error loading user totals: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("user_totals")
+  })
 
-  # User list - collected once
   all_user_list <- shiny::reactive({
-    if (is.null(user_list_ds)) return(NULL)
     tryCatch(
-      user_list_ds |> dplyr::collect(),
+      {
+        chronicle_data("workbench/user_list", base_path) |> dplyr::collect()
+      },
       error = function(e) {
-        message("Error collecting user list: ", e$message)
+        message("Error loading user list: ", e$message)
         NULL
       }
     )
-  }) |> shiny::bindCache("user_list")
+  })
 
   # ============================================
   # Call sub-servers with data
