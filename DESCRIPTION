@@ -1,6 +1,6 @@
 Package: chronicle.reports
 Title: Posit Chronicle Reports
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: c(
     person("Mark", "Tucker", , "mark.tucker@posit.co", role = c("aut", "cre")),
     person("Matt", "Urbina", , "matt.urbina@posit.co", role = c("aut")),
