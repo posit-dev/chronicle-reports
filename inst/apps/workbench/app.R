@@ -5,6 +5,11 @@ library(shiny)
 library(bslib)
 library(chronicle.reports)
 library(rlang)
+library(arrow)
+
+# Configure Arrow for optimal S3 performance
+arrow::set_io_thread_count(6) # Parallel S3 downloads
+arrow::set_cpu_count(4) # Parallel data processing
 
 # Common application configuration
 APP_CONFIG <- list(
@@ -80,19 +85,9 @@ users_overview_ui <- bslib::card(
   )
 )
 
-users_overview_server <- function(input, output, session) {
-  # Load user_totals data
-  users_data <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("workbench/user_totals", base_path)
-      },
-      error = function(e) {
-        message("Error loading user totals: ", e$message)
-        NULL
-      }
-    )
-  })
+users_overview_server <- function(input, output, session, user_totals) {
+  # Use shared user_totals data (error handling in main server)
+  users_data <- user_totals
 
   # Set default date range when data loads
   shiny::observe({
@@ -103,8 +98,7 @@ users_overview_server <- function(input, output, session) {
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     shiny::updateDateRangeInput(
       session,
@@ -124,7 +118,6 @@ users_overview_server <- function(input, output, session) {
     }
 
     data |>
-      dplyr::collect() |>
       dplyr::arrange(dplyr::desc(date)) |>
       dplyr::slice(1)
   })
@@ -142,8 +135,7 @@ users_overview_server <- function(input, output, session) {
       dplyr::filter(
         date >= input$users_overview_date_range[1],
         date <= input$users_overview_date_range[2]
-      ) |>
-      dplyr::collect()
+      )
   })
 
   # Value boxes (always latest data)
@@ -407,28 +399,19 @@ user_list_ui <- bslib::card(
   )
 )
 
-user_list_server <- function(input, output, session) {
-  # Load user_list data (snapshot at max_date)
+user_list_server <- function(input, output, session, user_list) {
+  # Use shared user_list data (error handling in main server)
   user_list_data <- shiny::reactive({
-    tryCatch(
-      {
-        data <- chronicle_data("workbench/user_list", base_path)
+    data <- user_list()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
 
-        # Get max_date snapshot - collect first, then filter to all users from max date
-        collected_data <- data |> dplyr::collect()
-        if (nrow(collected_data) == 0) {
-          return(collected_data)
-        }
-        max_date <- max(collected_data$date, na.rm = TRUE)
+    # Get max_date snapshot
+    max_date <- max(data$date, na.rm = TRUE)
 
-        collected_data |>
-          dplyr::filter(date == max_date)
-      },
-      error = function(e) {
-        message("Error loading user list: ", e$message)
-        NULL
-      }
-    )
+    data |>
+      dplyr::filter(date == max_date)
   })
 
   # Populate environment filter dynamically
@@ -570,12 +553,61 @@ ui <- bslib::page_navbar(
 # Main Server
 # ==============================================
 
-server <- function(input, output, session) {
-  # Users → Overview
-  users_overview_server(input, output, session)
+# Helper function to safely open a dataset (lazy - no data transfer)
+safe_open_dataset <- function(metric, base_path) {
+  tryCatch(
+    {
+      chronicle_data(metric, base_path)
+    },
+    error = function(e) {
+      message("Error opening dataset ", metric, ": ", e$message)
+      NULL
+    }
+  )
+}
 
-  # Users → User List
-  user_list_server(input, output, session)
+server <- function(input, output, session) {
+  # ============================================
+  # Workbench Data - open datasets lazily (no S3 transfer yet)
+  # ============================================
+
+  # Open datasets once at startup (lazy - only lists files, no data transfer)
+  user_totals_ds <- safe_open_dataset("workbench/user_totals", base_path)
+  user_list_ds <- safe_open_dataset("workbench/user_list", base_path)
+
+  # ============================================
+  # Reactive wrappers that collect data
+  # ============================================
+
+  # User totals - collected once
+  all_user_totals <- shiny::reactive({
+    if (is.null(user_totals_ds)) return(NULL)
+    tryCatch(
+      user_totals_ds |> dplyr::collect(),
+      error = function(e) {
+        message("Error collecting user totals: ", e$message)
+        NULL
+      }
+    )
+  }) |> shiny::bindCache("user_totals")
+
+  # User list - collected once
+  all_user_list <- shiny::reactive({
+    if (is.null(user_list_ds)) return(NULL)
+    tryCatch(
+      user_list_ds |> dplyr::collect(),
+      error = function(e) {
+        message("Error collecting user list: ", e$message)
+        NULL
+      }
+    )
+  }) |> shiny::bindCache("user_list")
+
+  # ============================================
+  # Call sub-servers with data
+  # ============================================
+  users_overview_server(input, output, session, all_user_totals)
+  user_list_server(input, output, session, all_user_list)
 }
 
 shinyApp(ui, server)

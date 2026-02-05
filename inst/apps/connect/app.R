@@ -5,6 +5,11 @@ library(shiny)
 library(bslib)
 library(chronicle.reports)
 library(rlang)
+library(arrow)
+
+# Configure Arrow for optimal S3 performance
+arrow::set_io_thread_count(6) # Parallel S3 downloads
+arrow::set_cpu_count(4) # Parallel data processing
 
 # Common application configuration
 APP_CONFIG <- list(
@@ -618,8 +623,7 @@ content_overview_server <- function(input, output, session, content_totals) {
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     shiny::updateDateRangeInput(
       session,
@@ -637,7 +641,7 @@ content_overview_server <- function(input, output, session, content_totals) {
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
 
     # Environment filter
     if (input$content_overview_environment != "All") {
@@ -1251,7 +1255,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
       return()
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
     if (!"environment" %in% names(df) || nrow(df) == 0) {
       shiny::updateSelectInput(
         session,
@@ -1294,8 +1298,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     if (nrow(date_summary) == 0) {
       return()
@@ -1317,7 +1320,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
 
     # Environment filter
     if (
@@ -1342,8 +1345,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
       dplyr::filter(
         date >= input$usage_overview_date_range[1],
         date <= input$usage_overview_date_range[2]
-      ) |>
-      dplyr::collect()
+      )
   })
 
   output$usage_visits_value <- shiny::renderText({
@@ -1550,7 +1552,7 @@ shiny_apps_server <- function(
       return()
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
 
     if (!"environment" %in% names(df) || nrow(df) == 0) {
       shiny::updateSelectInput(
@@ -1588,8 +1590,7 @@ shiny_apps_server <- function(
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     if (nrow(date_summary) == 0) {
       return()
@@ -1611,7 +1612,7 @@ shiny_apps_server <- function(
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
 
     # Environment filter
     if ("environment" %in% names(df) && input$shiny_apps_environment != "All") {
@@ -1634,8 +1635,7 @@ shiny_apps_server <- function(
       dplyr::filter(
         date >= input$shiny_apps_date_range[1],
         date <= input$shiny_apps_date_range[2]
-      ) |>
-      dplyr::collect()
+      )
   })
 
   output$shiny_sessions_value <- shiny::renderText({
@@ -1905,7 +1905,7 @@ content_by_user_server <- function(
       return()
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
     if (!"date" %in% names(df) || nrow(df) == 0) {
       shiny::updateSelectInput(
         session,
@@ -1965,7 +1965,7 @@ content_by_user_server <- function(
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
 
     # Environment filter
     if (
@@ -2156,7 +2156,7 @@ shiny_sessions_by_user_server <- function(
       return()
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
     if (!"date" %in% names(df) || nrow(df) == 0) {
       shiny::updateSelectInput(
         session,
@@ -2214,7 +2214,7 @@ shiny_sessions_by_user_server <- function(
       return(NULL)
     }
 
-    df <- data |> dplyr::collect()
+    df <- data
 
     if (
       "environment" %in%
@@ -2393,83 +2393,115 @@ ui <- bslib::page_navbar(
 # Main Server
 # ==============================================
 
+# Helper function to safely open a dataset (lazy - no data transfer)
+safe_open_dataset <- function(metric, base_path) {
+  tryCatch(
+    {
+      chronicle_data(metric, base_path)
+    },
+    error = function(e) {
+      message("Error opening dataset ", metric, ": ", e$message)
+      NULL
+    }
+  )
+}
+
 server <- function(input, output, session) {
   # ============================================
-  # Connect Data - load each dataset once
+  # Connect Data - open datasets lazily (no S3 transfer yet)
+  # These are Arrow dataset objects, not collected data frames
   # ============================================
+
+  # Open datasets once at startup (lazy - only lists files, no data transfer)
+  user_totals_ds <- safe_open_dataset("connect/user_totals", base_path)
+  user_list_ds <- safe_open_dataset("connect/user_list", base_path)
+  content_totals_ds <- safe_open_dataset("connect/content_totals", base_path)
+  content_list_ds <- safe_open_dataset("connect/content_list", base_path)
+  content_visits_ds <- safe_open_dataset(
+    "connect/content_visits_totals_by_user",
+    base_path
+  )
+  shiny_usage_ds <- safe_open_dataset(
+    "connect/shiny_usage_totals_by_user",
+    base_path
+  )
+
+  # ============================================
+  # Reactive wrappers that collect data with filters applied
+  # This enables predicate pushdown - only transfer filtered data from S3
+  # ============================================
+
+  # User totals - collected once, filtered in sub-server
   all_user_totals <- shiny::reactive({
+    if (is.null(user_totals_ds)) return(NULL)
     tryCatch(
-      {
-        chronicle_data("connect/user_totals", base_path) |> dplyr::collect()
-      },
+      user_totals_ds |> dplyr::collect(),
       error = function(e) {
-        message("Error loading user totals: ", e$message)
+        message("Error collecting user totals: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache("user_totals")
 
+  # User list - collected once
   all_user_list <- shiny::reactive({
+    if (is.null(user_list_ds)) return(NULL)
     tryCatch(
-      {
-        chronicle_data("connect/user_list", base_path) |> dplyr::collect()
-      },
+      user_list_ds |> dplyr::collect(),
       error = function(e) {
-        message("Error loading user list: ", e$message)
+        message("Error collecting user list: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache("user_list")
 
+  # Content totals - collected once
   all_content_totals <- shiny::reactive({
+    if (is.null(content_totals_ds)) return(NULL)
     tryCatch(
-      {
-        chronicle_data("connect/content_totals", base_path) |> dplyr::collect()
-      },
+      content_totals_ds |> dplyr::collect(),
       error = function(e) {
-        message("Error loading content totals: ", e$message)
+        message("Error collecting content totals: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache("content_totals")
 
+  # Content list - collected once
   all_content_list <- shiny::reactive({
+    if (is.null(content_list_ds)) return(NULL)
     tryCatch(
-      {
-        chronicle_data("connect/content_list", base_path) |> dplyr::collect()
-      },
+      content_list_ds |> dplyr::collect(),
       error = function(e) {
-        message("Error loading content list: ", e$message)
+        message("Error collecting content list: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache("content_list")
 
+  # Content visits - collected once
   all_content_visits <- shiny::reactive({
+    if (is.null(content_visits_ds)) return(NULL)
     tryCatch(
-      {
-        chronicle_data("connect/content_visits_totals_by_user", base_path) |>
-          dplyr::collect()
-      },
+      content_visits_ds |> dplyr::collect(),
       error = function(e) {
-        message("Error loading content visits: ", e$message)
+        message("Error collecting content visits: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache("content_visits")
 
+  # Shiny usage - collected once
   all_shiny_usage <- shiny::reactive({
+    if (is.null(shiny_usage_ds)) return(NULL)
     tryCatch(
-      {
-        chronicle_data("connect/shiny_usage_totals_by_user", base_path) |>
-          dplyr::collect()
-      },
+      shiny_usage_ds |> dplyr::collect(),
       error = function(e) {
-        message("Error loading shiny usage: ", e$message)
+        message("Error collecting shiny usage: ", e$message)
         NULL
       }
     )
-  })
+  }) |> shiny::bindCache("shiny_usage")
 
   # ============================================
   # Call sub-servers with data

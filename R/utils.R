@@ -135,7 +135,11 @@ chronicle_data <- function(
     path,
     hive_style = TRUE,
     partitioning = arrow::schema(date = arrow::date32()),
-    format = "parquet"
+    format = "parquet",
+    factory_options = list(
+      exclude_invalid_files = FALSE,
+      selector_ignore_prefixes = c(".", "_", "tmp")
+    )
   )
 }
 
