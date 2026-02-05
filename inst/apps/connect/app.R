@@ -79,9 +79,10 @@ users_overview_ui <- bslib::card(
   )
 )
 
-users_overview_server <- function(input, output, session, user_totals) {
+users_overview_server <- function(input, output, session, user_totals, user_totals_loaded) {
   # Use shared user_totals data (error handling in main server)
   users_data <- user_totals
+  data_loaded <- user_totals_loaded
 
   # Set default date range when data loads
   shiny::observe({
@@ -163,6 +164,9 @@ users_overview_server <- function(input, output, session, user_totals) {
 
   # Trend chart (filtered data)
   output$users_trend_plot <- plotly::renderPlotly({
+    # Keep spinner until data has loaded
+    shiny::req(data_loaded())
+
     data <- filtered_users_data()
 
     if (is.null(data) || nrow(data) == 0) {
@@ -268,6 +272,9 @@ users_overview_server <- function(input, output, session, user_totals) {
 
   # Day of week chart (filtered data)
   output$users_dow_plot <- plotly::renderPlotly({
+    # Keep spinner until data has loaded
+    shiny::req(data_loaded())
+
     data <- filtered_users_data()
 
     if (is.null(data) || nrow(data) == 0) {
@@ -2453,17 +2460,11 @@ server <- function(input, output, session) {
   # ============================================
   session$onFlushed(function() {
     # Schedule background loading with later:: to not block UI
-    # Load user_totals first (needed for first tab) - no date filter needed
+    # Load user_totals first (needed for first tab)
     later::later(function() {
-      user_totals_rv(tryCatch(
-        {
-          chronicle_data("connect/user_totals", base_path) |> dplyr::collect()
-        },
-        error = function(e) {
-          message("Error loading user totals: ", e$message)
-          NULL
-        }
-      ))
+      user_totals_rv(
+        load_with_date_filter("connect/user_totals", default_start, default_end)
+      )
       user_totals_loaded(TRUE)
     }, delay = 0)
 
@@ -2544,7 +2545,7 @@ server <- function(input, output, session) {
   # ============================================
   # Call sub-servers with data
   # ============================================
-  users_overview_server(input, output, session, all_user_totals)
+  users_overview_server(input, output, session, all_user_totals, user_totals_loaded)
   users_list_server(input, output, session, all_user_list)
   content_overview_server(input, output, session, all_content_totals)
   content_list_server(input, output, session, all_user_list, all_content_list)
