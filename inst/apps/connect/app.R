@@ -2393,82 +2393,77 @@ ui <- bslib::page_navbar(
 # Main Server
 # ==============================================
 
+# Default date range for initial load
+# This enables partition pruning - Arrow only downloads parquet files for these dates
+# Set CHRONICLE_DEFAULT_DAYS environment variable to customize (default: 90)
+DEFAULT_DAYS_BACK <- as.integer(
+  Sys.getenv("CHRONICLE_DEFAULT_DAYS", "90")
+)
+
 server <- function(input, output, session) {
   # ============================================
-  # Connect Data - load each dataset once (inside reactives for lazy loading)
-  # Data is only fetched from S3 when the reactive is first accessed
+  # Connect Data - load with date filtering for partition pruning
+  # Arrow will only download parquet files for dates in the filter range
+
   # ============================================
+
+
+  # Helper to load data with date filter (enables S3 partition pruning)
+  load_with_date_filter <- function(metric, start_date = NULL, end_date = NULL) {
+    tryCatch(
+      {
+        ds <- chronicle_data(metric, base_path)
+        if (!is.null(start_date) && !is.null(end_date)) {
+          ds <- ds |> dplyr::filter(date >= start_date, date <= end_date)
+        }
+        ds |> dplyr::collect()
+      },
+      error = function(e) {
+        message("Error loading ", metric, ": ", e$message)
+        NULL
+      }
+    )
+  }
+
+  # Default date range (last 90 days)
+  default_end <- Sys.Date()
+  default_start <- default_end - DEFAULT_DAYS_BACK
+
+  # User totals - uses date filter for partition pruning
   all_user_totals <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("connect/user_totals", base_path) |> dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading user totals: ", e$message)
-        NULL
-      }
-    )
+    load_with_date_filter("connect/user_totals", default_start, default_end)
   })
 
+  # User list - load latest snapshot only (filter to recent dates)
   all_user_list <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("connect/user_list", base_path) |> dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading user list: ", e$message)
-        NULL
-      }
-    )
+    load_with_date_filter("connect/user_list", default_start, default_end)
   })
 
+  # Content totals - uses date filter
   all_content_totals <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("connect/content_totals", base_path) |> dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading content totals: ", e$message)
-        NULL
-      }
-    )
+    load_with_date_filter("connect/content_totals", default_start, default_end)
   })
 
+  # Content list - load latest snapshot only
   all_content_list <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("connect/content_list", base_path) |> dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading content list: ", e$message)
-        NULL
-      }
-    )
+    load_with_date_filter("connect/content_list", default_start, default_end)
   })
 
+  # Content visits - uses date filter
   all_content_visits <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("connect/content_visits_totals_by_user", base_path) |>
-          dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading content visits: ", e$message)
-        NULL
-      }
+    load_with_date_filter(
+      "connect/content_visits_totals_by_user",
+      default_start,
+      default_end
     )
   })
 
+  # Shiny usage - uses date filter
   all_shiny_usage <- shiny::reactive({
-    tryCatch(
-      {
-        chronicle_data("connect/shiny_usage_totals_by_user", base_path) |>
-          dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading shiny usage: ", e$message)
-        NULL
-      }
+    load_with_date_filter(
+      "connect/shiny_usage_totals_by_user",
+      default_start,
+      default_end
     )
   })
 
