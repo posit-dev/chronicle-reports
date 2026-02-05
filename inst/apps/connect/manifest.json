@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "locale": "en_US",
-  "platform": "4.5.1",
+  "locale": "C",
+  "platform": "4.5.2",
   "metadata": {
     "appmode": "shiny",
     "primary_rmd": null,
@@ -37,9 +37,15 @@
         "Packaged": "2025-09-02 13:12:27 UTC; garrick",
         "Author": "Yihui Xie [aut],\n  Joe Cheng [aut],\n  Xianying Tan [aut],\n  Garrick Aden-Buie [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-7111-0077>),\n  JJ Allaire [ctb],\n  Maximilian Girlich [ctb],\n  Greg Freedman Ellis [ctb],\n  Johannes Rauh [ctb],\n  SpryMedia Limited [ctb, cph] (DataTables in htmlwidgets/lib),\n  Brian Reavis [ctb, cph] (selectize.js in htmlwidgets/lib),\n  Leon Gersen [ctb, cph] (noUiSlider in htmlwidgets/lib),\n  Bartek Szopka [ctb, cph] (jquery.highlight.js in htmlwidgets/lib),\n  Alex Pickering [ctb],\n  William Holmes [ctb],\n  Mikko Marttila [ctb],\n  Andres Quintero [ctb],\n  Stéphane Laurent [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Garrick Aden-Buie <garrick@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-09-02 22:00:06 UTC",
-        "Built": "R 4.5.0; ; 2025-09-03 17:32:54 UTC; unix"
+        "Built": "R 4.5.0; ; 2025-09-03 22:19:58 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "DT",
+        "RemoteRef": "DT",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "0.34.0"
       }
     },
     "R6": {
@@ -66,12 +72,12 @@
         "Maintainer": "Winston Chang <winston@posit.co>",
         "Repository": "CRAN",
         "Date/Publication": "2025-02-15 00:50:02 UTC",
-        "Built": "R 4.5.0; ; 2025-02-15 01:07:20 UTC; unix",
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:19 UTC; unix",
         "RemoteType": "standard",
         "RemotePkgRef": "R6",
         "RemoteRef": "R6",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
         "RemoteSha": "2.6.1"
       }
     },
@@ -120,15 +126,10 @@
         "Packaged": "2026-01-08 14:33:45 UTC; edd",
         "Author": "Dirk Eddelbuettel [aut, cre] (ORCID:\n    <https://orcid.org/0000-0001-6419-907X>),\n  Romain Francois [aut] (ORCID: <https://orcid.org/0000-0002-2444-4226>),\n  JJ Allaire [aut] (ORCID: <https://orcid.org/0000-0003-0174-9868>),\n  Kevin Ushey [aut] (ORCID: <https://orcid.org/0000-0003-2880-7407>),\n  Qiang Kou [aut] (ORCID: <https://orcid.org/0000-0001-6786-5453>),\n  Nathan Russell [aut],\n  Iñaki Ucar [aut] (ORCID: <https://orcid.org/0000-0001-6403-5550>),\n  Doug Bates [aut] (ORCID: <https://orcid.org/0000-0001-8316-9503>),\n  John Chambers [aut]",
         "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2026-01-10 09:50:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-01-11 13:11:35 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "Rcpp",
-        "RemoteRef": "Rcpp",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.1.1"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2026-01-10 11:50:00 UTC; unix",
+        "Archs": "Rcpp.so.dSYM"
       }
     },
     "S7": {
@@ -158,15 +159,10 @@
         "Packaged": "2025-11-14 13:45:25 UTC; hadleywickham",
         "Author": "Object-Oriented Programming Working Group [cph],\n  Davis Vaughan [aut],\n  Jim Hester [aut] (ORCID: <https://orcid.org/0000-0002-2739-7082>),\n  Tomasz Kalinowski [aut],\n  Will Landau [aut],\n  Michael Lawrence [aut],\n  Martin Maechler [aut] (ORCID: <https://orcid.org/0000-0002-8685-9910>),\n  Luke Tierney [aut],\n  Hadley Wickham [aut, cre] (ORCID:\n    <https://orcid.org/0000-0003-4757-117X>)",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-11-14 19:50:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-11-17 04:54:09 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "S7",
-        "RemoteRef": "S7",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "0.2.1"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-11-19 04:37:29 UTC; unix",
+        "Archs": "S7.so.dSYM"
       }
     },
     "arrow": {
@@ -197,15 +193,10 @@
         "Packaged": "2025-12-22 20:14:22 UTC; nic",
         "Author": "Neal Richardson [aut],\n  Ian Cook [aut],\n  Nic Crane [aut],\n  Dewey Dunnington [aut] (ORCID: <https://orcid.org/0000-0002-9415-4582>),\n  Romain François [aut] (ORCID: <https://orcid.org/0000-0002-2444-4226>),\n  Jonathan Keane [aut, cre],\n  Bryce Mecum [aut],\n  Dragoș Moldovan-Grünfeld [aut],\n  Jeroen Ooms [aut],\n  Jacob Wujciak-Jens [aut],\n  Javier Luraschi [ctb],\n  Karl Dunkle Werner [ctb] (ORCID:\n    <https://orcid.org/0000-0003-0523-7309>),\n  Jeffrey Wong [ctb],\n  Apache Arrow [aut, cph]",
         "Maintainer": "Jonathan Keane <jkeane@gmail.com>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-23 13:40:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-12-24 04:52:03 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "arrow",
-        "RemoteRef": "arrow",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "22.0.0.1"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-12-23 15:01:53 UTC; unix",
+        "Archs": "arrow.so.dSYM"
       }
     },
     "askpass": {
@@ -262,13 +253,7 @@
         "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
         "Repository": "CRAN",
         "Date/Publication": "2019-03-21 14:53:46 UTC",
-        "Built": "R 4.5.0; ; 2025-03-31 21:57:52 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "assertthat",
-        "RemoteRef": "assertthat",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "0.2.1"
+        "Built": "R 4.5.0; ; 2025-03-31 21:57:52 UTC; unix"
       }
     },
     "base64enc": {
@@ -325,13 +310,7 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-03-06 10:50:01 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-03-31 21:46:07 UTC; unix",
-        "Archs": "bit.so.dSYM",
-        "RemoteType": "standard",
-        "RemotePkgRef": "bit",
-        "RemoteRef": "bit",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "4.6.0"
+        "Archs": "bit.so.dSYM"
       }
     },
     "bit64": {
@@ -361,13 +340,7 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-01-16 16:00:07 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-04-01 06:32:47 UTC; unix",
-        "Archs": "bit64.so.dSYM",
-        "RemoteType": "standard",
-        "RemotePkgRef": "bit64",
-        "RemoteRef": "bit64",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "4.6.0-1"
+        "Archs": "bit64.so.dSYM"
       }
     },
     "bslib": {
@@ -400,7 +373,13 @@
         "Maintainer": "Carson Sievert <carson@posit.co>",
         "Repository": "CRAN",
         "Date/Publication": "2025-01-30 23:20:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-01 15:54:53 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:30:34 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "bslib",
+        "RemoteRef": "bslib",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "0.9.0"
       }
     },
     "cachem": {
@@ -428,7 +407,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2024-05-16 09:50:11 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-03-31 21:43:44 UTC; unix",
-        "Archs": "cachem.so.dSYM"
+        "Archs": "cachem.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "cachem",
+        "RemoteRef": "cachem",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "1.1.0"
       }
     },
     "charlatan": {
@@ -439,8 +424,8 @@
         "Type": "Package",
         "Title": "Make Fake Data",
         "Description": "Make fake data that looks realistic, supporting addresses, \n    person names, dates,\n    times, colors, coordinates, currencies, digital object identifiers\n    ('DOIs'), jobs, phone numbers, 'DNA' sequences, doubles and integers\n    from distributions and within a range.",
-        "Version": "0.6.1",
-        "Authors@R": "c(\n      person(\"Roel M.\", \"Hogervorst\", \n            email =\"hogervorst.rm@gmail.com\", \n            role = c(\"cre\", \"aut\"), \n            comment = c(ORCID = \"0000-0001-7509-0328\")),\n      person(\"Scott\", \"Chamberlain\", role = c(\"aut\"),\n        comment = c(ORCID = \"0000-0003-1444-9135\")),\n      person(\"Kyle\", \"Voytovich\", role = \"aut\"),\n      person(\"Martin\", \"Pedersen\", role = \"ctb\"),\n      person(\"Brooke\", \"Anderson\", role = \"rev\",\n        comment = \"Brooke Anderson reviewed the package for rOpenSci,\n        see https://github.com/ropensci/onboarding/issues/94\"),\n      person(\"Tristan\", \"Mahr\", role = \"rev\",\n        comment = \"Tristan Mahr reviewed the package for rOpenSci,\n        see https://github.com/ropensci/onboarding/issues/94\"),\n      person(\"rOpenSci\", role = \"fnd\", comment = \"https://ropensci.org\")\n    )",
+        "Version": "0.6.2",
+        "Authors@R": "c(\n      person(\"Roel M.\", \"Hogervorst\", \n            email =\"hogervorst.rm@gmail.com\", \n            role = c(\"cre\", \"aut\"), \n            comment = c(ORCID = \"0000-0001-7509-0328\")),\n      person(\"Scott\", \"Chamberlain\", role = c(\"aut\"),\n        comment = c(ORCID = \"0000-0003-1444-9135\")),\n      person(\"Kyle\", \"Voytovich\", role = \"aut\"),\n      person(\"Martin\", \"Pedersen\", role = \"ctb\"),\n      person(\"Brooke\", \"Anderson\", role = \"rev\",\n        comment = \"Brooke Anderson reviewed the package for rOpenSci,\n        see https://github.com/ropensci/onboarding/issues/94\"),\n      person(\"Tristan\", \"Mahr\", role = \"rev\",\n        comment = \"Tristan Mahr reviewed the package for rOpenSci,\n        see https://github.com/ropensci/onboarding/issues/94\"),\n      person(\"rOpenSci\", role = \"fnd\", comment = c(ROR = \"019jywm96\"))\n    )",
         "License": "MIT + file LICENSE",
         "URL": "https://docs.ropensci.org/charlatan/,\nhttps://github.com/ropensci/charlatan",
         "BugReports": "https://github.com/ropensci/charlatan/issues",
@@ -450,17 +435,23 @@
         "VignetteBuilder": "knitr",
         "Imports": "R6 (>= 2.2.0), tibble (>= 1.2), whisker",
         "Suggests": "testthat, knitr, rmarkdown, ipaddress, stringi, spelling",
-        "RoxygenNote": "7.3.2",
+        "RoxygenNote": "7.3.3",
         "Config/testthat/edition": "3",
         "Depends": "R (>= 2.10)",
         "Collate": "'address-provider-en_GB.R' 'address-provider-en_NZ.R'\n'address-provider-en_US.R' 'address-provider-nl_NL.R'\n'datetime-provider.R' 'address-provider.R'\n'available_locales.R' 'available_providers.R' 'base-provider.R'\n'charlatan-package.R' 'charlatan_settings.R'\n'color-provider-en_US.R' 'color-provider-uk_UA.R'\n'color-provider.R' 'color.R' 'company-provider-bg_BG.R'\n'company-provider-cs_CZ.R' 'company-provider-de_DE.R'\n'company-provider-en_US.R' 'company-provider-es_MX.R'\n'company-provider-fa_IR.R' 'company-provider-fr_FR.R'\n'company-provider-hr_HR.R' 'company-provider-it_IT.R'\n'company-provider.R' 'company.R' 'coordinate-provider.R'\n'coordinates.R' 'credit_card-provider.R' 'credit_card.R'\n'currency-provider.R' 'currency.R' 'date_time.R'\n'doi-provider.R' 'doi.R' 'element-provider.R' 'elements.R'\n'file-provider.R' 'fraudster.R' 'generate.R' 'globals.R'\n'internet-provider-bg_BG.R' 'internet-provider-cs_CZ.R'\n'internet-provider-de_DE.R' 'internet-provider-en_AU.R'\n'internet-provider-en_NZ.R' 'internet-provider-en_US.R'\n'internet-provider-fa_IR.R' 'internet-provider-fr_FR.R'\n'internet-provider-hr_HR.R' 'internet-provider.R'\n'isbn-provider.R' 'job.R' 'jobs-provider-da_DK.R'\n'jobs-provider-en_US.R' 'jobs-provider-fa_IR.R'\n'jobs-provider-fi_FI.R' 'jobs-provider-fr_CH.R'\n'jobs-provider-fr_FR.R' 'jobs-provider-hr_HR.R'\n'jobs-provider-nl_NL.R' 'jobs-provider-pl_PL.R'\n'jobs-provider-ru_RU.R' 'jobs-provider-uk_UA.R'\n'jobs-provider-zh_TW.R' 'jobs-provider.R' 'languages.R'\n'lorem-provider-ar_AA.R' 'lorem-provider-el_GR.R'\n'lorem-provider-en_US.R' 'lorem-provider-he_IL.R'\n'lorem-provider-ja_JP.R' 'lorem-provider-la.R'\n'lorem-provider-ru_RU.R' 'lorem-provider-zh_CN.R'\n'lorem-provider-zh_TW.R' 'lorem-provider.R' 'misc-provider.R'\n'missing-data-provider.R' 'missing.R' 'name.R'\n'numerics-provider.R' 'numerics.R' 'onload.R'\n'person-provider-bg_BG.R' 'person-provider-cs_CZ.R'\n'person-provider-da_DK.R' 'person-provider-de_AT.R'\n'person-provider-de_DE.R' 'person-provider-en_GB.R'\n'person-provider-en_NZ.R' 'person-provider-en_US.R'\n'person-provider-es_ES.R' 'person-provider-es_MX.R'\n'person-provider-fa_IR.R' 'person-provider-fi_FI.R'\n'person-provider-fr_CH.R' 'person-provider-fr_FR.R'\n'person-provider-hr_HR.R' 'person-provider-it_IT.R'\n'person-provider-ja_JP.R' 'person-provider-ko_KR.R'\n'person-provider-lt_LT.R' 'person-provider-lv_LV.R'\n'person-provider-ne_NP.R' 'person-provider-nl_NL.R'\n'person-provider-no_NO.R' 'person-provider-pl_PL.R'\n'person-provider.R' 'phone_number.R'\n'phonenumber-provider-en.R' 'phonenumber-provider-es.R'\n'phonenumber-provider-fr.R' 'phonenumber-provider-nl.R'\n'phonenumber-provider-rest.R' 'phonenumber-provider.R'\n'sequence-provider.R' 'sequences.R' 'ssn-provider-all.R'\n'ssn-provider.R' 'ssn.R' 'taxonomy-provider-all.R'\n'taxonomy-provider.R' 'taxonomy.R' 'useragent-provider-all.R'\n'useragent-provider.R' 'zzz.R'",
         "NeedsCompilation": "no",
-        "Packaged": "2024-10-17 04:46:43 UTC; roel",
-        "Author": "Roel M. Hogervorst [cre, aut] (<https://orcid.org/0000-0001-7509-0328>),\n  Scott Chamberlain [aut] (<https://orcid.org/0000-0003-1444-9135>),\n  Kyle Voytovich [aut],\n  Martin Pedersen [ctb],\n  Brooke Anderson [rev] (Brooke Anderson reviewed the package for\n    rOpenSci, see https://github.com/ropensci/onboarding/issues/94),\n  Tristan Mahr [rev] (Tristan Mahr reviewed the package for rOpenSci, see\n    https://github.com/ropensci/onboarding/issues/94),\n  rOpenSci [fnd] (https://ropensci.org)",
+        "Packaged": "2026-01-13 19:11:06 UTC; roel",
+        "Author": "Roel M. Hogervorst [cre, aut] (ORCID:\n    <https://orcid.org/0000-0001-7509-0328>),\n  Scott Chamberlain [aut] (ORCID:\n    <https://orcid.org/0000-0003-1444-9135>),\n  Kyle Voytovich [aut],\n  Martin Pedersen [ctb],\n  Brooke Anderson [rev] (Brooke Anderson reviewed the package for\n    rOpenSci, see https://github.com/ropensci/onboarding/issues/94),\n  Tristan Mahr [rev] (Tristan Mahr reviewed the package for rOpenSci, see\n    https://github.com/ropensci/onboarding/issues/94),\n  rOpenSci [fnd] (ROR: <https://ror.org/019jywm96>)",
         "Maintainer": "Roel M. Hogervorst <hogervorst.rm@gmail.com>",
         "Repository": "CRAN",
-        "Date/Publication": "2024-10-17 05:20:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-01 21:09:51 UTC; unix"
+        "Date/Publication": "2026-01-14 06:10:43 UTC",
+        "Built": "R 4.5.2; ; 2026-01-14 06:21:48 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "charlatan",
+        "RemoteRef": "charlatan",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "0.6.2"
       }
     },
     "chronicle.reports": {
@@ -469,7 +460,7 @@
       "description": {
         "Package": "chronicle.reports",
         "Title": "Posit Chronicle Reports",
-        "Version": "0.2.0",
+        "Version": "0.2.1",
         "Authors@R": "c(\n    person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "Run reports for Posit Chronicle. You provide the\n    location of your Chronicle data and this package will generate reports\n    to help you analyze and visualize your data.",
         "License": "MIT + file LICENSE",
@@ -489,16 +480,16 @@
         "RemoteUsername": "posit-dev",
         "RemotePkgRef": "posit-dev/chronicle-reports@dev",
         "RemoteRef": "dev",
-        "RemoteSha": "c710850b19a008e0fc082262d317e84995f9b01e",
+        "RemoteSha": "de0df42ad5ecf200844948832ad7742b66960e7f",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
         "GithubRef": "dev",
-        "GithubSHA1": "c710850b19a008e0fc082262d317e84995f9b01e",
+        "GithubSHA1": "de0df42ad5ecf200844948832ad7742b66960e7f",
         "NeedsCompilation": "no",
-        "Packaged": "2026-01-13 12:50:12 UTC; marktucker",
+        "Packaged": "2026-02-05 13:47:15 UTC; matturbina",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.1; ; 2026-01-13 12:50:13 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-02-05 13:47:16 UTC; unix"
       }
     },
     "cli": {
@@ -560,7 +551,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-07-07 13:40:02 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-07-07 15:18:49 UTC; unix",
-        "Archs": "commonmark.so.dSYM"
+        "Archs": "commonmark.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "commonmark",
+        "RemoteRef": "commonmark",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "2.0.0"
       }
     },
     "cpp11": {
@@ -616,7 +613,7 @@
         "Maintainer": "Carson Sievert <carson@posit.co>",
         "Repository": "CRAN",
         "Date/Publication": "2025-08-26 23:50:02 UTC",
-        "Built": "R 4.5.0; ; 2025-08-27 01:32:20 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 16:03:32 UTC; unix"
       }
     },
     "curl": {
@@ -677,15 +674,10 @@
         "Packaged": "2025-12-23 19:08:26 UTC; tysonbarrett",
         "Author": "Tyson Barrett [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-2137-1391>),\n  Matt Dowle [aut],\n  Arun Srinivasan [aut],\n  Jan Gorecki [aut],\n  Michael Chirico [aut] (ORCID: <https://orcid.org/0000-0003-0787-087X>),\n  Toby Hocking [aut] (ORCID: <https://orcid.org/0000-0002-3146-0865>),\n  Benjamin Schwendinger [aut] (ORCID:\n    <https://orcid.org/0000-0003-3315-8114>),\n  Ivan Krylov [aut] (ORCID: <https://orcid.org/0000-0002-0172-3812>),\n  Pasha Stetsenko [ctb],\n  Tom Short [ctb],\n  Steve Lianoglou [ctb],\n  Eduard Antonyan [ctb],\n  Markus Bonsch [ctb],\n  Hugh Parsonage [ctb],\n  Scott Ritchie [ctb],\n  Kun Ren [ctb],\n  Xianying Tan [ctb],\n  Rick Saporta [ctb],\n  Otto Seiskari [ctb],\n  Xianghui Dong [ctb],\n  Michel Lang [ctb],\n  Watal Iwasaki [ctb],\n  Seth Wenchel [ctb],\n  Karl Broman [ctb],\n  Tobias Schmidt [ctb],\n  David Arenburg [ctb],\n  Ethan Smith [ctb],\n  Francois Cocquemas [ctb],\n  Matthieu Gomez [ctb],\n  Philippe Chataignon [ctb],\n  Nello Blaser [ctb],\n  Dmitry Selivanov [ctb],\n  Andrey Riabushenko [ctb],\n  Cheng Lee [ctb],\n  Declan Groves [ctb],\n  Daniel Possenriede [ctb],\n  Felipe Parages [ctb],\n  Denes Toth [ctb],\n  Mus Yaramaz-David [ctb],\n  Ayappan Perumal [ctb],\n  James Sams [ctb],\n  Martin Morgan [ctb],\n  Michael Quinn [ctb],\n  @javrucebo [ctb] (GitHub user),\n  Marc Halperin [ctb],\n  Roy Storey [ctb],\n  Manish Saraswat [ctb],\n  Morgan Jacob [ctb],\n  Michael Schubmehl [ctb],\n  Davis Vaughan [ctb],\n  Leonardo Silvestri [ctb],\n  Jim Hester [ctb],\n  Anthony Damico [ctb],\n  Sebastian Freundt [ctb],\n  David Simons [ctb],\n  Elliott Sales de Andrade [ctb],\n  Cole Miller [ctb],\n  Jens Peder Meldgaard [ctb],\n  Vaclav Tlapak [ctb],\n  Kevin Ushey [ctb],\n  Dirk Eddelbuettel [ctb],\n  Tony Fischetti [ctb],\n  Ofek Shilon [ctb],\n  Vadim Khotilovich [ctb],\n  Hadley Wickham [ctb],\n  Bennet Becker [ctb],\n  Kyle Haynes [ctb],\n  Boniface Christian Kamgang [ctb],\n  Olivier Delmarcell [ctb],\n  Josh O'Brien [ctb],\n  Dereck de Mezquita [ctb],\n  Michael Czekanski [ctb],\n  Dmitry Shemetov [ctb],\n  Nitish Jha [ctb],\n  Joshua Wu [ctb],\n  Iago Giné-Vázquez [ctb],\n  Anirban Chetia [ctb],\n  Doris Amoakohene [ctb],\n  Angel Feliz [ctb],\n  Michael Young [ctb],\n  Mark Seeto [ctb],\n  Philippe Grosjean [ctb],\n  Vincent Runge [ctb],\n  Christian Wia [ctb],\n  Elise Maigné [ctb],\n  Vincent Rocher [ctb],\n  Vijay Lulla [ctb],\n  Aljaž Sluga [ctb],\n  Bill Evans [ctb],\n  Reino Bruner [ctb],\n  @badasahog [ctb] (GitHub user),\n  Vinit Thakur [ctb],\n  Mukul Kumar [ctb],\n  Ildikó Czeller [ctb]",
         "Maintainer": "Tyson Barrett <t.barrett88@gmail.com>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-24 12:05:11 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-12-25 04:34:37 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "data.table",
-        "RemoteRef": "data.table",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.18.0"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2026-01-04 01:41:28 UTC; unix",
+        "Archs": "data_table.so.dSYM"
       }
     },
     "digest": {
@@ -710,15 +702,10 @@
         "Packaged": "2025-11-19 11:55:09 UTC; edd",
         "Author": "Dirk Eddelbuettel [aut, cre] (ORCID:\n    <https://orcid.org/0000-0001-6419-907X>),\n  Antoine Lucas [ctb] (ORCID: <https://orcid.org/0000-0002-8059-9767>),\n  Jarek Tuszynski [ctb],\n  Henrik Bengtsson [ctb] (ORCID: <https://orcid.org/0000-0002-7579-5165>),\n  Simon Urbanek [ctb] (ORCID: <https://orcid.org/0000-0003-2297-1732>),\n  Mario Frasca [ctb],\n  Bryan Lewis [ctb],\n  Murray Stokely [ctb],\n  Hannes Muehleisen [ctb] (ORCID:\n    <https://orcid.org/0000-0001-8552-0029>),\n  Duncan Murdoch [ctb],\n  Jim Hester [ctb] (ORCID: <https://orcid.org/0000-0002-2739-7082>),\n  Wush Wu [ctb] (ORCID: <https://orcid.org/0000-0001-5180-0567>),\n  Qiang Kou [ctb] (ORCID: <https://orcid.org/0000-0001-6786-5453>),\n  Thierry Onkelinx [ctb] (ORCID: <https://orcid.org/0000-0001-8804-4216>),\n  Michel Lang [ctb] (ORCID: <https://orcid.org/0000-0001-9754-0393>),\n  Viliam Simko [ctb],\n  Kurt Hornik [ctb] (ORCID: <https://orcid.org/0000-0003-4198-9911>),\n  Radford Neal [ctb] (ORCID: <https://orcid.org/0000-0002-2473-3407>),\n  Kendon Bell [ctb] (ORCID: <https://orcid.org/0000-0002-9093-8312>),\n  Matthew de Queljoe [ctb],\n  Dmitry Selivanov [ctb] (ORCID: <https://orcid.org/0000-0003-0492-6647>),\n  Ion Suruceanu [ctb] (ORCID: <https://orcid.org/0009-0005-6446-4909>),\n  Bill Denney [ctb] (ORCID: <https://orcid.org/0000-0002-5759-428X>),\n  Dirk Schumacher [ctb],\n  András Svraka [ctb] (ORCID: <https://orcid.org/0009-0008-8480-1329>),\n  Sergey Fedorov [ctb] (ORCID: <https://orcid.org/0000-0002-5970-7233>),\n  Will Landau [ctb] (ORCID: <https://orcid.org/0000-0003-1878-3253>),\n  Floris Vanderhaeghe [ctb] (ORCID:\n    <https://orcid.org/0000-0002-6378-6229>),\n  Kevin Tappe [ctb],\n  Harris McGehee [ctb],\n  Tim Mastny [ctb],\n  Aaron Peikert [ctb] (ORCID: <https://orcid.org/0000-0001-7813-818X>),\n  Mark van der Loo [ctb] (ORCID: <https://orcid.org/0000-0002-9807-4686>),\n  Chris Muir [ctb] (ORCID: <https://orcid.org/0000-0003-2555-3878>),\n  Moritz Beller [ctb] (ORCID: <https://orcid.org/0000-0003-4852-0526>),\n  Sebastian Campbell [ctb] (ORCID:\n    <https://orcid.org/0009-0000-5948-4503>),\n  Winston Chang [ctb] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Dean Attali [ctb] (ORCID: <https://orcid.org/0000-0002-5645-3493>),\n  Michael Chirico [ctb] (ORCID: <https://orcid.org/0000-0003-0787-087X>),\n  Kevin Ushey [ctb] (ORCID: <https://orcid.org/0000-0003-2880-7407>),\n  Carl Pearson [ctb] (ORCID: <https://orcid.org/0000-0003-0701-7860>)",
         "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-11-19 13:20:08 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-11-20 14:34:23 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "digest",
-        "RemoteRef": "digest",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "0.6.39"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-11-22 19:17:48 UTC; unix",
+        "Archs": "digest.so.dSYM"
       }
     },
     "dplyr": {
@@ -750,7 +737,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2023-11-17 16:50:02 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-04-01 23:28:06 UTC; unix",
-        "Archs": "dplyr.so.dSYM"
+        "Archs": "dplyr.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "dplyr",
+        "RemoteRef": "dplyr",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "1.1.4"
       }
     },
     "evaluate": {
@@ -776,9 +769,15 @@
         "Packaged": "2025-08-27 16:20:56 UTC; hadleywickham",
         "Author": "Hadley Wickham [aut, cre],\n  Yihui Xie [aut] (ORCID: <https://orcid.org/0000-0003-0645-5666>),\n  Michael Lawrence [ctb],\n  Thomas Kluyver [ctb],\n  Jeroen Ooms [ctb],\n  Barret Schloerke [ctb],\n  Adam Ryczkowski [ctb],\n  Hiroaki Yutani [ctb],\n  Michel Lang [ctb],\n  Karolis Koncevičius [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-08-27 16:40:02 UTC",
-        "Built": "R 4.5.0; ; 2025-08-28 09:26:50 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:16 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "evaluate",
+        "RemoteRef": "evaluate",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "1.0.5"
       }
     },
     "farver": {
@@ -805,7 +804,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2024-05-13 09:33:09 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-03-31 21:42:31 UTC; unix",
-        "Archs": "farver.so.dSYM"
+        "Archs": "farver.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "farver",
+        "RemoteRef": "farver",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "2.1.2"
       }
     },
     "fastmap": {
@@ -830,7 +835,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2024-05-15 09:00:07 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-03-31 21:43:00 UTC; unix",
-        "Archs": "fastmap.so.dSYM"
+        "Archs": "fastmap.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "fastmap",
+        "RemoteRef": "fastmap",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "1.2.0"
       }
     },
     "fontawesome": {
@@ -859,7 +870,13 @@
         "Maintainer": "Richard Iannone <rich@posit.co>",
         "Repository": "CRAN",
         "Date/Publication": "2024-11-16 17:30:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-01 11:50:29 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:34 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "fontawesome",
+        "RemoteRef": "fontawesome",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "0.5.3"
       }
     },
     "fs": {
@@ -893,7 +910,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-04-12 10:40:02 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-04-12 11:59:24 UTC; unix",
-        "Archs": "fs.so.dSYM"
+        "Archs": "fs.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "fs",
+        "RemoteRef": "fs",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "1.6.6"
       }
     },
     "generics": {
@@ -921,13 +944,7 @@
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
         "Repository": "CRAN",
         "Date/Publication": "2025-05-09 23:50:06 UTC",
-        "Built": "R 4.5.0; ; 2025-05-10 00:42:34 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "generics",
-        "RemoteRef": "generics",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "0.1.4"
+        "Built": "R 4.5.0; ; 2025-05-10 00:42:34 UTC; unix"
       }
     },
     "ggplot2": {
@@ -958,9 +975,9 @@
         "Packaged": "2025-11-13 07:39:29 UTC; thomas",
         "Author": "Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>),\n  Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Lionel Henry [aut],\n  Thomas Lin Pedersen [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-5147-4711>),\n  Kohske Takahashi [aut],\n  Claus Wilke [aut] (ORCID: <https://orcid.org/0000-0002-7470-9261>),\n  Kara Woo [aut] (ORCID: <https://orcid.org/0000-0002-5125-4188>),\n  Hiroaki Yutani [aut] (ORCID: <https://orcid.org/0000-0002-3385-7233>),\n  Dewey Dunnington [aut] (ORCID: <https://orcid.org/0000-0002-9415-4582>),\n  Teun van den Brand [aut] (ORCID:\n    <https://orcid.org/0000-0002-9335-7468>),\n  Posit, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-11-14 09:20:02 UTC",
-        "Built": "R 4.5.0; ; 2025-11-17 04:54:37 UTC; unix"
+        "Built": "R 4.5.2; ; 2025-11-19 04:47:35 UTC; unix"
       }
     },
     "glue": {
@@ -1055,7 +1072,13 @@
         "Maintainer": "Yihui Xie <xie@yihui.name>",
         "Repository": "CRAN",
         "Date/Publication": "2024-05-26 20:00:03 UTC",
-        "Built": "R 4.5.0; ; 2025-04-01 06:32:49 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:26 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "highr",
+        "RemoteRef": "highr",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "0.11"
       }
     },
     "htmltools": {
@@ -1084,15 +1107,10 @@
         "Packaged": "2025-12-02 23:32:55 UTC; cpsievert",
         "Author": "Joe Cheng [aut],\n  Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>),\n  Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Yihui Xie [aut],\n  Jeff Allen [aut],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Carson Sievert <carson@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-04 11:50:09 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-12-04 17:13:38 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "htmltools",
-        "RemoteRef": "htmltools",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "0.5.9"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-12-04 12:12:04 UTC; unix",
+        "Archs": "htmltools.so.dSYM"
       }
     },
     "htmlwidgets": {
@@ -1151,7 +1169,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-04-16 08:00:06 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-04-16 09:05:24 UTC; unix",
-        "Archs": "httpuv.so.dSYM"
+        "Archs": "httpuv.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "httpuv",
+        "RemoteRef": "httpuv",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "1.6.16"
       }
     },
     "httr": {
@@ -1177,9 +1201,9 @@
         "Packaged": "2023-08-15 02:56:56 UTC; hadleywickham",
         "Author": "Hadley Wickham [aut, cre],\n  Posit, PBC [cph, fnd]",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2023-08-15 09:00:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-06 04:43:05 UTC; unix"
+        "Built": "R 4.5.0; ; 2025-04-01 15:55:58 UTC; unix"
       }
     },
     "isoband": {
@@ -1208,15 +1232,10 @@
         "Packaged": "2025-12-05 12:52:07 UTC; thomas",
         "Author": "Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>),\n  Claus O. Wilke [aut] (Original author, ORCID:\n    <https://orcid.org/0000-0002-7470-9261>),\n  Thomas Lin Pedersen [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-5147-4711>),\n  Posit, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-07 06:10:07 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-12-08 06:19:43 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "isoband",
-        "RemoteRef": "isoband",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "0.3.0"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-12-07 07:05:55 UTC; unix",
+        "Archs": "isoband.so.dSYM"
       }
     },
     "jquerylib": {
@@ -1240,7 +1259,13 @@
         "Maintainer": "Carson Sievert <carson@rstudio.com>",
         "Repository": "CRAN",
         "Date/Publication": "2021-04-26 17:10:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-01 11:50:17 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:34 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "jquerylib",
+        "RemoteRef": "jquerylib",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "0.1.4"
       }
     },
     "jsonlite": {
@@ -1301,9 +1326,9 @@
         "Packaged": "2025-12-19 15:19:25 UTC; yihui",
         "Author": "Yihui Xie [aut, cre] (ORCID: <https://orcid.org/0000-0003-0645-5666>,\n    URL: https://yihui.org),\n  Abhraneel Sarma [ctb],\n  Adam Vogt [ctb],\n  Alastair Andrew [ctb],\n  Alex Zvoleff [ctb],\n  Amar Al-Zubaidi [ctb],\n  Andre Simon [ctb] (the CSS files under inst/themes/ were derived from\n    the Highlight package http://www.andre-simon.de),\n  Aron Atkins [ctb],\n  Aaron Wolen [ctb],\n  Ashley Manton [ctb],\n  Atsushi Yasumoto [ctb] (ORCID: <https://orcid.org/0000-0002-8335-495X>),\n  Ben Baumer [ctb],\n  Brian Diggs [ctb],\n  Brian Zhang [ctb],\n  Bulat Yapparov [ctb],\n  Cassio Pereira [ctb],\n  Christophe Dervieux [ctb],\n  David Hall [ctb],\n  David Hugh-Jones [ctb],\n  David Robinson [ctb],\n  Doug Hemken [ctb],\n  Duncan Murdoch [ctb],\n  Elio Campitelli [ctb],\n  Ellis Hughes [ctb],\n  Emily Riederer [ctb],\n  Fabian Hirschmann [ctb],\n  Fitch Simeon [ctb],\n  Forest Fang [ctb],\n  Frank E Harrell Jr [ctb] (the Sweavel package at inst/misc/Sweavel.sty),\n  Garrick Aden-Buie [ctb],\n  Gregoire Detrez [ctb],\n  Hadley Wickham [ctb],\n  Hao Zhu [ctb],\n  Heewon Jeon [ctb],\n  Henrik Bengtsson [ctb],\n  Hiroaki Yutani [ctb],\n  Ian Lyttle [ctb],\n  Hodges Daniel [ctb],\n  Jacob Bien [ctb],\n  Jake Burkhead [ctb],\n  James Manton [ctb],\n  Jared Lander [ctb],\n  Jason Punyon [ctb],\n  Javier Luraschi [ctb],\n  Jeff Arnold [ctb],\n  Jenny Bryan [ctb],\n  Jeremy Ashkenas [ctb, cph] (the CSS file at\n    inst/misc/docco-classic.css),\n  Jeremy Stephens [ctb],\n  Jim Hester [ctb],\n  Joe Cheng [ctb],\n  Johannes Ranke [ctb],\n  John Honaker [ctb],\n  John Muschelli [ctb],\n  Jonathan Keane [ctb],\n  JJ Allaire [ctb],\n  Johan Toloe [ctb],\n  Jonathan Sidi [ctb],\n  Joseph Larmarange [ctb],\n  Julien Barnier [ctb],\n  Kaiyin Zhong [ctb],\n  Kamil Slowikowski [ctb],\n  Karl Forner [ctb],\n  Kevin K. Smith [ctb],\n  Kirill Mueller [ctb],\n  Kohske Takahashi [ctb],\n  Lorenz Walthert [ctb],\n  Lucas Gallindo [ctb],\n  Marius Hofert [ctb],\n  Martin Modrák [ctb],\n  Michael Chirico [ctb],\n  Michael Friendly [ctb],\n  Michal Bojanowski [ctb],\n  Michel Kuhlmann [ctb],\n  Miller Patrick [ctb],\n  Nacho Caballero [ctb],\n  Nick Salkowski [ctb],\n  Niels Richard Hansen [ctb],\n  Noam Ross [ctb],\n  Obada Mahdi [ctb],\n  Pavel N. Krivitsky [ctb] (ORCID:\n    <https://orcid.org/0000-0002-9101-3362>),\n  Pedro Faria [ctb],\n  Qiang Li [ctb],\n  Ramnath Vaidyanathan [ctb],\n  Richard Cotton [ctb],\n  Robert Krzyzanowski [ctb],\n  Rodrigo Copetti [ctb],\n  Romain Francois [ctb],\n  Ruaridh Williamson [ctb],\n  Sagiru Mati [ctb] (ORCID: <https://orcid.org/0000-0003-1413-3974>),\n  Scott Kostyshak [ctb],\n  Sebastian Meyer [ctb],\n  Sietse Brouwer [ctb],\n  Simon de Bernard [ctb],\n  Sylvain Rousseau [ctb],\n  Taiyun Wei [ctb],\n  Thibaut Assus [ctb],\n  Thibaut Lamadon [ctb],\n  Thomas Leeper [ctb],\n  Tim Mastny [ctb],\n  Tom Torsney-Weir [ctb],\n  Trevor Davis [ctb],\n  Viktoras Veitas [ctb],\n  Weicheng Zhu [ctb],\n  Wush Wu [ctb],\n  Zachary Foster [ctb],\n  Zhian N. Kamvar [ctb] (ORCID: <https://orcid.org/0000-0003-1458-7108>),\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Yihui Xie <xie@yihui.name>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-20 14:30:02 UTC",
-        "Built": "R 4.5.0; ; 2025-12-21 04:41:54 UTC; unix"
+        "Built": "R 4.5.2; ; 2025-12-21 22:52:57 UTC; unix"
       }
     },
     "labeling": {
@@ -1356,15 +1381,10 @@
         "Packaged": "2026-01-07 15:27:55 UTC; shikokuchuo",
         "Author": "Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Joe Cheng [aut],\n  Charlie Gao [aut, cre] (ORCID: <https://orcid.org/0000-0002-0750-061X>),\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>),\n  Marcus Geelnard [ctb, cph] (TinyCThread library,\n    https://tinycthread.github.io/),\n  Evan Nemerson [ctb, cph] (TinyCThread library,\n    https://tinycthread.github.io/)",
         "Maintainer": "Charlie Gao <charlie.gao@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2026-01-08 06:11:06 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-01-11 13:59:37 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "later",
-        "RemoteRef": "later",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.4.5"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2026-01-08 07:02:57 UTC; unix",
+        "Archs": "later.so.dSYM"
       }
     },
     "lazyeval": {
@@ -1389,7 +1409,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2019-03-15 17:50:07 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-03-31 21:52:09 UTC; unix",
-        "Archs": "lazyeval.so.dSYM"
+        "Archs": "lazyeval.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "lazyeval",
+        "RemoteRef": "lazyeval",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "0.2.2"
       }
     },
     "lifecycle": {
@@ -1416,9 +1442,9 @@
         "Packaged": "2026-01-07 15:00:49 UTC; lionel",
         "Author": "Lionel Henry [aut, cre],\n  Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>),\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Lionel Henry <lionel@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2026-01-08 08:00:02 UTC",
-        "Built": "R 4.5.0; ; 2026-01-09 05:16:07 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-01-08 12:03:10 UTC; unix"
       }
     },
     "lubridate": {
@@ -1450,9 +1476,10 @@
         "NeedsCompilation": "yes",
         "Packaged": "2024-12-07 23:41:45 UTC; vitalie",
         "Author": "Vitalie Spinu [aut, cre],\n  Garrett Grolemund [aut],\n  Hadley Wickham [aut],\n  Davis Vaughan [ctb],\n  Ian Lyttle [ctb],\n  Imanuel Costigan [ctb],\n  Jason Law [ctb],\n  Doug Mitarotonda [ctb],\n  Joseph Larmarange [ctb],\n  Jonathan Boiser [ctb],\n  Chel Hee Lee [ctb]",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2024-12-08 12:10:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-04-06 04:43:10 UTC; unix"
+        "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-04-01 06:37:23 UTC; unix",
+        "Archs": "lubridate.so.dSYM"
       }
     },
     "magrittr": {
@@ -1486,7 +1513,7 @@
         "RemoteType": "standard",
         "RemotePkgRef": "magrittr",
         "RemoteRef": "magrittr",
-        "RemoteRepos": "https://packagemanager.posit.co/cran/latest",
+        "RemoteRepos": "https://cloud.r-project.org",
         "RemotePkgPlatform": "aarch64-apple-darwin20",
         "RemoteSha": "2.0.4"
       }
@@ -1513,7 +1540,13 @@
         "Maintainer": "Winston Chang <winston@rstudio.com>",
         "Repository": "CRAN",
         "Date/Publication": "2021-11-26 16:11:10 UTC",
-        "Built": "R 4.5.0; ; 2025-04-01 06:31:57 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:32 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "memoise",
+        "RemoteRef": "memoise",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "2.0.1"
       }
     },
     "mime": {
@@ -1539,7 +1572,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-03-17 20:20:02 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-03-31 21:43:02 UTC; unix",
-        "Archs": "mime.so.dSYM"
+        "Archs": "mime.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "mime",
+        "RemoteRef": "mime",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "0.13"
       }
     },
     "openssl": {
@@ -1565,13 +1604,14 @@
         "Packaged": "2025-09-30 09:14:32 UTC; jeroen",
         "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Oliver Keyes [ctb]",
         "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-09-30 09:50:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-10-01 05:27:49 UTC; unix",
+        "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-09-30 15:37:19 UTC; unix",
+        "Archs": "openssl.so.dSYM",
         "RemoteType": "standard",
         "RemotePkgRef": "openssl",
         "RemoteRef": "openssl",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
+        "RemoteRepos": "https://cloud.r-project.org",
         "RemotePkgPlatform": "aarch64-apple-darwin20",
         "RemoteSha": "2.3.4"
       }
@@ -1599,9 +1639,9 @@
         "Packaged": "2025-08-29 12:46:28 UTC; gaborcsardi",
         "Author": "Gábor Csárdi [aut, cre]",
         "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-08-29 13:30:07 UTC",
-        "Built": "R 4.5.0; ; 2025-08-30 05:15:04 UTC; unix"
+        "Built": "R 4.5.0; ; 2025-09-01 01:35:46 UTC; unix"
       }
     },
     "pillar": {
@@ -1632,9 +1672,15 @@
         "Packaged": "2025-09-17 03:59:12 UTC; kirill",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  RStudio [cph]",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-09-17 11:20:02 UTC",
-        "Built": "R 4.5.0; ; 2025-09-18 04:43:44 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:44 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "pillar",
+        "RemoteRef": "pillar",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "1.11.1"
       }
     },
     "pkgconfig": {
@@ -1658,12 +1704,12 @@
         "Packaged": "2019-09-22 08:42:40 UTC; gaborcsardi",
         "Repository": "CRAN",
         "Date/Publication": "2019-09-22 09:20:02 UTC",
-        "Built": "R 4.5.0; ; 2025-03-31 21:41:54 UTC; unix",
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:18 UTC; unix",
         "RemoteType": "standard",
         "RemotePkgRef": "pkgconfig",
         "RemoteRef": "pkgconfig",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
         "RemoteSha": "2.0.3"
       }
     },
@@ -1690,9 +1736,9 @@
         "Packaged": "2025-06-19 15:43:06 UTC; cpsievert",
         "Author": "Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Chris Parmer [aut],\n  Toby Hocking [aut],\n  Scott Chamberlain [aut],\n  Karthik Ram [aut],\n  Marianne Corvellec [aut] (ORCID:\n    <https://orcid.org/0000-0002-1994-3581>),\n  Pedro Despouy [aut],\n  Salim Brüggemann [ctb] (ORCID: <https://orcid.org/0000-0002-5329-5987>),\n  Plotly Technologies Inc. [cph]",
         "Maintainer": "Carson Sievert <cpsievert1@gmail.com>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-06-19 18:30:02 UTC",
-        "Built": "R 4.5.0; ; 2025-06-20 04:59:42 UTC; unix"
+        "Built": "R 4.5.0; ; 2025-06-19 20:07:21 UTC; unix"
       }
     },
     "promises": {
@@ -1722,9 +1768,9 @@
         "Packaged": "2025-10-31 20:26:43 UTC; barret",
         "Author": "Joe Cheng [aut],\n  Barret Schloerke [aut, cre] (ORCID:\n    <https://orcid.org/0000-0001-9986-114X>),\n  Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Charlie Gao [aut] (ORCID: <https://orcid.org/0000-0002-0750-061X>),\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Barret Schloerke <barret@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-11-01 06:30:02 UTC",
-        "Built": "R 4.5.0; ; 2025-11-02 17:58:06 UTC; unix"
+        "Built": "R 4.5.0; ; 2025-11-01 08:07:07 UTC; unix"
       }
     },
     "purrr": {
@@ -1758,13 +1804,7 @@
         "Repository": "CRAN",
         "Date/Publication": "2026-01-09 10:30:02 UTC",
         "Built": "R 4.5.2; aarch64-apple-darwin20; 2026-01-09 12:00:11 UTC; unix",
-        "Archs": "purrr.so.dSYM",
-        "RemoteType": "standard",
-        "RemotePkgRef": "purrr",
-        "RemoteRef": "purrr",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.2.1"
+        "Archs": "purrr.so.dSYM"
       }
     },
     "rappdirs": {
@@ -1860,15 +1900,10 @@
         "Packaged": "2026-01-08 10:35:58 UTC; lionel",
         "Author": "Lionel Henry [aut, cre],\n  Hadley Wickham [aut],\n  mikefc [cph] (Hash implementation based on Mike's xxhashlite),\n  Yann Collet [cph] (Author of the embedded xxHash library),\n  Posit, PBC [cph, fnd]",
         "Maintainer": "Lionel Henry <lionel@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2026-01-09 12:10:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-01-10 05:05:03 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "rlang",
-        "RemoteRef": "rlang",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.1.7"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2026-01-09 16:51:14 UTC; unix",
+        "Archs": "rlang.so.dSYM"
       }
     },
     "rmarkdown": {
@@ -1897,9 +1932,15 @@
         "Packaged": "2025-09-25 03:25:30 UTC; yihui",
         "Author": "JJ Allaire [aut],\n  Yihui Xie [aut, cre] (ORCID: <https://orcid.org/0000-0003-0645-5666>),\n  Christophe Dervieux [aut] (ORCID:\n    <https://orcid.org/0000-0003-4474-2498>),\n  Jonathan McPherson [aut],\n  Javier Luraschi [aut],\n  Kevin Ushey [aut],\n  Aron Atkins [aut],\n  Hadley Wickham [aut],\n  Joe Cheng [aut],\n  Winston Chang [aut],\n  Richard Iannone [aut] (ORCID: <https://orcid.org/0000-0003-3925-190X>),\n  Andrew Dunning [ctb] (ORCID: <https://orcid.org/0000-0003-0464-5036>),\n  Atsushi Yasumoto [ctb, cph] (ORCID:\n    <https://orcid.org/0000-0002-8335-495X>, cph: Number sections Lua\n    filter),\n  Barret Schloerke [ctb],\n  Carson Sievert [ctb] (ORCID: <https://orcid.org/0000-0002-4958-2844>),\n  Devon Ryan [ctb] (ORCID: <https://orcid.org/0000-0002-8549-0971>),\n  Frederik Aust [ctb] (ORCID: <https://orcid.org/0000-0003-4900-788X>),\n  Jeff Allen [ctb],\n  JooYoung Seo [ctb] (ORCID: <https://orcid.org/0000-0002-4064-6012>),\n  Malcolm Barrett [ctb],\n  Rob Hyndman [ctb],\n  Romain Lesur [ctb],\n  Roy Storey [ctb],\n  Ruben Arslan [ctb],\n  Sergio Oller [ctb],\n  Posit Software, PBC [cph, fnd],\n  jQuery UI contributors [ctb, cph] (jQuery UI library; authors listed in\n    inst/rmd/h/jqueryui/AUTHORS.txt),\n  Mark Otto [ctb] (Bootstrap library),\n  Jacob Thornton [ctb] (Bootstrap library),\n  Bootstrap contributors [ctb] (Bootstrap library),\n  Twitter, Inc [cph] (Bootstrap library),\n  Alexander Farkas [ctb, cph] (html5shiv library),\n  Scott Jehl [ctb, cph] (Respond.js library),\n  Ivan Sagalaev [ctb, cph] (highlight.js library),\n  Greg Franko [ctb, cph] (tocify library),\n  John MacFarlane [ctb, cph] (Pandoc templates),\n  Google, Inc. [ctb, cph] (ioslides library),\n  Dave Raggett [ctb] (slidy library),\n  W3C [cph] (slidy library),\n  Dave Gandy [ctb, cph] (Font-Awesome),\n  Ben Sperry [ctb] (Ionicons),\n  Drifty [cph] (Ionicons),\n  Aidan Lister [ctb, cph] (jQuery StickyTabs),\n  Benct Philip Jonsson [ctb, cph] (pagebreak Lua filter),\n  Albert Krewinkel [ctb, cph] (pagebreak Lua filter)",
         "Maintainer": "Yihui Xie <xie@yihui.name>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-09-28 11:30:02 UTC",
-        "Built": "R 4.5.0; ; 2025-09-29 04:39:07 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:30:37 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "rmarkdown",
+        "RemoteRef": "rmarkdown",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "2.30"
       }
     },
     "sass": {
@@ -1929,7 +1970,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-04-11 19:50:02 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-04-11 21:17:02 UTC; unix",
-        "Archs": "sass.so.dSYM"
+        "Archs": "sass.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "sass",
+        "RemoteRef": "sass",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "0.4.10"
       }
     },
     "scales": {
@@ -1987,9 +2034,9 @@
         "Packaged": "2025-12-08 21:22:26 UTC; barret",
         "Author": "Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Joe Cheng [aut],\n  JJ Allaire [aut],\n  Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>),\n  Garrick Aden-Buie [aut] (ORCID:\n    <https://orcid.org/0000-0002-7111-0077>),\n  Yihui Xie [aut],\n  Jeff Allen [aut],\n  Jonathan McPherson [aut],\n  Alan Dipert [aut],\n  Barbara Borges [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>),\n  jQuery Foundation [cph] (jQuery library and jQuery UI library),\n  jQuery contributors [ctb, cph] (jQuery library; authors listed in\n    inst/www/shared/jquery-AUTHORS.txt),\n  jQuery UI contributors [ctb, cph] (jQuery UI library; authors listed in\n    inst/www/shared/jqueryui/AUTHORS.txt),\n  Mark Otto [ctb] (Bootstrap library),\n  Jacob Thornton [ctb] (Bootstrap library),\n  Bootstrap contributors [ctb] (Bootstrap library),\n  Twitter, Inc [cph] (Bootstrap library),\n  Prem Nawaz Khan [ctb] (Bootstrap accessibility plugin),\n  Victor Tsaran [ctb] (Bootstrap accessibility plugin),\n  Dennis Lembree [ctb] (Bootstrap accessibility plugin),\n  Srinivasu Chakravarthula [ctb] (Bootstrap accessibility plugin),\n  Cathy O'Connor [ctb] (Bootstrap accessibility plugin),\n  PayPal, Inc [cph] (Bootstrap accessibility plugin),\n  Stefan Petre [ctb, cph] (Bootstrap-datepicker library),\n  Andrew Rowls [ctb, cph] (Bootstrap-datepicker library),\n  Brian Reavis [ctb, cph] (selectize.js library),\n  Salmen Bejaoui [ctb, cph] (selectize-plugin-a11y library),\n  Denis Ineshin [ctb, cph] (ion.rangeSlider library),\n  Sami Samhuri [ctb, cph] (Javascript strftime library),\n  SpryMedia Limited [ctb, cph] (DataTables library),\n  Ivan Sagalaev [ctb, cph] (highlight.js library),\n  R Core Team [ctb, cph] (tar implementation from R)",
         "Maintainer": "Carson Sievert <carson@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-09 09:30:02 UTC",
-        "Built": "R 4.5.1; ; 2025-12-11 18:19:52 UTC; unix"
+        "Built": "R 4.5.2; ; 2025-12-09 10:52:28 UTC; unix"
       }
     },
     "shinycssloaders": {
@@ -2013,9 +2060,9 @@
         "Packaged": "2024-07-30 18:52:48 UTC; Dean",
         "Author": "Dean Attali [aut, cre] (Maintainer/developer of shinycssloaders since\n    2019, <https://orcid.org/0000-0002-5645-3493>),\n  Andras Sali [aut] (Original creator of shinycssloaders package),\n  Luke Hass [ctb, cph] (Author of included CSS loader code)",
         "Maintainer": "Dean Attali <daattali@gmail.com>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2024-07-30 22:30:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-08 03:12:37 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 12:04:24 UTC; unix"
       }
     },
     "sourcetools": {
@@ -2040,7 +2087,13 @@
         "Repository": "CRAN",
         "Date/Publication": "2023-02-01 10:10:02 UTC",
         "Built": "R 4.5.0; aarch64-apple-darwin20; 2025-03-31 21:43:26 UTC; unix",
-        "Archs": "sourcetools.so.dSYM"
+        "Archs": "sourcetools.so.dSYM",
+        "RemoteType": "standard",
+        "RemotePkgRef": "sourcetools",
+        "RemoteRef": "sourcetools",
+        "RemoteRepos": "https://cloud.r-project.org",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "0.1.7-1"
       }
     },
     "stringi": {
@@ -2105,9 +2158,9 @@
         "Packaged": "2025-11-03 22:09:58 UTC; hadleywickham",
         "Author": "Hadley Wickham [aut, cre, cph],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-11-04 14:00:02 UTC",
-        "Built": "R 4.5.0; ; 2025-11-05 04:39:09 UTC; unix"
+        "Built": "R 4.5.0; ; 2025-11-04 17:37:12 UTC; unix"
       }
     },
     "sys": {
@@ -2149,7 +2202,7 @@
       "description": {
         "Package": "tibble",
         "Title": "Simple Data Frames",
-        "Version": "3.3.1.9000",
+        "Version": "3.3.1.9002",
         "Authors@R": "c(\n    person(\"Kirill\", \"Müller\", , \"kirill@cynkra.com\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-1416-3412\")),\n    person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", role = \"aut\"),\n    person(\"Romain\", \"Francois\", , \"romain@r-enthusiasts.com\", role = \"ctb\"),\n    person(\"Jennifer\", \"Bryan\", , \"jenny@rstudio.com\", role = \"ctb\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "Provides a 'tbl_df' class (the 'tibble') with stricter\n    checking and better formatting than the traditional data frame.",
         "License": "MIT + file LICENSE",
@@ -2175,16 +2228,16 @@
         "RemoteRepo": "tibble",
         "RemoteUsername": "tidyverse",
         "RemoteRef": "HEAD",
-        "RemoteSha": "7f942a71a36544826c4ce0400ed0f913341004b1",
+        "RemoteSha": "639af76e755ee7633dc00110daec63be59c48c35",
         "GithubRepo": "tibble",
         "GithubUsername": "tidyverse",
         "GithubRef": "HEAD",
-        "GithubSHA1": "7f942a71a36544826c4ce0400ed0f913341004b1",
+        "GithubSHA1": "639af76e755ee7633dc00110daec63be59c48c35",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-01-12 20:39:57 UTC; marktucker",
+        "Packaged": "2026-01-14 14:43:39 UTC; matturbina",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.1; aarch64-apple-darwin20; 2026-01-12 20:39:58 UTC; unix"
+        "Built": "R 4.5.1; aarch64-apple-darwin20; 2026-01-14 14:43:40 UTC; unix"
       }
     },
     "tidyr": {
@@ -2214,15 +2267,10 @@
         "Packaged": "2025-12-17 23:35:11 UTC; hadleywickham",
         "Author": "Hadley Wickham [aut, cre],\n  Davis Vaughan [aut],\n  Maximilian Girlich [aut],\n  Kevin Ushey [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-19 09:20:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-12-20 04:58:29 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "tidyr",
-        "RemoteRef": "tidyr",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.3.2"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-12-21 22:56:43 UTC; unix",
+        "Archs": "tidyr.so.dSYM"
       }
     },
     "tidyselect": {
@@ -2252,13 +2300,7 @@
         "Maintainer": "Lionel Henry <lionel@posit.co>",
         "Repository": "CRAN",
         "Date/Publication": "2024-03-11 14:10:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-01 15:54:40 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "tidyselect",
-        "RemoteRef": "tidyselect",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.2.1"
+        "Built": "R 4.5.0; ; 2025-04-01 15:54:40 UTC; unix"
       }
     },
     "timechange": {
@@ -2310,9 +2352,9 @@
         "Packaged": "2025-11-18 19:18:53 UTC; yihui",
         "Author": "Yihui Xie [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0003-0645-5666>),\n  Posit Software, PBC [cph, fnd],\n  Christophe Dervieux [ctb] (ORCID:\n    <https://orcid.org/0000-0003-4474-2498>),\n  Devon Ryan [ctb] (ORCID: <https://orcid.org/0000-0002-8549-0971>),\n  Ethan Heinzen [ctb],\n  Fernando Cagua [ctb]",
         "Maintainer": "Yihui Xie <xie@yihui.name>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-11-19 06:10:02 UTC",
-        "Built": "R 4.5.0; ; 2025-11-20 14:34:24 UTC; unix"
+        "Built": "R 4.5.2; ; 2025-11-20 10:11:08 UTC; unix"
       }
     },
     "utf8": {
@@ -2431,10 +2473,9 @@
         "RoxygenNote": "6.1.1",
         "NeedsCompilation": "no",
         "Packaged": "2022-12-05 15:15:55 UTC; hornik",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2022-12-05 15:33:50 UTC",
-        "Encoding": "UTF-8",
-        "Built": "R 4.5.0; ; 2025-04-09 06:25:31 UTC; unix"
+        "Built": "R 4.5.0; ; 2025-03-31 21:55:43 UTC; unix"
       }
     },
     "withr": {
@@ -2471,10 +2512,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "22e392c9cc13efaa9ba042bb193991f78316edb1",
         "NeedsCompilation": "no",
-        "Packaged": "2026-01-08 18:46:35 UTC; marktucker",
+        "Packaged": "2026-01-14 13:19:28 UTC; matturbina",
         "Author": "Jim Hester [aut],\n  Lionel Henry [aut, cre],\n  Kirill Müller [aut],\n  Kevin Ushey [aut],\n  Hadley Wickham [aut],\n  Winston Chang [aut],\n  Jennifer Bryan [ctb],\n  Richard Cotton [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Lionel Henry <lionel@posit.co>",
-        "Built": "R 4.5.1; ; 2026-01-08 18:46:36 UTC; unix"
+        "Built": "R 4.5.1; ; 2026-01-14 13:19:29 UTC; unix"
       }
     },
     "xfun": {
@@ -2503,13 +2544,7 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-12-16 06:10:03 UTC",
         "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-12-16 07:24:59 UTC; unix",
-        "Archs": "xfun.so.dSYM",
-        "RemoteType": "standard",
-        "RemotePkgRef": "xfun",
-        "RemoteRef": "xfun",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "0.55"
+        "Archs": "xfun.so.dSYM"
       }
     },
     "xtable": {
@@ -2534,7 +2569,13 @@
         "Packaged": "2019-04-21 10:56:51 UTC; dsco036",
         "Author": "David B. Dahl [aut],\n  David Scott [aut, cre],\n  Charles Roosen [aut],\n  Arni Magnusson [aut],\n  Jonathan Swinton [aut],\n  Ajay Shah [ctb],\n  Arne Henningsen [ctb],\n  Benno Puetz [ctb],\n  Bernhard Pfaff [ctb],\n  Claudio Agostinelli [ctb],\n  Claudius Loehnert [ctb],\n  David Mitchell [ctb],\n  David Whiting [ctb],\n  Fernando da Rosa [ctb],\n  Guido Gay [ctb],\n  Guido Schulz [ctb],\n  Ian Fellows [ctb],\n  Jeff Laake [ctb],\n  John Walker [ctb],\n  Jun Yan [ctb],\n  Liviu Andronic [ctb],\n  Markus Loecher [ctb],\n  Martin Gubri [ctb],\n  Matthieu Stigler [ctb],\n  Robert Castelo [ctb],\n  Seth Falcon [ctb],\n  Stefan Edwards [ctb],\n  Sven Garbade [ctb],\n  Uwe Ligges [ctb]",
         "Date/Publication": "2019-04-21 12:20:03 UTC",
-        "Built": "R 4.5.0; ; 2025-03-31 21:41:48 UTC; unix"
+        "Built": "R 4.5.1; ; 2025-10-16 14:29:23 UTC; unix",
+        "RemoteType": "standard",
+        "RemotePkgRef": "xtable",
+        "RemoteRef": "xtable",
+        "RemoteRepos": "https://cran.rstudio.com/",
+        "RemotePkgPlatform": "source",
+        "RemoteSha": "1.8-4"
       }
     },
     "yaml": {
@@ -2560,24 +2601,19 @@
         "Packaged": "2025-12-08 16:53:07 UTC; hadleywickham",
         "Author": "Hadley Wickham [cre] (ORCID: <https://orcid.org/0000-0003-4757-117X>),\n  Shawn Garbett [ctb] (ORCID: <https://orcid.org/0000-0003-4079-5621>),\n  Jeremy Stephens [aut, ctb],\n  Kirill Simonov [aut],\n  Yihui Xie [ctb] (ORCID: <https://orcid.org/0000-0003-0645-5666>),\n  Zhuoer Dong [ctb],\n  Jeffrey Horner [ctb],\n  reikoch [ctb],\n  Will Beasley [ctb] (ORCID: <https://orcid.org/0000-0002-5613-5006>),\n  Brendan O'Connor [ctb],\n  Michael Quinn [ctb],\n  Charlie Gao [ctb],\n  Gregory R. Warnes [ctb],\n  Zhian N. Kamvar [ctb]",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "RSPM",
+        "Repository": "CRAN",
         "Date/Publication": "2025-12-10 07:00:01 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-12-10 20:45:20 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "yaml",
-        "RemoteRef": "yaml",
-        "RemoteRepos": "https://p3m.dev/cran/latest",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "2.3.12"
+        "Built": "R 4.5.2; aarch64-apple-darwin20; 2025-12-10 09:31:17 UTC; unix",
+        "Archs": "yaml.so.dSYM"
       }
     }
   },
   "files": {
     "app.R": {
-      "checksum": "175aeabc42a1fd960a316eac6d9b4a2b"
+      "checksum": "f11ed7e151df65471d30ce4b66a24176"
     },
     "renv.lock": {
-      "checksum": "fb62d0ffbace04b44d4adeae79f1fe60"
+      "checksum": "c6f15afb3007cdfb84672b91b5b4d4f3"
     }
   },
   "users": null
