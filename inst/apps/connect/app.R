@@ -124,8 +124,10 @@ users_overview_server <- function(input, output, session, user_totals) {
       return(NULL)
     }
 
-    # Still need the date range input
-    shiny::req(input$users_overview_date_range)
+    # If date range not yet set, return all data
+    if (is.null(input$users_overview_date_range)) {
+      return(data)
+    }
 
     data |>
       dplyr::filter(
