@@ -23,6 +23,7 @@ Imports:
     DT,
     ggplot2,
     glue,
+    later,
     lubridate,
     plotly,
     rlang,

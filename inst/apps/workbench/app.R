@@ -6,6 +6,7 @@ library(bslib)
 library(chronicle.reports)
 library(rlang)
 library(arrow)
+library(later)
 
 # Configure Arrow for optimal S3 performance
 arrow::set_io_thread_count(6) # Parallel S3 downloads
@@ -562,8 +563,9 @@ DEFAULT_DAYS_BACK <- as.integer(
 
 server <- function(input, output, session) {
   # ============================================
-  # Workbench Data - load with date filtering for partition pruning
-  # Arrow will only download parquet files for dates in the filter range
+  # Workbench Data - Progressive loading strategy:
+  # 1. Load user_totals immediately (needed for first tab)
+  # 2. Load remaining datasets in background after first render
   # ============================================
 
   # Helper to load data with date filter (enables S3 partition pruning)
@@ -587,15 +589,37 @@ server <- function(input, output, session) {
   default_end <- Sys.Date()
   default_start <- default_end - DEFAULT_DAYS_BACK
 
-  # User totals - uses date filter for partition pruning
-  all_user_totals <- shiny::reactive({
-    load_with_date_filter("workbench/user_totals", default_start, default_end)
+  # ============================================
+  # Reactive values to hold data (allows background loading)
+  # ============================================
+  user_totals_rv <- shiny::reactiveVal(NULL)
+  user_list_rv <- shiny::reactiveVal(NULL)
+
+  # ============================================
+  # Load user_totals immediately (needed for Users Overview - first tab)
+  # ============================================
+  shiny::observe({
+    user_totals_rv(
+      load_with_date_filter("workbench/user_totals", default_start, default_end)
+    )
   })
 
-  # User list - load latest snapshot only (filter to recent dates)
-  all_user_list <- shiny::reactive({
-    load_with_date_filter("workbench/user_list", default_start, default_end)
-  })
+  # ============================================
+  # Load remaining datasets in background after first render
+  # ============================================
+  session$onFlushed(function() {
+    later::later(function() {
+      user_list_rv(
+        load_with_date_filter("workbench/user_list", default_start, default_end)
+      )
+    }, delay = 0)
+  }, once = TRUE)
+
+  # ============================================
+  # Wrapper reactives for sub-servers
+  # ============================================
+  all_user_totals <- shiny::reactive({ user_totals_rv() })
+  all_user_list <- shiny::reactive({ user_list_rv() })
 
   # ============================================
   # Call sub-servers with data
