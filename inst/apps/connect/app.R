@@ -2432,24 +2432,30 @@ server <- function(input, output, session) {
   default_start <- default_end - DEFAULT_DAYS_BACK
 
   # ============================================
-  # Load user_totals synchronously (needed for Users Overview - first tab)
-  # This ensures data is ready before the first render
+  # user_totals - load on-demand via reactive (needed for first tab)
+  # This is small and loads quickly, so we don't background it
   # ============================================
-  user_totals_initial <- load_with_date_filter(
-    "connect/user_totals",
-    default_start,
-    default_end
-  )
+  all_user_totals <- shiny::reactive({
+    tryCatch(
+      {
+        chronicle_data("connect/user_totals", base_path) |> dplyr::collect()
+      },
+      error = function(e) {
+        message("Error loading user totals: ", e$message)
+        NULL
+      }
+    )
+  })
 
   # ============================================
-  # Reactive values to hold data (allows background loading)
+  # Reactive values for background-loaded data
   # ============================================
-  user_totals_rv <- shiny::reactiveVal(user_totals_initial)
   user_list_rv <- shiny::reactiveVal(NULL)
   content_totals_rv <- shiny::reactiveVal(NULL)
   content_list_rv <- shiny::reactiveVal(NULL)
   content_visits_rv <- shiny::reactiveVal(NULL)
   shiny_usage_rv <- shiny::reactiveVal(NULL)
+
   # ============================================
   # Load remaining datasets in background after first render
   # ============================================
@@ -2497,7 +2503,6 @@ server <- function(input, output, session) {
   # ============================================
   # Wrapper reactives for sub-servers
   # ============================================
-  all_user_totals <- shiny::reactive({ user_totals_rv() })
   all_user_list <- shiny::reactive({ user_list_rv() })
   all_content_totals <- shiny::reactive({ content_totals_rv() })
   all_content_list <- shiny::reactive({ content_list_rv() })
