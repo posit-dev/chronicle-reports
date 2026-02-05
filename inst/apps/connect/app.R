@@ -2430,23 +2430,24 @@ server <- function(input, output, session) {
   default_start <- default_end - DEFAULT_DAYS_BACK
 
   # ============================================
+  # Load user_totals synchronously (needed for Users Overview - first tab)
+  # This ensures data is ready before the first render
+  # ============================================
+  user_totals_initial <- load_with_date_filter(
+    "connect/user_totals",
+    default_start,
+    default_end
+  )
+
+  # ============================================
   # Reactive values to hold data (allows background loading)
   # ============================================
-  user_totals_rv <- shiny::reactiveVal(NULL)
+  user_totals_rv <- shiny::reactiveVal(user_totals_initial)
   user_list_rv <- shiny::reactiveVal(NULL)
   content_totals_rv <- shiny::reactiveVal(NULL)
   content_list_rv <- shiny::reactiveVal(NULL)
   content_visits_rv <- shiny::reactiveVal(NULL)
   shiny_usage_rv <- shiny::reactiveVal(NULL)
-
-  # ============================================
-  # Load user_totals immediately (needed for Users Overview - first tab)
-  # ============================================
-  shiny::observe({
-    user_totals_rv(
-      load_with_date_filter("connect/user_totals", default_start, default_end)
-    )
-  })
   # ============================================
   # Load remaining datasets in background after first render
   # ============================================
