@@ -185,7 +185,7 @@ users_overview_server <- function(input, output, session) {
 
     if (is.null(data) || nrow(data) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -240,7 +240,7 @@ users_overview_server <- function(input, output, session) {
 
     if (nrow(plot_data) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -259,33 +259,35 @@ users_overview_server <- function(input, output, session) {
       )
     }
 
-    p <- ggplot2::ggplot(
-      plot_data,
-      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
-    ) +
-      ggplot2::geom_line(linewidth = 0.5) +
-      ggplot2::geom_point(
-        ggplot2::aes(
-          text = paste0(
-            format(date, "%B %d, %Y"),
-            "<br>",
-            prettyNum(.data$value, big.mark = ","),
-            " ",
-            .data$metric
-          )
-        ),
-        size = 0.5
+    p <- suppressWarnings(
+      ggplot2::ggplot(
+        plot_data,
+        ggplot2::aes(x = date, y = .data$value, color = .data$metric)
       ) +
-      ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Number of Users", color = "") +
-      ggplot2::scale_color_manual(
-        values = c(
-          "Licensed Users" = BRAND_COLORS$BLUE,
-          "Daily Users" = BRAND_COLORS$GREEN,
-          "Admins" = BRAND_COLORS$BURGUNDY,
-          "Super Admins" = BRAND_COLORS$GRAY
+        ggplot2::geom_line(linewidth = 0.5) +
+        ggplot2::geom_point(
+          ggplot2::aes(
+            text = paste0(
+              format(date, "%B %d, %Y"),
+              "<br>",
+              prettyNum(.data$value, big.mark = ","),
+              " ",
+              .data$metric
+            )
+          ),
+          size = 0.5
+        ) +
+        ggplot2::theme_minimal() +
+        ggplot2::labs(x = "", y = "Number of Users", color = "") +
+        ggplot2::scale_color_manual(
+          values = c(
+            "Licensed Users" = BRAND_COLORS$BLUE,
+            "Daily Users" = BRAND_COLORS$GREEN,
+            "Admins" = BRAND_COLORS$BURGUNDY,
+            "Super Admins" = BRAND_COLORS$GRAY
+          )
         )
-      )
+    )
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
@@ -302,7 +304,7 @@ users_overview_server <- function(input, output, session) {
 
     if (is.null(data) || nrow(data) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -342,7 +344,7 @@ users_overview_server <- function(input, output, session) {
 
     if (nrow(day_summary) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),

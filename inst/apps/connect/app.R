@@ -159,7 +159,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     if (is.null(data) || nrow(data) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -203,7 +203,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     if (nrow(plot_data) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -222,32 +222,34 @@ users_overview_server <- function(input, output, session, user_totals) {
       )
     }
 
-    p <- ggplot2::ggplot(
-      plot_data,
-      ggplot2::aes(x = date, y = .data$value, color = .data$metric)
-    ) +
-      ggplot2::geom_line(linewidth = 0.5) +
-      ggplot2::geom_point(
-        ggplot2::aes(
-          text = paste0(
-            format(date, "%B %d, %Y"),
-            "<br>",
-            prettyNum(.data$value, big.mark = ","),
-            " ",
-            .data$metric
-          )
-        ),
-        size = 0.5
+    p <- suppressWarnings(
+      ggplot2::ggplot(
+        plot_data,
+        ggplot2::aes(x = date, y = .data$value, color = .data$metric)
       ) +
-      ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Number of Users", color = "") +
-      ggplot2::scale_color_manual(
-        values = c(
-          "Licensed Users" = BRAND_COLORS$BLUE,
-          "Daily Users" = BRAND_COLORS$GREEN,
-          "Publishers" = BRAND_COLORS$BURGUNDY
+        ggplot2::geom_line(linewidth = 0.5) +
+        ggplot2::geom_point(
+          ggplot2::aes(
+            text = paste0(
+              format(date, "%B %d, %Y"),
+              "<br>",
+              prettyNum(.data$value, big.mark = ","),
+              " ",
+              .data$metric
+            )
+          ),
+          size = 0.5
+        ) +
+        ggplot2::theme_minimal() +
+        ggplot2::labs(x = "", y = "Number of Users", color = "") +
+        ggplot2::scale_color_manual(
+          values = c(
+            "Licensed Users" = BRAND_COLORS$BLUE,
+            "Daily Users" = BRAND_COLORS$GREEN,
+            "Publishers" = BRAND_COLORS$BURGUNDY
+          )
         )
-      )
+    )
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
@@ -264,7 +266,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     if (is.null(data) || nrow(data) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -304,7 +306,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     if (nrow(day_summary) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -691,7 +693,7 @@ content_overview_server <- function(input, output, session, content_totals) {
 
     if (is.null(data)) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -723,7 +725,7 @@ content_overview_server <- function(input, output, session, content_totals) {
 
     if (is.null(df) || nrow(df) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -755,11 +757,11 @@ content_overview_server <- function(input, output, session, content_totals) {
       dplyr::mutate(
         metric = factor("Total Content", levels = "Total Content")
       ) |>
-      dplyr::rename(value = .data$total_content)
+      dplyr::rename(value = "total_content")
 
     if (nrow(plot_data) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -778,28 +780,30 @@ content_overview_server <- function(input, output, session, content_totals) {
       )
     }
 
-    p <- ggplot2::ggplot(
-      plot_data,
-      ggplot2::aes(x = .data$date, y = .data$value, color = .data$metric)
-    ) +
-      ggplot2::geom_line(linewidth = 0.5) +
-      ggplot2::geom_point(
-        ggplot2::aes(
-          text = paste0(
-            format(date, "%B %d, %Y"),
-            "<br>",
-            prettyNum(.data$value, big.mark = ","),
-            " ",
-            .data$metric
-          )
-        ),
-        size = 0.5
+    p <- suppressWarnings(
+      ggplot2::ggplot(
+        plot_data,
+        ggplot2::aes(x = .data$date, y = .data$value, color = .data$metric)
       ) +
-      ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Content Items", color = "") +
-      ggplot2::scale_color_manual(
-        values = c("Total Content" = BRAND_COLORS$BLUE)
-      )
+        ggplot2::geom_line(linewidth = 0.5) +
+        ggplot2::geom_point(
+          ggplot2::aes(
+            text = paste0(
+              format(date, "%B %d, %Y"),
+              "<br>",
+              prettyNum(.data$value, big.mark = ","),
+              " ",
+              .data$metric
+            )
+          ),
+          size = 0.5
+        ) +
+        ggplot2::theme_minimal() +
+        ggplot2::labs(x = "", y = "Content Items", color = "") +
+        ggplot2::scale_color_manual(
+          values = c("Total Content" = BRAND_COLORS$BLUE)
+        )
+    )
 
     plotly::ggplotly(p, tooltip = "text") |>
       plotly::layout(
@@ -816,7 +820,7 @@ content_overview_server <- function(input, output, session, content_totals) {
 
     if (is.null(data)) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -847,12 +851,12 @@ content_overview_server <- function(input, output, session, content_totals) {
     df <- filtered_contents_in_range()
 
     if (is.null(df)) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     if (nrow(df) == 0) {
       return(
-        plotly::plotly_empty() |>
+        plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
             xaxis = list(showgrid = FALSE, zeroline = FALSE),
             yaxis = list(showgrid = FALSE, zeroline = FALSE),
@@ -885,7 +889,7 @@ content_overview_server <- function(input, output, session, content_totals) {
     names(type_summary)[1] <- "content_type"
 
     if (nrow(type_summary) == 0) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     # Order by total asc so after coord_flip highest are at top
@@ -1030,8 +1034,8 @@ content_list_server <- function(
       owners <- df |>
         dplyr::left_join(
           ulist |>
-            dplyr::select(.data$id, .data$username) |>
-            dplyr::rename(owner_guid = .data$id, owner = .data$username),
+            dplyr::select("id", "username") |>
+            dplyr::rename(owner_guid = "id", owner = "username"),
           by = "owner_guid"
         ) |>
         dplyr::pull(.data$owner) |>
@@ -1097,8 +1101,8 @@ content_list_server <- function(
     ulist <- latest_user_list()
     if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
       owner_lookup <- ulist |>
-        dplyr::select(.data$id, .data$username) |>
-        dplyr::rename(owner_guid = .data$id, owner = .data$username)
+        dplyr::select("id", "username") |>
+        dplyr::rename(owner_guid = "id", owner = "username")
 
       df <- df |>
         dplyr::left_join(owner_lookup, by = "owner_guid")
@@ -1399,7 +1403,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
         nrow(df) == 0 ||
         !"visits" %in% names(df)
     ) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     daily <- df |>
@@ -1410,7 +1414,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
       )
 
     if (nrow(daily) == 0) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     p <- ggplot2::ggplot(
@@ -1438,7 +1442,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
         nrow(df) == 0 ||
         !"user_guid" %in% names(df)
     ) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     daily <- df |>
@@ -1449,7 +1453,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
       )
 
     if (nrow(daily) == 0) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     p <- ggplot2::ggplot(
@@ -1674,7 +1678,7 @@ shiny_apps_server <- function(
     df <- shiny_usage_filtered()
 
     if (is.null(df) || nrow(df) == 0 || !"num_sessions" %in% names(df)) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     daily <- df |>
@@ -1690,7 +1694,7 @@ shiny_apps_server <- function(
       )
 
     if (nrow(daily) == 0) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     metrics <- c("total_sessions")
@@ -1719,7 +1723,7 @@ shiny_apps_server <- function(
     ]
 
     if (nrow(plot_data) == 0) {
-      return(plotly::plotly_empty())
+      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     p <- ggplot2::ggplot(
@@ -1795,7 +1799,7 @@ shiny_apps_server <- function(
     content_df <- shiny_content_list_latest()
     if (!is.null(content_df)) {
       content_join <- content_df |>
-        dplyr::select(.data$id, .data$environment, .data$title)
+        dplyr::select("id", "environment", "title")
 
       app_summary <- app_summary |>
         dplyr::left_join(
@@ -2030,7 +2034,7 @@ content_by_user_server <- function(
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
       user_join <- u_df |>
-        dplyr::select(.data$id, .data$username)
+        dplyr::select("id", "username")
 
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
@@ -2042,7 +2046,7 @@ content_by_user_server <- function(
       !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
     ) {
       content_join <- c_df |>
-        dplyr::select(.data$id, .data$environment, .data$title)
+        dplyr::select("id", "environment", "title")
 
       summary_df <- summary_df |>
         dplyr::left_join(
@@ -2299,7 +2303,7 @@ shiny_sessions_by_user_server <- function(
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
       user_join <- u_df |>
-        dplyr::select(.data$id, .data$username)
+        dplyr::select("id", "username")
 
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
@@ -2311,7 +2315,7 @@ shiny_sessions_by_user_server <- function(
       !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
     ) {
       content_join <- c_df |>
-        dplyr::select(.data$id, .data$environment, .data$title)
+        dplyr::select("id", "environment", "title")
 
       summary_df <- summary_df |>
         dplyr::left_join(
