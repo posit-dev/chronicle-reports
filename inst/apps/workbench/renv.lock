@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.5.1",
+    "Version": "4.5.2",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -450,12 +450,12 @@
     },
     "charlatan": {
       "Package": "charlatan",
-      "Version": "0.6.1",
+      "Version": "0.6.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Make Fake Data",
       "Description": "Make fake data that looks realistic, supporting addresses,  person names, dates, times, colors, coordinates, currencies, digital object identifiers ('DOIs'), jobs, phone numbers, 'DNA' sequences, doubles and integers from distributions and within a range.",
-      "Authors@R": "c( person(\"Roel M.\", \"Hogervorst\",  email =\"hogervorst.rm@gmail.com\",  role = c(\"cre\", \"aut\"),  comment = c(ORCID = \"0000-0001-7509-0328\")), person(\"Scott\", \"Chamberlain\", role = c(\"aut\"), comment = c(ORCID = \"0000-0003-1444-9135\")), person(\"Kyle\", \"Voytovich\", role = \"aut\"), person(\"Martin\", \"Pedersen\", role = \"ctb\"), person(\"Brooke\", \"Anderson\", role = \"rev\", comment = \"Brooke Anderson reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94\"), person(\"Tristan\", \"Mahr\", role = \"rev\", comment = \"Tristan Mahr reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94\"), person(\"rOpenSci\", role = \"fnd\", comment = \"https://ropensci.org\") )",
+      "Authors@R": "c( person(\"Roel M.\", \"Hogervorst\",  email =\"hogervorst.rm@gmail.com\",  role = c(\"cre\", \"aut\"),  comment = c(ORCID = \"0000-0001-7509-0328\")), person(\"Scott\", \"Chamberlain\", role = c(\"aut\"), comment = c(ORCID = \"0000-0003-1444-9135\")), person(\"Kyle\", \"Voytovich\", role = \"aut\"), person(\"Martin\", \"Pedersen\", role = \"ctb\"), person(\"Brooke\", \"Anderson\", role = \"rev\", comment = \"Brooke Anderson reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94\"), person(\"Tristan\", \"Mahr\", role = \"rev\", comment = \"Tristan Mahr reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94\"), person(\"rOpenSci\", role = \"fnd\", comment = c(ROR = \"019jywm96\")) )",
       "License": "MIT + file LICENSE",
       "URL": "https://docs.ropensci.org/charlatan/, https://github.com/ropensci/charlatan",
       "BugReports": "https://github.com/ropensci/charlatan/issues",
@@ -476,20 +476,20 @@
         "stringi",
         "spelling"
       ],
-      "RoxygenNote": "7.3.2",
+      "RoxygenNote": "7.3.3",
       "Config/testthat/edition": "3",
       "Depends": [
         "R (>= 2.10)"
       ],
       "Collate": "'address-provider-en_GB.R' 'address-provider-en_NZ.R' 'address-provider-en_US.R' 'address-provider-nl_NL.R' 'datetime-provider.R' 'address-provider.R' 'available_locales.R' 'available_providers.R' 'base-provider.R' 'charlatan-package.R' 'charlatan_settings.R' 'color-provider-en_US.R' 'color-provider-uk_UA.R' 'color-provider.R' 'color.R' 'company-provider-bg_BG.R' 'company-provider-cs_CZ.R' 'company-provider-de_DE.R' 'company-provider-en_US.R' 'company-provider-es_MX.R' 'company-provider-fa_IR.R' 'company-provider-fr_FR.R' 'company-provider-hr_HR.R' 'company-provider-it_IT.R' 'company-provider.R' 'company.R' 'coordinate-provider.R' 'coordinates.R' 'credit_card-provider.R' 'credit_card.R' 'currency-provider.R' 'currency.R' 'date_time.R' 'doi-provider.R' 'doi.R' 'element-provider.R' 'elements.R' 'file-provider.R' 'fraudster.R' 'generate.R' 'globals.R' 'internet-provider-bg_BG.R' 'internet-provider-cs_CZ.R' 'internet-provider-de_DE.R' 'internet-provider-en_AU.R' 'internet-provider-en_NZ.R' 'internet-provider-en_US.R' 'internet-provider-fa_IR.R' 'internet-provider-fr_FR.R' 'internet-provider-hr_HR.R' 'internet-provider.R' 'isbn-provider.R' 'job.R' 'jobs-provider-da_DK.R' 'jobs-provider-en_US.R' 'jobs-provider-fa_IR.R' 'jobs-provider-fi_FI.R' 'jobs-provider-fr_CH.R' 'jobs-provider-fr_FR.R' 'jobs-provider-hr_HR.R' 'jobs-provider-nl_NL.R' 'jobs-provider-pl_PL.R' 'jobs-provider-ru_RU.R' 'jobs-provider-uk_UA.R' 'jobs-provider-zh_TW.R' 'jobs-provider.R' 'languages.R' 'lorem-provider-ar_AA.R' 'lorem-provider-el_GR.R' 'lorem-provider-en_US.R' 'lorem-provider-he_IL.R' 'lorem-provider-ja_JP.R' 'lorem-provider-la.R' 'lorem-provider-ru_RU.R' 'lorem-provider-zh_CN.R' 'lorem-provider-zh_TW.R' 'lorem-provider.R' 'misc-provider.R' 'missing-data-provider.R' 'missing.R' 'name.R' 'numerics-provider.R' 'numerics.R' 'onload.R' 'person-provider-bg_BG.R' 'person-provider-cs_CZ.R' 'person-provider-da_DK.R' 'person-provider-de_AT.R' 'person-provider-de_DE.R' 'person-provider-en_GB.R' 'person-provider-en_NZ.R' 'person-provider-en_US.R' 'person-provider-es_ES.R' 'person-provider-es_MX.R' 'person-provider-fa_IR.R' 'person-provider-fi_FI.R' 'person-provider-fr_CH.R' 'person-provider-fr_FR.R' 'person-provider-hr_HR.R' 'person-provider-it_IT.R' 'person-provider-ja_JP.R' 'person-provider-ko_KR.R' 'person-provider-lt_LT.R' 'person-provider-lv_LV.R' 'person-provider-ne_NP.R' 'person-provider-nl_NL.R' 'person-provider-no_NO.R' 'person-provider-pl_PL.R' 'person-provider.R' 'phone_number.R' 'phonenumber-provider-en.R' 'phonenumber-provider-es.R' 'phonenumber-provider-fr.R' 'phonenumber-provider-nl.R' 'phonenumber-provider-rest.R' 'phonenumber-provider.R' 'sequence-provider.R' 'sequences.R' 'ssn-provider-all.R' 'ssn-provider.R' 'ssn.R' 'taxonomy-provider-all.R' 'taxonomy-provider.R' 'taxonomy.R' 'useragent-provider-all.R' 'useragent-provider.R' 'zzz.R'",
       "NeedsCompilation": "no",
-      "Author": "Roel M. Hogervorst [cre, aut] (<https://orcid.org/0000-0001-7509-0328>), Scott Chamberlain [aut] (<https://orcid.org/0000-0003-1444-9135>), Kyle Voytovich [aut], Martin Pedersen [ctb], Brooke Anderson [rev] (Brooke Anderson reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94), Tristan Mahr [rev] (Tristan Mahr reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94), rOpenSci [fnd] (https://ropensci.org)",
+      "Author": "Roel M. Hogervorst [cre, aut] (ORCID: <https://orcid.org/0000-0001-7509-0328>), Scott Chamberlain [aut] (ORCID: <https://orcid.org/0000-0003-1444-9135>), Kyle Voytovich [aut], Martin Pedersen [ctb], Brooke Anderson [rev] (Brooke Anderson reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94), Tristan Mahr [rev] (Tristan Mahr reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94), rOpenSci [fnd] (ROR: <https://ror.org/019jywm96>)",
       "Maintainer": "Roel M. Hogervorst <hogervorst.rm@gmail.com>",
       "Repository": "CRAN"
     },
     "chronicle.reports": {
       "Package": "chronicle.reports",
-      "Version": "0.2.0",
+      "Version": "0.2.1",
       "Source": "GitHub",
       "Title": "Posit Chronicle Reports",
       "Authors@R": "c( person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")), person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
@@ -533,7 +533,7 @@
       "RemoteUsername": "posit-dev",
       "RemotePkgRef": "posit-dev/chronicle-reports@dev",
       "RemoteRef": "dev",
-      "RemoteSha": "c710850b19a008e0fc082262d317e84995f9b01e",
+      "RemoteSha": "de0df42ad5ecf200844948832ad7742b66960e7f",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
@@ -2608,7 +2608,7 @@
     },
     "tibble": {
       "Package": "tibble",
-      "Version": "3.3.1.9000",
+      "Version": "3.3.1.9002",
       "Source": "GitHub",
       "Title": "Simple Data Frames",
       "Authors@R": "c( person(\"Kirill\", \"Müller\", , \"kirill@cynkra.com\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-1416-3412\")), person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", role = \"aut\"), person(\"Romain\", \"Francois\", , \"romain@r-enthusiasts.com\", role = \"ctb\"), person(\"Jennifer\", \"Bryan\", , \"jenny@rstudio.com\", role = \"ctb\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
@@ -2672,7 +2672,7 @@
       "RemoteRepo": "tibble",
       "RemoteUsername": "tidyverse",
       "RemoteRef": "HEAD",
-      "RemoteSha": "7f942a71a36544826c4ce0400ed0f913341004b1",
+      "RemoteSha": "639af76e755ee7633dc00110daec63be59c48c35",
       "NeedsCompilation": "yes",
       "Author": "Kirill Müller [aut, cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], Romain Francois [ctb], Jennifer Bryan [ctb], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>"
@@ -2947,8 +2947,7 @@
       ],
       "RoxygenNote": "6.1.1",
       "NeedsCompilation": "no",
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     },
     "withr": {
       "Package": "withr",
