@@ -4,11 +4,20 @@
 \alias{chronicle_sample_data}
 \title{Get path to sample Chronicle data}
 \usage{
-chronicle_sample_data(refresh = FALSE)
+chronicle_sample_data(refresh = FALSE, base_path = NULL)
 }
 \arguments{
 \item{refresh}{Logical. If TRUE, regenerate sample data even if cached.
-Default is FALSE.}
+Default is FALSE. When FALSE, the function reuses existing valid data for
+both default temp directories and custom paths. When TRUE, data is always
+regenerated to ensure freshness.}
+
+\item{base_path}{Character path to directory where sample data should be
+created. If NULL (default), creates in a temporary directory that is
+cached and automatically cleaned up at session end. If specified, creates
+data at the given path with no automatic cleanup. When \code{refresh=FALSE}
+and the directory exists, the function validates the structure and reuses
+existing data if valid, otherwise regenerates.}
 }
 \value{
 Character path to the sample Chronicle data directory
@@ -37,8 +46,21 @@ referential integrity across datasets. Content items are created gradually
 over the 30-day period and persist once created.
 }
 \examples{
-# Get path to sample data
+# Get path to sample data (default temp directory)
 sample_path <- chronicle_sample_data()
+
+# Reuse cached sample data (fast)
+sample_path <- chronicle_sample_data()
+
+# Force refresh of sample data
+sample_path <- chronicle_sample_data(refresh = TRUE)
+
+# Create sample data in a custom directory
+custom_dir <- tempfile("chronicle-custom-")
+sample_path <- chronicle_sample_data(base_path = custom_dir)
+
+# Reuse existing custom directory data
+sample_path <- chronicle_sample_data(base_path = custom_dir)
 
 # List available metrics
 chronicle_list_data(sample_path)
@@ -47,6 +69,7 @@ chronicle_list_data(sample_path)
 data <- chronicle_data("connect/user_totals", sample_path)
 dplyr::collect(data)
 
-# Clean up (optional - automatically cleaned at session end)
-unlink(sample_path, recursive = TRUE)
+# Clean up (default temp dir cleaned automatically at session end)
+# For custom directories, manual cleanup is needed
+unlink(custom_dir, recursive = TRUE)
 }

@@ -1,5 +1,13 @@
 # chronicle.reports (development version)
 
+# chronicle.reports 0.2.1
+
+* Improved Connect dashboard load time performance.
+* Added optional `base_path` parameter to `chronicle_sample_data()` to allow writing sample data to a custom location.
+* Aligned sample data structure with actual Chronicle data format.
+* Simplified `chronicle_sample_data()` to generate only curated datasets (raw data generation removed).
+* Fixed lintr warnings.
+
 # chronicle.reports 0.2.0
 
 * Significant refactor of the package structure and functions for improved maintainability.

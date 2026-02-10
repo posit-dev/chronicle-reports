@@ -1,6 +1,7 @@
 test_that("chronicle_raw_data loads raw daily data successfully", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Load raw Connect users data
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
@@ -26,6 +27,7 @@ test_that("chronicle_raw_data loads raw daily data successfully", {
 test_that("chronicle_raw_data defaults to daily frequency", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Call without frequency parameter
   data <- chronicle_raw_data("connect_users", base_path)
@@ -38,6 +40,7 @@ test_that("chronicle_raw_data defaults to daily frequency", {
 test_that("chronicle_raw_data supports date filtering", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Load all data and get the first date dynamically
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
@@ -56,6 +59,7 @@ test_that("chronicle_raw_data supports date filtering", {
 test_that("chronicle_raw_data supports ymd filtering", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # First, get the actual dates in the sample data
   all_data <- chronicle_raw_data(
@@ -88,6 +92,7 @@ test_that("chronicle_raw_data supports ymd filtering", {
 test_that("chronicle_raw_data ymd filtering with different dates", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # First, get the actual dates in the sample data
   all_data <- chronicle_raw_data(
@@ -119,6 +124,7 @@ test_that("chronicle_raw_data ymd filtering with different dates", {
 test_that("chronicle_raw_data preserves data integrity", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Load all data and get the first date dynamically
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
@@ -153,6 +159,7 @@ test_that("chronicle_raw_data preserves data integrity", {
 test_that("chronicle_raw_data includes expected user roles", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Load all data and get the first date dynamically
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
@@ -176,6 +183,7 @@ test_that("chronicle_raw_data includes expected user roles", {
 test_that("chronicle_raw_data can be used with dplyr operations", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
 
@@ -198,6 +206,7 @@ test_that("chronicle_raw_data can be used with dplyr operations", {
 test_that("chronicle_raw_data validates frequency parameter", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Invalid frequency should error
   expect_error(
@@ -209,6 +218,7 @@ test_that("chronicle_raw_data validates frequency parameter", {
 test_that("chronicle_raw_data handles multiple days correctly", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Load all days without filtering
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
@@ -233,6 +243,7 @@ test_that("chronicle_raw_data handles multiple days correctly", {
 test_that("chronicle_raw_data timestamp field is POSIXct", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   data <- chronicle_raw_data("connect_users", base_path, frequency = "daily")
   collected <- dplyr::collect(data)
@@ -246,6 +257,7 @@ test_that("chronicle_raw_data timestamp field is POSIXct", {
 test_that("chronicle_raw_data ymd with non-existent date", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
+  create_raw_test_data(base_path)
 
   # Try to load data for a date that doesn't exist in sample data
   # Arrow should error with IOError about missing directory

@@ -1,15 +1,19 @@
 aaa
+aafce
 aarch
+abdd
 Abhraneel
 abline
 acf
 ActiveState
 adeae
 adenbuie
+ae
 aeabc
 aes
 AES
 af
+afb
 agg
 Agostinelli
 Aidan
@@ -85,6 +89,7 @@ barrett
 Bartek
 Baumer
 bb
+bd
 behaviour
 Beilei
 Bejaoui
@@ -142,8 +147,11 @@ cbc
 cctz
 CCTZ
 cderv
+cdfb
 ce
 Ceci
+ceec
+cfcb
 Chakravarthula
 Chataignon
 checkboxgroup
@@ -217,6 +225,7 @@ Czeller
 Cédric
 da
 daattali
+daec
 Dahl
 Daijiang
 Damico
@@ -228,6 +237,7 @@ datepicker
 daterange
 davis
 dbplyr
+ddf
 de
 debian
 debugme
@@ -284,7 +294,9 @@ Dunkle
 Dunnington
 dygraphs
 eac
+ec
 ecdf
+ecf
 edb
 edd
 eddelbuettel
@@ -294,6 +306,7 @@ edu
 Eduard
 edwindj
 edwindjonge
+ee
 efaa
 el
 Elio
@@ -313,6 +326,7 @@ fc
 fcller
 fcnfeld
 fd
+fde
 fe
 Fedorov
 Feliz
@@ -376,6 +390,7 @@ gha
 gifski
 Giné
 Girlich
+gitcreds
 github
 GithubRef
 GithubRepo
@@ -511,6 +526,7 @@ JuliaCall
 julialang
 Julien
 Justfile
+jywm
 Kaiyin
 Kalinowski
 Kamgang
@@ -611,6 +627,7 @@ Mahr
 Maigné
 MailingList
 Manish
+Manmita
 Manton
 marco
 marek
@@ -625,6 +642,7 @@ Mati
 matt
 Matthieu
 mattjdowle
+matturbina
 McGehee
 md
 Mecum
@@ -722,6 +740,7 @@ n'map
 n'message
 n'missing
 n'nav
+n'navbar
 n'notifications
 n'numeric
 n'numerics
@@ -732,6 +751,7 @@ n'pandoc
 n'person
 n'phonenumber
 n'plot
+n'popover
 n'position
 n'pretty
 n'query
@@ -747,6 +767,7 @@ n'sequence
 n'server
 n'shiny
 n'shinywrappers
+n'sidebar
 n'ssn
 n'standalone
 n'stat
@@ -794,6 +815,7 @@ nformat
 nformattable
 nfunction
 nfuture
+ngenerics
 nggplot
 ngitcreds
 nGrids
@@ -818,6 +840,7 @@ nlattice
 nlibcurl
 nlitedown
 nlme
+nlobstr
 nLoops
 nlubridate
 nmagrittr
@@ -825,6 +848,7 @@ nmapproj
 nmicrobenchmark
 nmime
 nModel
+nmodules
 nnycflights
 noam
 Noam
@@ -837,6 +861,7 @@ noUiSlider
 npackrat
 npillar
 nplotly
+nPosit
 nprocessx
 nqs
 nquantreg
@@ -890,6 +915,7 @@ Oller
 onboarding
 Onkelinx
 onload
+onLoad
 Ooms
 openssl
 OpenSSL
@@ -901,6 +927,7 @@ organised
 otel
 otelsdk
 packagemanager
+packrat
 pagebreak
 pak
 palmerpenguins
@@ -989,6 +1016,7 @@ rcpp
 Rcpp
 RcppCore
 RcppExports
+RData
 Rdatatable
 reactlog
 README
@@ -1243,6 +1271,7 @@ unicode
 univie
 unnesting
 Urbanek
+urbanek
 urbina
 Urbina
 useragent
@@ -1324,6 +1353,7 @@ ydensity
 yihui
 Yihui
 Yixuan
+yml
 Yutani
 zh
 Zhang

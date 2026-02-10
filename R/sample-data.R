@@ -27,15 +27,36 @@
 #' over the 30-day period and persist once created.
 #'
 #' @param refresh Logical. If TRUE, regenerate sample data even if cached.
-#'   Default is FALSE.
+#'   Default is FALSE. When FALSE, the function reuses existing valid data for
+#'   both default temp directories and custom paths. When TRUE, data is always
+#'   regenerated to ensure freshness.
+#' @param base_path Character path to directory where sample data should be
+#'   created. If NULL (default), creates in a temporary directory that is
+#'   cached and automatically cleaned up at session end. If specified, creates
+#'   data at the given path with no automatic cleanup. When \code{refresh=FALSE}
+#'   and the directory exists, the function validates the structure and reuses
+#'   existing data if valid, otherwise regenerates.
 #'
 #' @return Character path to the sample Chronicle data directory
 #'
 #' @export
 #'
 #' @examples
-#' # Get path to sample data
+#' # Get path to sample data (default temp directory)
 #' sample_path <- chronicle_sample_data()
+#'
+#' # Reuse cached sample data (fast)
+#' sample_path <- chronicle_sample_data()
+#'
+#' # Force refresh of sample data
+#' sample_path <- chronicle_sample_data(refresh = TRUE)
+#'
+#' # Create sample data in a custom directory
+#' custom_dir <- tempfile("chronicle-custom-")
+#' sample_path <- chronicle_sample_data(base_path = custom_dir)
+#'
+#' # Reuse existing custom directory data
+#' sample_path <- chronicle_sample_data(base_path = custom_dir)
 #'
 #' # List available metrics
 #' chronicle_list_data(sample_path)
@@ -44,19 +65,41 @@
 #' data <- chronicle_data("connect/user_totals", sample_path)
 #' dplyr::collect(data)
 #'
-#' # Clean up (optional - automatically cleaned at session end)
-#' unlink(sample_path, recursive = TRUE)
-chronicle_sample_data <- function(refresh = FALSE) {
-  # Check if we have a cached path and it still exists
-  if (!refresh && exists("sample_path", envir = .chronicle_sample_env)) {
+#' # Clean up (default temp dir cleaned automatically at session end)
+#' # For custom directories, manual cleanup is needed
+#' unlink(custom_dir, recursive = TRUE)
+chronicle_sample_data <- function(refresh = FALSE, base_path = NULL) {
+  # Check if we have a cached path and it still exists (default paths only)
+  if (
+    !refresh &&
+      is.null(base_path) &&
+      exists("sample_path", envir = .chronicle_sample_env)
+  ) {
     cached_path <- get("sample_path", envir = .chronicle_sample_env)
     if (dir.exists(cached_path)) {
       return(cached_path)
     }
   }
 
-  # Create new sample data directory
-  sample_dir <- file.path(tempdir(), "chronicle-sample-data")
+  # Determine which directory to use
+  if (is.null(base_path)) {
+    sample_dir <- file.path(tempdir(), "chronicle-sample-data")
+  } else {
+    sample_dir <- base_path
+  }
+
+  # For custom paths with refresh=FALSE, check if we can reuse existing data
+  if (!is.null(base_path) && !refresh) {
+    if (validate_sample_data_structure(sample_dir)) {
+      # Valid existing data, return path without regenerating
+      message("Using existing sample data at: ", sample_dir)
+      return(sample_dir)
+    }
+    # Invalid or missing structure, will regenerate below
+    if (dir.exists(sample_dir)) {
+      message("Invalid sample data structure detected, regenerating...")
+    }
+  }
 
   # Remove if it exists (in case of refresh)
   if (dir.exists(sample_dir)) {
@@ -69,21 +112,45 @@ chronicle_sample_data <- function(refresh = FALSE) {
   # Cache the path
   assign("sample_path", sample_dir, envir = .chronicle_sample_env)
 
-  # Register cleanup on exit
-  reg.finalizer(
-    .chronicle_sample_env,
-    function(e) {
-      if (exists("sample_path", envir = e)) {
-        path <- get("sample_path", envir = e)
-        if (dir.exists(path)) {
-          unlink(path, recursive = TRUE)
+  # Register cleanup on exit (only for default paths)
+  if (is.null(base_path)) {
+    reg.finalizer(
+      .chronicle_sample_env,
+      function(e) {
+        if (exists("sample_path", envir = e)) {
+          path <- get("sample_path", envir = e)
+          if (dir.exists(path)) {
+            unlink(path, recursive = TRUE)
+          }
         }
-      }
-    },
-    onexit = TRUE
-  )
+      },
+      onexit = TRUE
+    )
+  }
 
   sample_dir
+}
+
+#' Validate sample data directory structure
+#' @noRd
+validate_sample_data_structure <- function(path) {
+  if (!dir.exists(path)) {
+    return(FALSE)
+  }
+
+  # Check for expected curated/v2 structure
+  curated_path <- file.path(path, "curated", "v2")
+  if (!dir.exists(curated_path)) {
+    return(FALSE)
+  }
+
+  # Check for at least one expected metric directory
+  expected_metrics <- c("connect", "workbench")
+  has_metric <- any(sapply(expected_metrics, function(m) {
+    dir.exists(file.path(curated_path, m))
+  }))
+
+  has_metric
 }
 
 # Internal helper functions for creating sample data
@@ -388,21 +455,38 @@ sample_connect_user_totals_internal <- function() {
     # Named users: gradual growth from 24 to 26
     named_users <- min(24 + floor(i / 15), 26)
 
-    # Active users: 40-60% of named, affected by weekday
+    # Active users (1 day): 40-60% of named, affected by weekday
     base_active_rate <- 0.50
-    active_users <- round(
+    active_users_1day <- round(
       named_users * base_active_rate * weekday_factor * runif(1, 0.9, 1.1)
     )
-    active_users <- max(1, min(active_users, named_users))
+    active_users_1day <- max(1, min(active_users_1day, named_users))
+
+    # Active users (30 days): 70-85% of named users (rolling window)
+    active_users_30days <- round(named_users * runif(1, 0.70, 0.85))
+    active_users_30days <- max(active_users_1day, active_users_30days)
+
+    # Administrators: ~10-15% of named users
+    administrators <- max(2, min(4, round(named_users * 0.12)))
 
     # Publishers: ~20-25% of named users
     publishers <- max(5, min(8, round(named_users * 0.25)))
 
+    # Viewers: remaining users after administrators and publishers
+    viewers <- named_users - administrators - publishers
+
+    # Licensed user seats: typically >= named_users (some buffer)
+    licensed_user_seats <- named_users + sample(0:5, 1)
+
     data.frame(
-      date = date,
       named_users = as.integer(named_users),
-      active_users_1day = as.integer(active_users),
+      active_users_30days = as.integer(active_users_30days),
+      active_users_1day = as.integer(active_users_1day),
+      administrators = as.integer(administrators),
       publishers = as.integer(publishers),
+      viewers = as.integer(viewers),
+      licensed_user_seats = as.integer(licensed_user_seats),
+      date = date,
       stringsAsFactors = FALSE
     )
   })
@@ -414,6 +498,7 @@ sample_connect_user_totals_internal <- function() {
 sample_connect_user_list_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   last_date <- max(dates)
+  first_date <- min(dates)
   user_pool <- generate_user_pool(26)
 
   # Calculate last active times relative to last_date
@@ -426,21 +511,33 @@ sample_connect_user_list_internal <- function() {
     prob = c(0.35, 0.20, 0.15, 0.10, 0.10, 0.05, 0.05)
   )
 
+  # Calculate created_at times (users created within first 5 days of the period)
+  created_dates <- first_date + (user_pool$created_day - 1)
+
+  # Calculate updated_at times (between created and last_date)
+  set.seed(501)
+  days_since_update <- sample(0:10, nrow(user_pool), replace = TRUE)
+  updated_dates <- pmin(last_date, created_dates + days_since_update)
+
   data.frame(
-    date = last_date,
-    username = user_pool$username,
+    environment = user_pool$environment,
     id = user_pool$user_guid,
+    username = user_pool$username,
     email = user_pool$email,
     first_name = user_pool$first_name,
     last_name = user_pool$last_name,
-    environment = user_pool$environment,
     user_role = user_pool$user_role,
+    created_at = as.POSIXct(created_dates, tz = "UTC") +
+      sample(3600 * 8:18, nrow(user_pool), replace = TRUE),
+    updated_at = as.POSIXct(updated_dates, tz = "UTC") +
+      sample(3600 * 8:18, nrow(user_pool), replace = TRUE),
     last_active_at = as.POSIXct(
       last_date - days_since_active,
       tz = "UTC"
     ) +
       sample(3600 * 8:18, nrow(user_pool), replace = TRUE), # Random time 8am-6pm
     active_today = days_since_active == 0,
+    date = last_date,
     stringsAsFactors = FALSE
   )
 }
@@ -462,7 +559,6 @@ sample_connect_content_list_internal <- function() {
   last_deployed_dates <- pmin(last_date, created_dates + days_since_deploy)
 
   data.frame(
-    date = last_date,
     environment = content_pool$environment,
     id = content_pool$content_guid,
     name = content_pool$name,
@@ -550,6 +646,7 @@ sample_connect_content_list_internal <- function() {
       c(content_pool$type[i], content_pool$environment[i])
     })),
     extension = FALSE,
+    date = last_date,
     stringsAsFactors = FALSE
   )
 }
@@ -578,7 +675,7 @@ sample_connect_content_totals_internal <- function() {
     names(agg)[3] <- "count"
     agg$date <- dates[i]
 
-    agg[, c("date", "count", "type", "environment")]
+    agg[, c("count", "type", "environment", "date")]
   })
 
   do.call(rbind, Filter(Negate(is.null), daily_totals))
@@ -694,12 +791,12 @@ sample_connect_visits_by_user_internal <- function() {
   )
 
   result[, c(
-    "date",
     "environment",
     "content_guid",
     "user_guid",
     "visits",
-    "path"
+    "path",
+    "date"
   )]
 }
 
@@ -833,12 +930,12 @@ sample_connect_shiny_by_user_internal <- function() {
   )]
 
   result[, c(
-    "date",
     "environment",
     "content_guid",
     "user_guid",
     "num_sessions",
-    "duration"
+    "duration",
+    "date"
   )]
 }
 
@@ -853,12 +950,16 @@ sample_workbench_user_totals_internal <- function() {
     # Named users: gradual growth from 19 to 21
     named_users <- min(19 + floor(i / 15), 21)
 
-    # Active users: 35-45% of named, affected by weekday
+    # Active users (1 day): 35-45% of named, affected by weekday
     base_active_rate <- 0.40
-    active_users <- round(
+    active_users_1day <- round(
       named_users * base_active_rate * weekday_factor * runif(1, 0.9, 1.1)
     )
-    active_users <- max(1, min(active_users, named_users))
+    active_users_1day <- max(1, min(active_users_1day, named_users))
+
+    # Active users (30 days): 70-85% of named users (rolling window)
+    active_users_30days <- round(named_users * runif(1, 0.70, 0.85))
+    active_users_30days <- max(active_users_1day, active_users_30days)
 
     # Administrators: ~20% of named
     administrators <- max(3, min(5, round(named_users * 0.20)))
@@ -866,12 +967,21 @@ sample_workbench_user_totals_internal <- function() {
     # Super admins: always 1
     super_administrators <- 1L
 
+    # Users: remaining users after administrators and super_administrators
+    users <- named_users - administrators - super_administrators
+
+    # Licensed user seats: typically >= named_users (some buffer)
+    licensed_user_seats <- named_users + sample(0:5, 1)
+
     data.frame(
-      date = date,
       named_users = as.integer(named_users),
-      active_users_1day = as.integer(active_users),
+      active_users_30days = as.integer(active_users_30days),
+      active_users_1day = as.integer(active_users_1day),
       administrators = as.integer(administrators),
       super_administrators = as.integer(super_administrators),
+      users = as.integer(users),
+      licensed_user_seats = as.integer(licensed_user_seats),
+      date = date,
       stringsAsFactors = FALSE
     )
   })
@@ -883,9 +993,29 @@ sample_workbench_user_totals_internal <- function() {
 sample_workbench_user_list_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   last_date <- max(dates)
+  first_date <- min(dates)
   n_users <- 21
 
   set.seed(50)
+
+  # Generate fake names using charlatan for usernames
+  fake <- charlatan::PersonProvider_en_US$new()
+  names_list <- lapply(1:n_users, function(i) {
+    list(
+      first = fake$first_name(),
+      last = fake$last_name()
+    )
+  })
+
+  # Create usernames from first.last format
+  usernames <- tolower(sprintf(
+    "%s.%s",
+    sapply(names_list, function(x) x$first),
+    sapply(names_list, function(x) x$last)
+  ))
+
+  # Create emails from username@example.com
+  emails <- sprintf("%s@example.com", usernames)
 
   # Workbench role distribution
   roles <- c(
@@ -908,17 +1038,25 @@ sample_workbench_user_list_internal <- function() {
     prob = c(0.30, 0.20, 0.15, 0.15, 0.15, 0.05)
   )
 
+  # Calculate created_at times (users created within first 5 days of the period)
+  created_days <- sample(1:5, n_users, replace = TRUE)
+  created_dates <- first_date + (created_days - 1)
+
   data.frame(
-    date = last_date,
-    username = sprintf("wbuser%02d", 1:n_users),
-    user_role = roles,
     environment = envs,
+    id = sprintf("wb-user-guid-%03d", 1:n_users),
+    username = usernames,
+    email = emails,
+    user_role = roles,
+    created_at = as.POSIXct(created_dates, tz = "UTC") +
+      sample(3600 * 8:18, n_users, replace = TRUE),
     last_active_at = as.POSIXct(
       last_date - days_since_active,
       tz = "UTC"
     ) +
       sample(3600 * 8:18, n_users, replace = TRUE),
     active_today = days_since_active == 0,
+    date = last_date,
     stringsAsFactors = FALSE
   )
 }
@@ -968,42 +1106,6 @@ write_sample_parquet_internal <- function(
     partitioning = partition_col,
     hive_style = TRUE
   )
-}
-
-#' @noRd
-write_raw_parquet_internal <- function(
-  data,
-  base_path,
-  metric,
-  frequency = "daily"
-) {
-  dates <- unique(data$date)
-
-  for (d in dates) {
-    date_obj <- as.Date(d, origin = "1970-01-01")
-    year <- format(date_obj, "%Y")
-    month <- format(date_obj, "%m")
-    day <- format(date_obj, "%d")
-
-    subset_data <- data[data$date == d, ]
-
-    metric_path <- file.path(
-      base_path,
-      frequency,
-      "v2",
-      metric,
-      year,
-      month,
-      day
-    )
-
-    dir.create(metric_path, recursive = TRUE, showWarnings = FALSE)
-
-    arrow::write_parquet(
-      subset_data,
-      file.path(metric_path, "data.parquet")
-    )
-  }
 }
 
 #' @noRd
@@ -1057,14 +1159,6 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_workbench_user_list_internal(),
     base_path,
     "workbench/user_list"
-  )
-
-  # Create raw data
-  write_raw_parquet_internal(
-    sample_raw_connect_users_internal(),
-    base_path,
-    "connect_users",
-    frequency = "daily"
   )
 
   base_path
