@@ -14,7 +14,11 @@ chronicle_path <- function(
   frequency = c("daily", "hourly", "curated")
 ) {
   frequency <- match.arg(frequency)
-  glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
+  if (is.null(metric)) {
+    glue::glue("{base_path}/{frequency}/v2/")
+  } else {
+    glue::glue("{base_path}/{frequency}/v2/{metric}/")
+  }
 }
 
 #' List immediate subdirectories of a path
