@@ -34,7 +34,7 @@ chronicle_list_dirs <- function(path) {
     selector <- arrow::FileSelector$create("", recursive = FALSE)
     info <- fs$GetFileInfo(selector)
     dirs <- Filter(function(fi) fi$type == arrow::FileType$Directory, info)
-    vapply(dirs, function(fi) fi$base_name, character(1))
+    vapply(dirs, function(fi) basename(fi$path), character(1))
   } else {
     list.dirs(path, recursive = FALSE, full.names = FALSE)
   }
