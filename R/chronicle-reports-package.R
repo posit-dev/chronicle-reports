@@ -5,3 +5,7 @@
 ## usethis namespace: start
 ## usethis namespace: end
 NULL
+
+.onAttach <- function(libname, pkgname) {
+  suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
+}
