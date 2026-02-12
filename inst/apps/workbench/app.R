@@ -387,11 +387,7 @@ users_overview_server <- function(input, output, session) {
     content = function(file) {
       data <- filtered_users_data()
       if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- data |>
@@ -412,11 +408,7 @@ users_overview_server <- function(input, output, session) {
     content = function(file) {
       data <- filtered_users_data()
       if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- data |>
@@ -611,22 +603,12 @@ user_list_server <- function(input, output, session) {
     content = function(file) {
       data <- filtered_user_list()
       if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- data |>
         dplyr::mutate(
-          environment = ifelse(
-            is.na(.data$environment) |
-              .data$environment == "" |
-              .data$environment == " ",
-            "(Not Set)",
-            .data$environment
-          )
+          environment = normalize_environment(.data$environment)
         ) |>
         dplyr::select(
           "username",

@@ -241,6 +241,33 @@ chronicle_list_raw_data <- function(
 }
 
 
+#' Write an empty "No data available" CSV
+#'
+#' Used by download handlers when reactive data is NULL or empty.
+#'
+#' @param file Path to write the CSV
+#' @keywords internal
+#' @noRd
+write_empty_csv <- function(file) {
+  utils::write.csv(
+    data.frame(message = "No data available"),
+    file,
+    row.names = FALSE
+  )
+}
+
+#' Normalize environment column values
+#'
+#' Replaces NA, empty string, and single-space values with "(Not Set)".
+#'
+#' @param x Character vector of environment values
+#' @return Character vector with normalized values
+#' @keywords internal
+#' @noRd
+normalize_environment <- function(x) {
+  ifelse(is.na(x) | x == "" | x == " ", "(Not Set)", x)
+}
+
 #' Create a card header with a CSV download button
 #'
 #' Creates a bslib card header with a title on the left and a small
@@ -251,7 +278,8 @@ chronicle_list_raw_data <- function(
 #' @param download_id Character string for the Shiny download button output ID
 #'
 #' @return A bslib card_header element
-#' @export
+#' @keywords internal
+#' @noRd
 card_header_with_download <- function(title, download_id) {
   bslib::card_header(
     class = "d-flex justify-content-between align-items-center",

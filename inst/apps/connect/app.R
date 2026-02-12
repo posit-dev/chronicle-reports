@@ -349,11 +349,7 @@ users_overview_server <- function(input, output, session, user_totals) {
     content = function(file) {
       data <- filtered_users_data()
       if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- data |>
@@ -371,11 +367,7 @@ users_overview_server <- function(input, output, session, user_totals) {
     content = function(file) {
       data <- filtered_users_data()
       if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- data |>
@@ -583,23 +575,11 @@ users_list_server <- function(input, output, session, user_list) {
     content = function(file) {
       data <- filtered_users_list()
       if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- data |>
-        dplyr::mutate(
-          environment = ifelse(
-            is.na(environment) |
-              environment == "" |
-              environment == " ",
-            "(Not Set)",
-            environment
-          )
-        ) |>
+        dplyr::mutate(environment = normalize_environment(environment)) |>
         dplyr::select(
           "username",
           "email",
@@ -1021,11 +1001,7 @@ content_overview_server <- function(input, output, session, content_totals) {
     content = function(file) {
       df <- filtered_contents_in_range()
       if (is.null(df) || nrow(df) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- df |>
@@ -1047,11 +1023,7 @@ content_overview_server <- function(input, output, session, content_totals) {
     content = function(file) {
       df <- filtered_contents_in_range()
       if (is.null(df) || nrow(df) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
@@ -1337,11 +1309,7 @@ content_list_server <- function(
     content = function(file) {
       data <- filtered_content_list()
       if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       cols <- c(
@@ -1659,11 +1627,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
     content = function(file) {
       df <- usage_filtered()
       if (is.null(df) || nrow(df) == 0 || !"visits" %in% names(df)) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- df |>
@@ -1685,11 +1649,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
     content = function(file) {
       df <- usage_filtered()
       if (is.null(df) || nrow(df) == 0 || !"user_guid" %in% names(df)) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       csv_data <- df |>
@@ -2081,31 +2041,30 @@ shiny_apps_server <- function(
           !"content_guid" %in% names(df) ||
           !"num_sessions" %in% names(df)
       ) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
+      has_duration <- "duration" %in% names(df)
       app_summary <- df |>
         dplyr::group_by(.data$environment, .data$content_guid) |>
         dplyr::summarise(
           total_sessions = sum(.data$num_sessions, na.rm = TRUE),
           unique_users = dplyr::n_distinct(.data$user_guid),
-          avg_duration_minutes = if ("duration" %in% names(df)) {
-            total_duration <- sum(.data$duration, na.rm = TRUE)
-            total_sessions_inner <- sum(.data$num_sessions, na.rm = TRUE)
-            if (total_sessions_inner > 0) {
-              round((total_duration / total_sessions_inner) / 60, 2)
-            } else {
-              NA_real_
-            }
+          total_duration = if (has_duration) {
+            sum(.data$duration, na.rm = TRUE)
           } else {
             NA_real_
           },
           .groups = "drop"
-        )
+        ) |>
+        dplyr::mutate(
+          avg_duration_minutes = dplyr::if_else(
+            is.na(total_duration) | total_sessions == 0,
+            NA_real_,
+            round((total_duration / total_sessions) / 60, 2)
+          )
+        ) |>
+        dplyr::select(-"total_duration")
       content_df <- shiny_content_list_latest()
       if (!is.null(content_df)) {
         content_join <- content_df |>
@@ -2117,15 +2076,7 @@ shiny_apps_server <- function(
           )
       }
       csv_data <- app_summary |>
-        dplyr::mutate(
-          environment = ifelse(
-            is.na(environment) |
-              environment == "" |
-              environment == " ",
-            "(Not Set)",
-            environment
-          )
-        )
+        dplyr::mutate(environment = normalize_environment(environment))
       cols <- c(
         "title",
         "environment",
@@ -2133,7 +2084,11 @@ shiny_apps_server <- function(
         "unique_users",
         "avg_duration_minutes"
       )
-      utils::write.csv(csv_data[, cols, drop = FALSE], file, row.names = FALSE)
+      utils::write.csv(
+        csv_data |> dplyr::select(dplyr::any_of(cols)),
+        file,
+        row.names = FALSE
+      )
     }
   )
 
@@ -2145,18 +2100,15 @@ shiny_apps_server <- function(
     content = function(file) {
       df <- shiny_usage_filtered()
       if (is.null(df) || nrow(df) == 0 || !"num_sessions" %in% names(df)) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
+      has_peak <- "peak_concurrent" %in% names(df)
       csv_data <- df |>
         dplyr::group_by(date) |>
         dplyr::summarise(
           total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-          peak_concurrent = if ("peak_concurrent" %in% names(df)) {
+          peak_concurrent = if (has_peak) {
             suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
           } else {
             NA_real_
@@ -2164,6 +2116,9 @@ shiny_apps_server <- function(
           .groups = "drop"
         ) |>
         dplyr::arrange(date)
+      if (!has_peak) {
+        csv_data <- csv_data |> dplyr::select(-"peak_concurrent")
+      }
       utils::write.csv(csv_data, file, row.names = FALSE)
     }
   )
@@ -2436,11 +2391,7 @@ content_by_user_server <- function(
           !"user_guid" %in% names(df) ||
           !"visits" %in% names(df)
       ) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
       summary_df <- df |>
@@ -2471,21 +2422,23 @@ content_by_user_server <- function(
       }
       csv_data <- summary_df |>
         dplyr::mutate(
-          username = ifelse(
-            is.na(.data$user_guid) | is.na(.data$username),
-            "(anonymous)",
-            .data$username
-          ),
-          environment = ifelse(
-            is.na(environment) |
-              environment == "" |
-              environment == " ",
-            "(Not Set)",
-            environment
-          )
+          username = if ("username" %in% names(summary_df)) {
+            ifelse(
+              is.na(.data$user_guid) | is.na(.data$username),
+              "(anonymous)",
+              .data$username
+            )
+          } else {
+            ifelse(is.na(.data$user_guid), "(anonymous)", .data$user_guid)
+          },
+          environment = normalize_environment(environment)
         )
       cols <- c("username", "title", "environment", "total_visits")
-      utils::write.csv(csv_data[, cols, drop = FALSE], file, row.names = FALSE)
+      utils::write.csv(
+        csv_data |> dplyr::select(dplyr::any_of(cols)),
+        file,
+        row.names = FALSE
+      )
     }
   )
 }
@@ -2773,33 +2726,26 @@ shiny_sessions_by_user_server <- function(
           !"user_guid" %in% names(df) ||
           !"num_sessions" %in% names(df)
       ) {
-        utils::write.csv(
-          data.frame(message = "No data available"),
-          file,
-          row.names = FALSE
-        )
+        write_empty_csv(file)
         return()
       }
+      has_duration <- "duration" %in% names(df)
       summary_df <- df |>
         dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
         dplyr::summarise(
           total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-          total_duration = if ("duration" %in% names(df)) {
+          total_duration = if (has_duration) {
             sum(.data$duration, na.rm = TRUE)
           } else {
             NA_real_
           },
           .groups = "drop"
-        )
-      summary_df <- summary_df |>
+        ) |>
         dplyr::mutate(
-          avg_duration_minutes = round(
-            ifelse(
-              is.na(.data$total_duration) | .data$total_sessions == 0,
-              NA_real_,
-              (.data$total_duration / .data$total_sessions) / 60
-            ),
-            2
+          avg_duration_minutes = dplyr::if_else(
+            is.na(total_duration) | total_sessions == 0,
+            NA_real_,
+            round((total_duration / total_sessions) / 60, 2)
           )
         )
       u_df <- user_list_latest_usage()
@@ -2824,18 +2770,16 @@ shiny_sessions_by_user_server <- function(
       }
       csv_data <- summary_df |>
         dplyr::mutate(
-          username = ifelse(
-            is.na(.data$user_guid) | is.na(.data$username),
-            "(anonymous)",
-            .data$username
-          ),
-          environment = ifelse(
-            is.na(environment) |
-              environment == "" |
-              environment == " ",
-            "(Not Set)",
-            environment
-          )
+          username = if ("username" %in% names(summary_df)) {
+            ifelse(
+              is.na(.data$user_guid) | is.na(.data$username),
+              "(anonymous)",
+              .data$username
+            )
+          } else {
+            ifelse(is.na(.data$user_guid), "(anonymous)", .data$user_guid)
+          },
+          environment = normalize_environment(environment)
         )
       cols <- c(
         "username",
@@ -2844,7 +2788,11 @@ shiny_sessions_by_user_server <- function(
         "total_sessions",
         "avg_duration_minutes"
       )
-      utils::write.csv(csv_data[, cols, drop = FALSE], file, row.names = FALSE)
+      utils::write.csv(
+        csv_data |> dplyr::select(dplyr::any_of(cols)),
+        file,
+        row.names = FALSE
+      )
     }
   )
 }
