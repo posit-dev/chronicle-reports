@@ -42,10 +42,21 @@ chronicle_list_dirs <- function(path) {
     parsed <- arrow::FileSystem$from_uri(path)
     fs <- parsed$fs
     subpath <- parsed$path
+
+    # Debug: print what we're working with
+    message("S3 path: ", path)
+    message("Subpath: ", subpath)
+
     selector <- arrow::FileSelector$create(subpath, recursive = FALSE)
     info <- fs$GetFileInfo(selector)
+
+    message("Found ", length(info$path), " items")
+
     is_dir <- info$type == arrow::FileType$Directory
     dir_paths <- as.character(info$path[is_dir])
+
+    message("Found ", length(dir_paths), " directories")
+
     basename(dir_paths)
   } else {
     list.dirs(path, recursive = FALSE, full.names = FALSE)
