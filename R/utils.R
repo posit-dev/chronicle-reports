@@ -14,46 +14,14 @@ chronicle_path <- function(
   frequency = c("daily", "hourly", "curated")
 ) {
   frequency <- match.arg(frequency)
-  if (is.null(metric)) {
-    path <- chronicle_join_path(base_path, frequency, "v2")
+
+  # Use paste for S3 paths to ensure forward slashes, glue for local paths
+  if (startsWith(base_path, "s3://")) {
+    base_path <- sub("/+$", "", base_path)
+    glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
   } else {
-    path <- chronicle_join_path(base_path, frequency, "v2", metric)
+    glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
   }
-  paste0(path, "/")
-}
-
-#' Join path components for both local and S3 paths
-#'
-#' Uses paste with "/" separator to avoid double-slash issues
-#' with S3 URIs that `file.path()` can cause.
-#'
-#' @param ... Path components to join
-#'
-#' @return Character string with the joined path
-#'
-#' @keywords internal
-#' @noRd
-chronicle_join_path <- function(...) {
-  parts <- c(...)
-  if (length(parts) == 0L) {
-    return("")
-  }
-
-  # Handle first component separately to preserve URI schemes and absolute paths
-  # Strip only trailing slashes to keep URI schemes and leading "/" for absolute paths
-  first <- sub("/+$", "", parts[1])
-
-  if (length(parts) > 1L) {
-    # For subsequent components, strip both leading and trailing slashes
-    rest <- parts[-1]
-    rest <- sub("^/+", "", rest)
-    rest <- sub("/+$", "", rest)
-    parts <- c(first, rest)
-  } else {
-    parts <- first
-  }
-
-  paste(parts, collapse = "/")
 }
 
 #' List immediate subdirectories of a path
@@ -75,7 +43,8 @@ chronicle_list_dirs <- function(path) {
     selector <- arrow::FileSelector$create(subpath, recursive = FALSE)
     info <- fs$GetFileInfo(selector)
     is_dir <- info$type == arrow::FileType$Directory
-    basename(info$path[is_dir])
+    dir_paths <- as.character(info$path[is_dir])
+    basename(dir_paths)
   } else {
     dirs <- list.dirs(path, recursive = FALSE, full.names = FALSE)
     dirs[dirs != "."]
@@ -144,7 +113,11 @@ chronicle_raw_data <- function(
     year_str <- ymd[["year"]]
     month_str <- sprintf("%02d", as.integer(ymd[["month"]]))
     day_str <- sprintf("%02d", as.integer(ymd[["day"]]))
-    path <- chronicle_join_path(path, year_str, month_str, day_str)
+    # Strip trailing slash for S3 paths to avoid double slashes
+    if (startsWith(path, "s3://")) {
+      path <- sub("/+$", "", path)
+    }
+    path <- glue::glue("{path}/{year_str}/{month_str}/{day_str}/")
     partitioning <- NULL
   } else {
     partitioning <- c("Year", "Month", "Day")
@@ -241,10 +214,14 @@ chronicle_list_data <- function(
   # Get two levels of directory names: product/metric
   all_dirs <- unlist(
     lapply(product_dirs, function(product_dir) {
-      metric_dirs <- chronicle_list_dirs(
-        chronicle_join_path(data_path, product_dir)
-      )
-      chronicle_join_path(product_dir, metric_dirs)
+      # Build path to product directory
+      if (startsWith(data_path, "s3://")) {
+        product_path <- paste(sub("/+$", "", data_path), product_dir, sep = "/")
+      } else {
+        product_path <- file.path(data_path, product_dir)
+      }
+      metric_dirs <- chronicle_list_dirs(product_path)
+      file.path(product_dir, metric_dirs)
     }),
     use.names = FALSE
   )
