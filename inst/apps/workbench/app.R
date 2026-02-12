@@ -70,11 +70,11 @@ users_overview_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(6, 6),
     bslib::card(
-      bslib::card_header("User Trends Over Time"),
+      card_header_with_download("User Trends Over Time", "dl_users_trend"),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_trend_plot"))
     ),
     bslib::card(
-      bslib::card_header("Average Users by Day of Week"),
+      card_header_with_download("Average Users by Day of Week", "dl_users_dow"),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_dow_plot"))
     )
   )
@@ -378,6 +378,59 @@ users_overview_server <- function(input, output, session) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handler: User Trends Over Time
+  output$dl_users_trend <- shiny::downloadHandler(
+    filename = function() {
+      paste0("user_trends_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(
+          data.frame(message = "No data available"),
+          file,
+          row.names = FALSE
+        )
+        return()
+      }
+      csv_data <- data |>
+        dplyr::select(
+          "date", "named_users", "active_users_1day",
+          "administrators", "super_administrators"
+        ) |>
+        dplyr::arrange(date)
+      utils::write.csv(csv_data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handler: Average Users by Day of Week
+  output$dl_users_dow <- shiny::downloadHandler(
+    filename = function() {
+      paste0("users_by_day_of_week_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(
+          data.frame(message = "No data available"),
+          file,
+          row.names = FALSE
+        )
+        return()
+      }
+      csv_data <- data |>
+        dplyr::mutate(
+          day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
+        ) |>
+        dplyr::group_by(.data$day_of_week) |>
+        dplyr::summarise(
+          avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
+          .groups = "drop"
+        )
+      utils::write.csv(csv_data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -385,7 +438,7 @@ users_overview_server <- function(input, output, session) {
 # ==============================================
 
 user_list_ui <- bslib::card(
-  bslib::card_header("Filters"),
+  card_header_with_download("Filters", "dl_user_list"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
@@ -549,6 +602,41 @@ user_list_server <- function(input, output, session) {
         rownames = FALSE
       )
   })
+
+  # Download handler: User List
+  output$dl_user_list <- shiny::downloadHandler(
+    filename = function() {
+      paste0("user_list_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_user_list()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(
+          data.frame(message = "No data available"),
+          file,
+          row.names = FALSE
+        )
+        return()
+      }
+      csv_data <- data |>
+        dplyr::mutate(
+          environment = ifelse(
+            is.na(.data$environment) |
+              .data$environment == "" |
+              .data$environment == " ",
+            "(Not Set)",
+            .data$environment
+          )
+        ) |>
+        dplyr::select(
+          "username",
+          "user_role",
+          "environment",
+          "last_active_at"
+        )
+      utils::write.csv(csv_data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================

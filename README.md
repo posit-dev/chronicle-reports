@@ -325,6 +325,29 @@ file.copy(
 shiny::runApp("my-custom-report")
 ```
 
+### Running the Source from the Command Line
+
+If you would like to work directly on this repo to submit changes to it, you can easily run the reports
+from the command line with sample data.
+
+#### Install Dependencies
+
+```bash
+Rscript -e "install.packages('devtools'); devtools::install_deps(dependencies = TRUE)"
+```
+
+#### Run the Connect Dashboard
+
+```bash
+Rscript -e "devtools::load_all(); sample_path <- chronicle_sample_data(); chronicle_run_app('connect', base_path = sample_path)"
+```
+
+#### Run the Workbench Dashboard
+
+```bash
+Rscript -e "devtools::load_all(); sample_path <- chronicle_sample_data(); chronicle_run_app('workbench', base_path = sample_path)"
+```
+
 ## License
 
 MIT License. See LICENSE file for details.

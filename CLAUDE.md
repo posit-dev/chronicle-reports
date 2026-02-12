@@ -42,31 +42,22 @@ All reports are now located in [inst/apps/](inst/apps/) and can be run using `ch
 
 ## Development Workflow
 
-### Setup
+### Running from the Command Line
 
-```r
-# Install the package from GitHub
-pak::pak("posit-dev/chronicle-reports")
+You can also run the apps from the command line using `Rscript`. First install dependencies:
 
-# Or for development, load the package locally
-library(devtools)
-load_all()
+```bash
+Rscript -e "install.packages('devtools'); devtools::install_deps(dependencies = TRUE)"
 ```
 
-### Running Reports Locally
+Then run an app with sample data:
 
-Reports expect Chronicle data at a base path (default: `/var/lib/posit-chronicle/data`):
+```bash
+Rscript -e "devtools::load_all(); sample_path <- chronicle_sample_data(); chronicle_run_app('connect', base_path = sample_path)"
+```
 
-```r
-# List available apps
-chronicle_list_apps()
-# Returns: c("connect", "workbench")
-
-# Run an app with local filesystem data
-chronicle_run_app("connect", base_path = "/path/to/chronicle/data")
-
-# Run an app with S3 data
-chronicle_run_app("workbench", base_path = "s3://chronicle-bucket/optional-prefix")
+```bash
+Rscript -e "devtools::load_all(); sample_path <- chronicle_sample_data(); chronicle_run_app('workbench', base_path = sample_path)"
 ```
 
 ### Testing

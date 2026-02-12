@@ -239,3 +239,28 @@ chronicle_list_raw_data <- function(
 
   list.dirs(data_path, recursive = FALSE, full.names = FALSE)
 }
+
+
+#' Create a card header with a CSV download button
+#'
+#' Creates a bslib card header with a title on the left and a small
+#' CSV download button on the right. Used in dashboard charts to allow
+#' users to download the chart data.
+#'
+#' @param title Character string for the card header title
+#' @param download_id Character string for the Shiny download button output ID
+#'
+#' @return A bslib card_header element
+#' @export
+card_header_with_download <- function(title, download_id) {
+  bslib::card_header(
+    class = "d-flex justify-content-between align-items-center",
+    title,
+    shiny::downloadButton(
+      download_id,
+      label = "CSV",
+      class = "btn btn-outline-secondary btn-sm",
+      icon = shiny::icon("download")
+    )
+  )
+}
