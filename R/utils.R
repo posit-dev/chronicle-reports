@@ -296,7 +296,7 @@ enrich_with_names <- function(summary_df, user_df = NULL, content_df = NULL) {
   if (
     !is.null(content_df) &&
       all(c("id", "environment", "title") %in% names(content_df)) &&
-      "content_guid" %in% names(summary_df)
+      all(c("content_guid", "environment") %in% names(summary_df))
   ) {
     content_join <- content_df |>
       dplyr::select("id", "environment", "title")
@@ -308,24 +308,28 @@ enrich_with_names <- function(summary_df, user_df = NULL, content_df = NULL) {
   }
 
   if ("user_guid" %in% names(summary_df)) {
-    has_username <- "username" %in% names(summary_df)
-    summary_df <- summary_df |>
-      dplyr::mutate(
-        username = if (has_username) {
-          ifelse(
+    if ("username" %in% names(summary_df)) {
+      summary_df <- summary_df |>
+        dplyr::mutate(
+          username = ifelse(
             is.na(.data$user_guid) | is.na(.data$username),
             "(anonymous)",
             .data$username
           )
-        } else {
-          ifelse(is.na(.data$user_guid), "(anonymous)", .data$user_guid)
-        }
-      )
+        )
+    } else {
+      summary_df <- summary_df |>
+        dplyr::mutate(
+          username = ifelse(
+            is.na(.data$user_guid), "(anonymous)", .data$user_guid
+          )
+        )
+    }
   }
 
   if ("environment" %in% names(summary_df)) {
     summary_df <- summary_df |>
-      dplyr::mutate(environment = normalize_environment(environment))
+      dplyr::mutate(environment = normalize_environment(.data$environment))
   }
 
   summary_df
@@ -345,9 +349,9 @@ add_avg_duration <- function(df) {
   df |>
     dplyr::mutate(
       avg_duration_minutes = dplyr::if_else(
-        is.na(total_duration) | total_sessions == 0,
+        is.na(.data$total_duration) | .data$total_sessions == 0,
         NA_real_,
-        round((total_duration / total_sessions) / 60, 2)
+        round((.data$total_duration / .data$total_sessions) / 60, 2)
       )
     ) |>
     dplyr::select(-"total_duration")

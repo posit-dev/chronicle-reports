@@ -571,13 +571,7 @@ user_list_server <- function(input, output, session) {
 
     data |>
       dplyr::mutate(
-        environment = ifelse(
-          is.na(.data$environment) |
-            .data$environment == "" |
-            .data$environment == " ",
-          "(Not Set)",
-          .data$environment
-        )
+        environment = normalize_environment(.data$environment)
       ) |>
       dplyr::select(
         "username",
