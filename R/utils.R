@@ -37,12 +37,22 @@ chronicle_path <- function(
 #' @noRd
 chronicle_list_dirs <- function(path) {
   if (startsWith(path, "s3://")) {
-    # SubTreeFileSystem creates a view rooted at the given S3 path
-    fs <- arrow::SubTreeFileSystem$create(path)
-    selector <- arrow::FileSelector$create("", recursive = FALSE)
+    # Parse S3 URI to get filesystem and path
+    parsed <- arrow::FileSystem$from_uri(path)
+    fs <- parsed$fs
+    subpath <- parsed$path
+
+    # Ensure subpath ends with / to list directory contents
+    if (subpath != "" && !endsWith(subpath, "/")) {
+      subpath <- paste0(subpath, "/")
+    }
+
+    # List immediate children of this directory
+    selector <- arrow::FileSelector$create(subpath, recursive = FALSE)
     info <- fs$GetFileInfo(selector)
-    dirs <- Filter(function(fi) fi$type == arrow::FileType$Directory, info)
-    vapply(dirs, function(fi) fi$base_name, character(1))
+    is_dir <- info$type == arrow::FileType$Directory
+    dir_paths <- info$path[is_dir]
+    basename(as.character(dir_paths))
   } else {
     list.dirs(path, recursive = FALSE, full.names = FALSE)
   }
