@@ -15,9 +15,9 @@ chronicle_path <- function(
 ) {
   frequency <- match.arg(frequency)
   if (is.null(metric)) {
-    glue::glue("{base_path}/{frequency}/v2/")
+    chronicle_join_path(base_path, frequency, "v2")
   } else {
-    glue::glue("{base_path}/{frequency}/v2/{metric}/")
+    chronicle_join_path(base_path, frequency, "v2", metric)
   }
 }
 
@@ -125,7 +125,7 @@ chronicle_raw_data <- function(
     year_str <- ymd[["year"]]
     month_str <- sprintf("%02d", as.integer(ymd[["month"]]))
     day_str <- sprintf("%02d", as.integer(ymd[["day"]]))
-    path <- glue::glue("{path}{year_str}/{month_str}/{day_str}/")
+    path <- chronicle_join_path(path, year_str, month_str, day_str)
     partitioning <- NULL
   } else {
     partitioning <- c("Year", "Month", "Day")
