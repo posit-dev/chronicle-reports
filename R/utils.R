@@ -37,6 +37,8 @@ chronicle_path <- function(
 #' @noRd
 chronicle_list_dirs <- function(path) {
   if (startsWith(path, "s3://")) {
+    # Strip trailing slash for S3 directory listing
+    path <- sub("/+$", "", path)
     parsed <- arrow::FileSystem$from_uri(path)
     fs <- parsed$fs
     subpath <- parsed$path
