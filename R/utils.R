@@ -15,10 +15,11 @@ chronicle_path <- function(
 ) {
   frequency <- match.arg(frequency)
   if (is.null(metric)) {
-    chronicle_join_path(base_path, frequency, "v2")
+    path <- chronicle_join_path(base_path, frequency, "v2")
   } else {
-    chronicle_join_path(base_path, frequency, "v2", metric)
+    path <- chronicle_join_path(base_path, frequency, "v2", metric)
   }
+  paste0(path, "/")
 }
 
 #' Join path components for both local and S3 paths
@@ -34,8 +35,24 @@ chronicle_path <- function(
 #' @noRd
 chronicle_join_path <- function(...) {
   parts <- c(...)
-  # Strip trailing slashes from each part, then join with /
-  parts <- sub("/+$", "", parts)
+  if (length(parts) == 0L) {
+    return("")
+  }
+
+  # Handle first component separately to preserve URI schemes and absolute paths
+  # Strip only trailing slashes to keep URI schemes and leading "/" for absolute paths
+  first <- sub("/+$", "", parts[1])
+
+  if (length(parts) > 1L) {
+    # For subsequent components, strip both leading and trailing slashes
+    rest <- parts[-1]
+    rest <- sub("^/+", "", rest)
+    rest <- sub("/+$", "", rest)
+    parts <- c(first, rest)
+  } else {
+    parts <- first
+  }
+
   paste(parts, collapse = "/")
 }
 
@@ -52,8 +69,10 @@ chronicle_join_path <- function(...) {
 #' @noRd
 chronicle_list_dirs <- function(path) {
   if (startsWith(path, "s3://")) {
-    fs <- arrow::SubTreeFileSystem$create(path)
-    selector <- arrow::FileSelector$create("", recursive = FALSE)
+    parsed <- arrow::FileSystem$from_uri(path)
+    fs <- parsed$fs
+    subpath <- parsed$path
+    selector <- arrow::FileSelector$create(subpath, recursive = FALSE)
     info <- fs$GetFileInfo(selector)
     is_dir <- info$type == arrow::FileType$Directory
     basename(info$path[is_dir])
@@ -225,7 +244,7 @@ chronicle_list_data <- function(
       metric_dirs <- chronicle_list_dirs(
         chronicle_join_path(data_path, product_dir)
       )
-      file.path(product_dir, metric_dirs)
+      chronicle_join_path(product_dir, metric_dirs)
     }),
     use.names = FALSE
   )
