@@ -21,6 +21,24 @@ chronicle_path <- function(
   }
 }
 
+#' Join path components for both local and S3 paths
+#'
+#' Uses paste with "/" separator to avoid double-slash issues
+#' with S3 URIs that `file.path()` can cause.
+#'
+#' @param ... Path components to join
+#'
+#' @return Character string with the joined path
+#'
+#' @keywords internal
+#' @noRd
+chronicle_join_path <- function(...) {
+  parts <- c(...)
+  # Strip trailing slashes from each part, then join with /
+  parts <- sub("/+$", "", parts)
+  paste(parts, collapse = "/")
+}
+
 #' List immediate subdirectories of a path
 #'
 #' Works with both local filesystem paths and S3 URIs.
@@ -37,10 +55,11 @@ chronicle_list_dirs <- function(path) {
     fs <- arrow::SubTreeFileSystem$create(path)
     selector <- arrow::FileSelector$create("", recursive = FALSE)
     info <- fs$GetFileInfo(selector)
-    dirs <- Filter(function(fi) fi$type == arrow::FileType$Directory, info)
-    vapply(dirs, function(fi) basename(fi$path), character(1))
+    is_dir <- info$type == arrow::FileType$Directory
+    basename(info$path[is_dir])
   } else {
-    list.dirs(path, recursive = FALSE, full.names = FALSE)
+    dirs <- list.dirs(path, recursive = FALSE, full.names = FALSE)
+    dirs[dirs != "."]
   }
 }
 
@@ -204,7 +223,7 @@ chronicle_list_data <- function(
   all_dirs <- unlist(
     lapply(product_dirs, function(product_dir) {
       metric_dirs <- chronicle_list_dirs(
-        paste0(data_path, product_dir, "/")
+        chronicle_join_path(data_path, product_dir)
       )
       file.path(product_dir, metric_dirs)
     }),
