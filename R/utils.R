@@ -14,14 +14,7 @@ chronicle_path <- function(
   frequency = c("daily", "hourly", "curated")
 ) {
   frequency <- match.arg(frequency)
-
-  # Use paste for S3 paths to ensure forward slashes, glue for local paths
-  if (startsWith(base_path, "s3://")) {
-    base_path <- sub("/+$", "", base_path)
-    glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
-  } else {
-    glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
-  }
+  glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
 }
 
 #' List immediate subdirectories of a path
@@ -111,11 +104,7 @@ chronicle_raw_data <- function(
     year_str <- ymd[["year"]]
     month_str <- sprintf("%02d", as.integer(ymd[["month"]]))
     day_str <- sprintf("%02d", as.integer(ymd[["day"]]))
-    # Strip trailing slash for S3 paths to avoid double slashes
-    if (startsWith(path, "s3://")) {
-      path <- sub("/+$", "", path)
-    }
-    path <- glue::glue("{path}/{year_str}/{month_str}/{day_str}/")
+    path <- glue::glue("{path}{year_str}/{month_str}/{day_str}/")
     partitioning <- NULL
   } else {
     partitioning <- c("Year", "Month", "Day")
@@ -212,14 +201,9 @@ chronicle_list_data <- function(
   # Get two levels of directory names: product/metric
   all_dirs <- unlist(
     lapply(product_dirs, function(product_dir) {
-      # Build path to product directory
-      if (startsWith(data_path, "s3://")) {
-        # For S3, use paste0 with explicit slash
-        product_path <- paste0(sub("/+$", "", data_path), "/", product_dir)
-      } else {
-        product_path <- file.path(data_path, product_dir)
-      }
-      metric_dirs <- chronicle_list_dirs(product_path)
+      metric_dirs <- chronicle_list_dirs(
+        paste0(data_path, product_dir, "/")
+      )
       file.path(product_dir, metric_dirs)
     }),
     use.names = FALSE
