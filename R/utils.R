@@ -46,8 +46,7 @@ chronicle_list_dirs <- function(path) {
     dir_paths <- as.character(info$path[is_dir])
     basename(dir_paths)
   } else {
-    dirs <- list.dirs(path, recursive = FALSE, full.names = FALSE)
-    dirs[dirs != "."]
+    list.dirs(path, recursive = FALSE, full.names = FALSE)
   }
 }
 
