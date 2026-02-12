@@ -199,9 +199,13 @@ chronicle_list_data <- function(
   # Get two levels of directory names: product/metric
   all_dirs <- unlist(
     lapply(product_dirs, function(product_dir) {
-      metric_dirs <- chronicle_list_dirs(
-        paste0(data_path, product_dir, "/")
-      )
+      # Build path to product directory
+      if (startsWith(data_path, "s3://")) {
+        product_path <- paste0(sub("/+$", "", data_path), "/", product_dir, "/")
+      } else {
+        product_path <- file.path(data_path, product_dir)
+      }
+      metric_dirs <- chronicle_list_dirs(product_path)
       file.path(product_dir, metric_dirs)
     }),
     use.names = FALSE
