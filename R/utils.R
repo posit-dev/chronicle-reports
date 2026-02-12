@@ -265,7 +265,92 @@ write_empty_csv <- function(file) {
 #' @keywords internal
 #' @noRd
 normalize_environment <- function(x) {
-  ifelse(is.na(x) | x == "" | x == " ", "(Not Set)", x)
+  ifelse(is.na(x) | trimws(x) == "", "(Not Set)", x)
+}
+
+#' Enrich a summary data frame with user and content names
+#'
+#' Joins user names and content titles onto a summary data frame that contains
+#' `user_guid` and/or `content_guid` columns. Replaces missing user names with
+#' "(anonymous)" and normalizes environment values.
+#'
+#' @param summary_df Data frame with columns like user_guid, content_guid, environment
+#' @param user_df Optional data frame with at least "id" and "username" columns
+#' @param content_df Optional data frame with at least "id", "environment", and "title" columns
+#'
+#' @return The enriched data frame
+#' @keywords internal
+#' @noRd
+enrich_with_names <- function(summary_df, user_df = NULL, content_df = NULL) {
+  if (
+    !is.null(user_df) &&
+      all(c("id", "username") %in% names(user_df)) &&
+      "user_guid" %in% names(summary_df)
+  ) {
+    user_join <- user_df |>
+      dplyr::select("id", "username")
+    summary_df <- summary_df |>
+      dplyr::left_join(user_join, by = c("user_guid" = "id"))
+  }
+
+  if (
+    !is.null(content_df) &&
+      all(c("id", "environment", "title") %in% names(content_df)) &&
+      "content_guid" %in% names(summary_df)
+  ) {
+    content_join <- content_df |>
+      dplyr::select("id", "environment", "title")
+    summary_df <- summary_df |>
+      dplyr::left_join(
+        content_join,
+        by = c("content_guid" = "id", "environment" = "environment")
+      )
+  }
+
+  if ("user_guid" %in% names(summary_df)) {
+    has_username <- "username" %in% names(summary_df)
+    summary_df <- summary_df |>
+      dplyr::mutate(
+        username = if (has_username) {
+          ifelse(
+            is.na(.data$user_guid) | is.na(.data$username),
+            "(anonymous)",
+            .data$username
+          )
+        } else {
+          ifelse(is.na(.data$user_guid), "(anonymous)", .data$user_guid)
+        }
+      )
+  }
+
+  if ("environment" %in% names(summary_df)) {
+    summary_df <- summary_df |>
+      dplyr::mutate(environment = normalize_environment(environment))
+  }
+
+  summary_df
+}
+
+#' Compute average duration in minutes from total duration and session count
+#'
+#' Expects a data frame with `total_sessions` and `total_duration` columns.
+#' Adds `avg_duration_minutes` and removes the intermediate `total_duration`.
+#'
+#' @param df Data frame with `total_sessions` and `total_duration` columns
+#'
+#' @return The data frame with `avg_duration_minutes` added and `total_duration` removed
+#' @keywords internal
+#' @noRd
+add_avg_duration <- function(df) {
+  df |>
+    dplyr::mutate(
+      avg_duration_minutes = dplyr::if_else(
+        is.na(total_duration) | total_sessions == 0,
+        NA_real_,
+        round((total_duration / total_sessions) / 60, 2)
+      )
+    ) |>
+    dplyr::select(-"total_duration")
 }
 
 #' Create a card header with a CSV download button
@@ -274,7 +359,7 @@ normalize_environment <- function(x) {
 #' CSV download button on the right. Used in dashboard charts to allow
 #' users to download the chart data.
 #'
-#' @param title Character string for the card header title
+#' @param title Character string or UI element for the card header title
 #' @param download_id Character string for the Shiny download button output ID
 #'
 #' @return A bslib card_header element

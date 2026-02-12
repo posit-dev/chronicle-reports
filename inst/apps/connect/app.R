@@ -389,8 +389,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 # ==============================================
 
 users_list_ui <- bslib::card(
-  bslib::card_header(
-    class = "d-flex justify-content-between align-items-center",
+  card_header_with_download(
     shiny::div(
       shiny::span("Filters"),
       shiny::span(
@@ -398,12 +397,7 @@ users_list_ui <- bslib::card(
         shiny::textOutput("users_list_as_of", inline = TRUE)
       )
     ),
-    shiny::downloadButton(
-      "dl_users_list",
-      label = "CSV",
-      class = "btn btn-outline-secondary btn-sm",
-      icon = shiny::icon("download")
-    )
+    "dl_users_list"
   ),
   bslib::layout_columns(
     col_widths = c(6, 6),
@@ -1322,8 +1316,11 @@ content_list_server <- function(
         "quarto_version",
         "last_deployed_time"
       )
-      csv_data <- data[, cols, drop = FALSE]
-      utils::write.csv(csv_data, file, row.names = FALSE)
+      utils::write.csv(
+        data |> dplyr::select(dplyr::any_of(cols)),
+        file,
+        row.names = FALSE
+      )
     }
   )
 }
@@ -2050,33 +2047,26 @@ shiny_apps_server <- function(
         dplyr::summarise(
           total_sessions = sum(.data$num_sessions, na.rm = TRUE),
           unique_users = dplyr::n_distinct(.data$user_guid),
-          total_duration = if (has_duration) {
-            sum(.data$duration, na.rm = TRUE)
-          } else {
-            NA_real_
-          },
           .groups = "drop"
-        ) |>
-        dplyr::mutate(
-          avg_duration_minutes = dplyr::if_else(
-            is.na(total_duration) | total_sessions == 0,
-            NA_real_,
-            round((total_duration / total_sessions) / 60, 2)
+        )
+      if (has_duration) {
+        duration_data <- df |>
+          dplyr::group_by(.data$environment, .data$content_guid) |>
+          dplyr::summarise(
+            total_duration = sum(.data$duration, na.rm = TRUE),
+            .groups = "drop"
           )
-        ) |>
-        dplyr::select(-"total_duration")
-      content_df <- shiny_content_list_latest()
-      if (!is.null(content_df)) {
-        content_join <- content_df |>
-          dplyr::select("id", "environment", "title")
         app_summary <- app_summary |>
           dplyr::left_join(
-            content_join,
-            by = c("content_guid" = "id", "environment" = "environment")
-          )
+            duration_data,
+            by = c("environment", "content_guid")
+          ) |>
+          add_avg_duration()
       }
-      csv_data <- app_summary |>
-        dplyr::mutate(environment = normalize_environment(environment))
+      csv_data <- enrich_with_names(
+        app_summary,
+        content_df = shiny_content_list_latest()
+      )
       cols <- c(
         "title",
         "environment",
@@ -2108,16 +2098,20 @@ shiny_apps_server <- function(
         dplyr::group_by(date) |>
         dplyr::summarise(
           total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-          peak_concurrent = if (has_peak) {
-            suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
-          } else {
-            NA_real_
-          },
           .groups = "drop"
         ) |>
         dplyr::arrange(date)
-      if (!has_peak) {
-        csv_data <- csv_data |> dplyr::select(-"peak_concurrent")
+      if (has_peak) {
+        peak_data <- df |>
+          dplyr::group_by(date) |>
+          dplyr::summarise(
+            peak_concurrent = suppressWarnings(
+              max(.data$peak_concurrent, na.rm = TRUE)
+            ),
+            .groups = "drop"
+          )
+        csv_data <- csv_data |>
+          dplyr::left_join(peak_data, by = "date")
       }
       utils::write.csv(csv_data, file, row.names = FALSE)
     }
@@ -2400,39 +2394,11 @@ content_by_user_server <- function(
           total_visits = sum(.data$visits, na.rm = TRUE),
           .groups = "drop"
         )
-      u_df <- user_list_latest_usage()
-      if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
-        user_join <- u_df |>
-          dplyr::select("id", "username")
-        summary_df <- summary_df |>
-          dplyr::left_join(user_join, by = c("user_guid" = "id"))
-      }
-      c_df <- content_list_latest_usage()
-      if (
-        !is.null(c_df) &&
-          all(c("id", "environment", "title") %in% names(c_df))
-      ) {
-        content_join <- c_df |>
-          dplyr::select("id", "environment", "title")
-        summary_df <- summary_df |>
-          dplyr::left_join(
-            content_join,
-            by = c("content_guid" = "id", "environment" = "environment")
-          )
-      }
-      csv_data <- summary_df |>
-        dplyr::mutate(
-          username = if ("username" %in% names(summary_df)) {
-            ifelse(
-              is.na(.data$user_guid) | is.na(.data$username),
-              "(anonymous)",
-              .data$username
-            )
-          } else {
-            ifelse(is.na(.data$user_guid), "(anonymous)", .data$user_guid)
-          },
-          environment = normalize_environment(environment)
-        )
+      csv_data <- enrich_with_names(
+        summary_df,
+        user_df = user_list_latest_usage(),
+        content_df = content_list_latest_usage()
+      )
       cols <- c("username", "title", "environment", "total_visits")
       utils::write.csv(
         csv_data |> dplyr::select(dplyr::any_of(cols)),
@@ -2734,53 +2700,27 @@ shiny_sessions_by_user_server <- function(
         dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
         dplyr::summarise(
           total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-          total_duration = if (has_duration) {
-            sum(.data$duration, na.rm = TRUE)
-          } else {
-            NA_real_
-          },
           .groups = "drop"
-        ) |>
-        dplyr::mutate(
-          avg_duration_minutes = dplyr::if_else(
-            is.na(total_duration) | total_sessions == 0,
-            NA_real_,
-            round((total_duration / total_sessions) / 60, 2)
-          )
         )
-      u_df <- user_list_latest_usage()
-      if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
-        user_join <- u_df |>
-          dplyr::select("id", "username")
-        summary_df <- summary_df |>
-          dplyr::left_join(user_join, by = c("user_guid" = "id"))
-      }
-      c_df <- content_list_latest_usage()
-      if (
-        !is.null(c_df) &&
-          all(c("id", "environment", "title") %in% names(c_df))
-      ) {
-        content_join <- c_df |>
-          dplyr::select("id", "environment", "title")
+      if (has_duration) {
+        duration_data <- df |>
+          dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
+          dplyr::summarise(
+            total_duration = sum(.data$duration, na.rm = TRUE),
+            .groups = "drop"
+          )
         summary_df <- summary_df |>
           dplyr::left_join(
-            content_join,
-            by = c("content_guid" = "id", "environment" = "environment")
-          )
+            duration_data,
+            by = c("environment", "user_guid", "content_guid")
+          ) |>
+          add_avg_duration()
       }
-      csv_data <- summary_df |>
-        dplyr::mutate(
-          username = if ("username" %in% names(summary_df)) {
-            ifelse(
-              is.na(.data$user_guid) | is.na(.data$username),
-              "(anonymous)",
-              .data$username
-            )
-          } else {
-            ifelse(is.na(.data$user_guid), "(anonymous)", .data$user_guid)
-          },
-          environment = normalize_environment(environment)
-        )
+      csv_data <- enrich_with_names(
+        summary_df,
+        user_df = user_list_latest_usage(),
+        content_df = content_list_latest_usage()
+      )
       cols <- c(
         "username",
         "title",
