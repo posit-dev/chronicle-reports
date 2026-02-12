@@ -37,27 +37,21 @@ chronicle_path <- function(
 #' @noRd
 chronicle_list_dirs <- function(path) {
   if (startsWith(path, "s3://")) {
-    # Strip trailing slash for S3 directory listing
-    path <- sub("/+$", "", path)
+    # Parse S3 URI to get filesystem and path
     parsed <- arrow::FileSystem$from_uri(path)
     fs <- parsed$fs
     subpath <- parsed$path
 
-    # Debug: print what we're working with
-    message("S3 path: ", path)
-    message("Subpath: ", subpath)
+    # Ensure subpath has trailing slash for directory listing
+    if (!endsWith(subpath, "/") && subpath != "") {
+      subpath <- paste0(subpath, "/")
+    }
 
     selector <- arrow::FileSelector$create(subpath, recursive = FALSE)
     info <- fs$GetFileInfo(selector)
-
-    message("Found ", length(info$path), " items")
-
     is_dir <- info$type == arrow::FileType$Directory
-    dir_paths <- as.character(info$path[is_dir])
-
-    message("Found ", length(dir_paths), " directories")
-
-    basename(dir_paths)
+    dir_paths <- info$path[is_dir]
+    basename(as.character(dir_paths))
   } else {
     list.dirs(path, recursive = FALSE, full.names = FALSE)
   }
@@ -228,7 +222,8 @@ chronicle_list_data <- function(
     lapply(product_dirs, function(product_dir) {
       # Build path to product directory
       if (startsWith(data_path, "s3://")) {
-        product_path <- paste(sub("/+$", "", data_path), product_dir, sep = "/")
+        # For S3, use paste0 with explicit slash
+        product_path <- paste0(sub("/+$", "", data_path), "/", product_dir)
       } else {
         product_path <- file.path(data_path, product_dir)
       }
