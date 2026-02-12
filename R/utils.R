@@ -42,11 +42,7 @@ chronicle_list_dirs <- function(path) {
     fs <- parsed$fs
     subpath <- parsed$path
 
-    # Ensure subpath has trailing slash for directory listing
-    if (!endsWith(subpath, "/") && subpath != "") {
-      subpath <- paste0(subpath, "/")
-    }
-
+    # List contents of the directory
     selector <- arrow::FileSelector$create(subpath, recursive = FALSE)
     info <- fs$GetFileInfo(selector)
     is_dir <- info$type == arrow::FileType$Directory
