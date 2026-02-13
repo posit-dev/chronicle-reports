@@ -22,11 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure git safe directory
-        run: |
-          git config --global --add safe.directory /__w/chronicle-reports/chronicle-reports
-          git config --global --add safe.directory '*'
-
       - name: Install system dependencies
         run: |
           apt-get update
