@@ -28,11 +28,11 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rsconnect, any::renv
+          extra-packages: any::rsconnect, any::renv, any::devtools
 
-      - name: Install chronicle.reports
+      - name: Install chronicle.reports with dependencies
         run: |
-          Rscript -e 'devtools::install(upgrade = FALSE)'
+          Rscript -e 'devtools::install(dependencies = TRUE, upgrade = FALSE)'
 
       - name: Regenerate manifests
         run: |
