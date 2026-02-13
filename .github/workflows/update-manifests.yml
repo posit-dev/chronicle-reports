@@ -22,6 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Configure git safe directory
+        run: |
+          git config --global --add safe.directory /__w/chronicle-reports/chronicle-reports
+          git config --global --add safe.directory '*'
+
       - name: Install system dependencies
         run: |
           apt-get update
@@ -52,14 +57,7 @@ jobs:
         run: |
           Rscript -e '
           options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
-          install.packages(c("rsconnect", "renv", "devtools"), repos = c(CRAN = "https://p3m.dev/cran/__linux__/bookworm/latest"))
-          '
-
-      - name: Install chronicle.reports with dependencies
-        run: |
-          Rscript -e '
-          options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
-          devtools::install(dependencies = TRUE, upgrade = FALSE)
+          install.packages(c("rsconnect", "renv"), repos = c(CRAN = "https://p3m.dev/cran/__linux__/bookworm/latest"))
           '
 
       - name: Regenerate manifests
