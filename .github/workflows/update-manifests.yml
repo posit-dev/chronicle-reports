@@ -40,6 +40,11 @@ jobs:
           app_dirs <- c("inst/apps/connect", "inst/apps/workbench")
           for (app_dir in app_dirs) {
             message("Generating manifest for: ", app_dir)
+
+            # Snapshot current dependencies to renv.lock
+            renv::snapshot(project = app_dir, prompt = FALSE)
+
+            # Generate manifest.json
             rsconnect::writeManifest(appDir = app_dir)
           }
           '
