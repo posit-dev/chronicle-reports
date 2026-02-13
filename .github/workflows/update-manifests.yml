@@ -37,6 +37,11 @@ jobs:
       - name: Regenerate manifests
         run: |
           Rscript -e '
+          # Set up named repositories for renv
+          options(repos = c(
+            CRAN = "https://p3m.dev/cran/__linux__/noble/latest"
+          ))
+
           app_dirs <- c("inst/apps/connect", "inst/apps/workbench")
           for (app_dir in app_dirs) {
             message("Generating manifest for: ", app_dir)
