@@ -17,6 +17,29 @@ chronicle_path <- function(
   glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
 }
 
+#' List immediate subdirectories of a path
+#'
+#' Works with both local filesystem paths and S3 URIs.
+#' For S3 paths, uses Arrow's S3 filesystem to list directories.
+#'
+#' @param path Directory path (local or s3://)
+#'
+#' @return Character vector of subdirectory names (basenames only)
+#'
+#' @keywords internal
+#' @noRd
+chronicle_list_dirs <- function(path) {
+  if (startsWith(path, "s3://")) {
+    fs <- arrow::SubTreeFileSystem$create(path)
+    selector <- arrow::FileSelector$create("", recursive = FALSE)
+    info <- fs$GetFileInfo(selector)
+    dirs <- Filter(function(fi) fi$type == arrow::FileType$Directory, info)
+    vapply(dirs, function(fi) basename(fi$path), character(1))
+  } else {
+    list.dirs(path, recursive = FALSE, full.names = FALSE)
+  }
+}
+
 #' Load raw Chronicle data (Advanced)
 #'
 #' Loads raw Chronicle metric data. **Most users should use [chronicle_data()]
@@ -171,16 +194,18 @@ chronicle_list_data <- function(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   data_path <- chronicle_path(base_path, frequency = "curated")
-  product_dirs <- list.dirs(data_path, recursive = FALSE, full.names = FALSE)
+  product_dirs <- chronicle_list_dirs(data_path)
 
   # Get two levels of directory names: product/metric
   all_dirs <- unlist(
     lapply(product_dirs, function(product_dir) {
-      metric_dirs <- list.dirs(
-        file.path(data_path, product_dir),
-        recursive = FALSE,
-        full.names = FALSE
-      )
+      # Build path to product directory
+      if (startsWith(data_path, "s3://")) {
+        product_path <- paste0(sub("/+$", "", data_path), "/", product_dir, "/")
+      } else {
+        product_path <- file.path(data_path, product_dir)
+      }
+      metric_dirs <- chronicle_list_dirs(product_path)
       file.path(product_dir, metric_dirs)
     }),
     use.names = FALSE
@@ -237,5 +262,5 @@ chronicle_list_raw_data <- function(
   frequency <- match.arg(frequency)
   data_path <- chronicle_path(base_path, frequency = frequency)
 
-  list.dirs(data_path, recursive = FALSE, full.names = FALSE)
+  chronicle_list_dirs(data_path)
 }
