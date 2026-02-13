@@ -32,7 +32,7 @@ jobs:
 
       - name: Install chronicle.reports
         run: |
-          Rscript -e 'devtools::install(upgrade = "never")'
+          Rscript -e 'devtools::install(upgrade = FALSE)'
 
       - name: Regenerate manifests
         run: |
