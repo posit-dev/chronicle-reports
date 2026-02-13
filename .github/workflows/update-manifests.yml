@@ -18,30 +18,18 @@ jobs:
     # Skip commits made by this workflow to prevent infinite loops
     if: github.event.head_commit.author.username != 'github-actions[bot]'
     runs-on: ubuntu-24.04
-    container: r-base:latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y \
-            git \
-            libssl-dev \
-            libcurl4-gnutls-dev \
-            libxml2-dev \
-            libfontconfig1-dev \
-            libfreetype6-dev \
-            libpng-dev \
-            libtiff5-dev \
-            libjpeg-dev
-          rm -rf /var/lib/apt/lists/*
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.5.2"
 
       - name: Install R packages
         run: |
           Rscript -e '
           options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
-          install.packages(c("rsconnect", "renv"), repos = c(CRAN = "https://p3m.dev/cran/__linux__/bookworm/latest"))
+          install.packages(c("rsconnect", "renv"), repos = c(CRAN = "https://p3m.dev/cran/__linux__/noble/latest"))
           '
 
       - name: Regenerate manifests
@@ -52,7 +40,7 @@ jobs:
 
           # Set up named repositories for renv
           options(repos = c(
-            CRAN = "https://p3m.dev/cran/__linux__/bookworm/latest"
+            CRAN = "https://p3m.dev/cran/__linux__/noble/latest"
           ))
 
           app_dirs <- c("inst/apps/connect", "inst/apps/workbench")
