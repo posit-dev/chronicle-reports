@@ -41,6 +41,7 @@ Antônio
 apache
 api
 appdir
+appDir
 appdirs
 Appdirs
 appmode
@@ -205,6 +206,7 @@ corvellec
 Corvellec
 Costigan
 covr
+cp
 cph
 cpp
 cpsievert
@@ -275,6 +277,7 @@ dk
 DK
 Dmitry
 docco
+Dockerfile
 Docstrings
 doi
 dotplot
@@ -322,6 +325,7 @@ env
 Eppstein
 erich
 errorbar
+euo
 Faria
 Farkas
 farver
@@ -958,6 +962,7 @@ Petre
 Petrisor
 Pfaff
 phonenumber
+pipefail
 pkgconfig
 pkgdown
 pkgKitten
@@ -1047,6 +1052,7 @@ renv
 repurrrsive
 requireNamespace
 reticulate
+rf
 rforge
 rgl
 Riabushenko
@@ -1297,6 +1303,7 @@ vctrs
 vdiffr
 Veitas
 vembedr
+ver
 VignetteBuilder
 Vijay
 Viktoras
@@ -1334,6 +1341,8 @@ winston
 withr
 withSpinner
 Wolen
+WORKDIR
+writeManifest
 wujciak
 Wujciak
 Wush
