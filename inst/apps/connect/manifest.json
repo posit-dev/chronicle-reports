@@ -433,17 +433,17 @@
         "RemoteHost": "api.github.com",
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
-        "RemoteRef": "just-generate-manifests",
-        "RemoteSha": "0410e22b8c78ca4df25c6567f6419d13f3f434bc",
+        "RemoteRef": "dev",
+        "RemoteSha": "13b18e1124a4d035673bcabbb4fef7ab8c8f8272",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
-        "GithubRef": "just-generate-manifests",
-        "GithubSHA1": "0410e22b8c78ca4df25c6567f6419d13f3f434bc",
+        "GithubRef": "dev",
+        "GithubSHA1": "13b18e1124a4d035673bcabbb4fef7ab8c8f8272",
         "NeedsCompilation": "no",
-        "Packaged": "2026-02-18 21:15:02 UTC; root",
+        "Packaged": "2026-02-18 21:20:51 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.2; ; 2026-02-18 21:15:02 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-02-18 21:20:51 UTC; unix"
       }
     },
     "cli": {
@@ -2005,10 +2005,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "11955e52915a26ec22732f53982ceec24323e436",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-02-18 21:14:36 UTC; root",
+        "Packaged": "2026-02-18 21:20:25 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.2; aarch64-unknown-linux-gnu; 2026-02-18 21:14:37 UTC; unix"
+        "Built": "R 4.5.2; aarch64-unknown-linux-gnu; 2026-02-18 21:20:26 UTC; unix"
       }
     },
     "tidyr": {
@@ -2269,10 +2269,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "22e392c9cc13efaa9ba042bb193991f78316edb1",
         "NeedsCompilation": "no",
-        "Packaged": "2026-02-18 21:14:39 UTC; root",
+        "Packaged": "2026-02-18 21:20:28 UTC; root",
         "Author": "Jim Hester [aut],\n  Lionel Henry [aut, cre],\n  Kirill Müller [aut],\n  Kevin Ushey [aut],\n  Hadley Wickham [aut],\n  Winston Chang [aut],\n  Jennifer Bryan [ctb],\n  Richard Cotton [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Lionel Henry <lionel@posit.co>",
-        "Built": "R 4.5.2; ; 2026-02-18 21:14:39 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-02-18 21:20:28 UTC; unix"
       }
     },
     "xfun": {
@@ -2363,7 +2363,7 @@
       "checksum": "5428a4341ddf7111c8805bd1df6abdd3"
     },
     "renv.lock": {
-      "checksum": "8974fc4e1be542bc3d607545e61e87db"
+      "checksum": "c248f0ff5dcb22b2674b1e3d0c6a4203"
     }
   },
   "users": null
