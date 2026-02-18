@@ -539,7 +539,7 @@
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
       "RemoteRef": "just-generate-manifests",
-      "RemoteSha": "a7f479f0f3c3ee4d4444c75718e65e82cfde256e",
+      "RemoteSha": "91ef12f4686878f3f323098781860b994644dbb3",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"

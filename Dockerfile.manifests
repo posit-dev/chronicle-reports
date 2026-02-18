@@ -1,24 +1,30 @@
-FROM rocker/r-ver:4
+FROM posit/r-base:4.5-noble
 
 RUN apt-get update && apt-get install -y \
-    libcurl4-openssl-dev \
+    libcurl4-gnutls-dev \
     libssl-dev \
+    libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN install2.r --error rsconnect renv remotes
+# CRAN REPO to use in app manifest files
+ENV MANIFEST_REPO="https://p3m.dev/cran/latest"
+# CRAN REPO for package installs on the image
+ENV CRAN_REPO="https://p3m.dev/cran/__linux__/noble/latest"
+
+RUN Rscript -e 'install.packages(c("rsconnect", "renv", "remotes"), repos = Sys.getenv("CRAN_REPO"))'
 
 ARG GIT_BRANCH=main
 
 WORKDIR /workspace
 
 COPY DESCRIPTION NAMESPACE ./
-RUN Rscript -e 'remotes::install_deps(".", dependencies = TRUE, upgrade = "never")'
+RUN Rscript -e 'options(repos = c(CRAN = Sys.getenv("CRAN_REPO"))); remotes::install_deps(".", dependencies = TRUE, upgrade = "never")'
 
 COPY . .
 RUN Rscript -e "remotes::install_github('posit-dev/chronicle-reports@${GIT_BRANCH}', upgrade = 'never')"
 
 CMD ["Rscript", "-e", "\
-  options(repos = c(CRAN = 'https://p3m.dev/cran/latest')); \
+  options(repos = c(CRAN = Sys.getenv('MANIFEST_REPO'))); \
   app_dirs <- c('inst/apps/connect', 'inst/apps/workbench'); \
   for (app_dir in app_dirs) { \
     message('Processing: ', app_dir); \

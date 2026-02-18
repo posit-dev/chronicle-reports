@@ -37,15 +37,6 @@ docs:
 update-manifests branch="main":
   #!/usr/bin/env bash
   set -euo pipefail
-  CONTAINER="chronicle-manifest-gen"
 
   docker build -f Dockerfile.manifests --build-arg GIT_BRANCH={{branch}} -t chronicle-manifests .
-  docker rm -f "$CONTAINER" 2>/dev/null || true
-  docker run --name "$CONTAINER" chronicle-manifests
-
-  for app in connect workbench; do
-    docker cp "$CONTAINER:/workspace/inst/apps/$app/manifest.json" "inst/apps/$app/manifest.json"
-    docker cp "$CONTAINER:/workspace/inst/apps/$app/renv.lock" "inst/apps/$app/renv.lock"
-  done
-
-  docker rm "$CONTAINER"
+  docker run --rm -v "$(pwd)/inst/apps:/workspace/inst/apps" chronicle-manifests
