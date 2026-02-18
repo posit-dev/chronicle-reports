@@ -34,12 +34,12 @@ docs:
   @echo "Building documentation..."
   {{R_CMD}} -e 'devtools::document()'
 
-update-manifests:
+update-manifests branch="main":
   #!/usr/bin/env bash
   set -euo pipefail
   CONTAINER="chronicle-manifest-gen"
 
-  docker build -f Dockerfile.manifests -t chronicle-manifests .
+  docker build -f Dockerfile.manifests --build-arg GIT_BRANCH={{branch}} -t chronicle-manifests .
   docker rm -f "$CONTAINER" 2>/dev/null || true
   docker run --name "$CONTAINER" chronicle-manifests
 

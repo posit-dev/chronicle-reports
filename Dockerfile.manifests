@@ -7,12 +7,15 @@ RUN apt-get update && apt-get install -y \
 
 RUN install2.r --error rsconnect renv remotes
 
+ARG GIT_BRANCH=main
+
 WORKDIR /workspace
 
 COPY DESCRIPTION NAMESPACE ./
-RUN Rscript -e 'remotes::install_local(".", dependencies = TRUE, upgrade = "never")'
+RUN Rscript -e 'remotes::install_deps(".", dependencies = TRUE, upgrade = "never")'
 
 COPY . .
+RUN Rscript -e "remotes::install_github('posit-dev/chronicle-reports@${GIT_BRANCH}', upgrade = 'never')"
 
 CMD ["Rscript", "-e", "\
   options(repos = c(CRAN = 'https://p3m.dev/cran/latest')); \

@@ -152,6 +152,39 @@
         "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2025-12-02 12:21:05 UTC; unix"
       }
     },
+    "arrow": {
+      "Source": "CRAN",
+      "Repository": "https://p3m.dev/cran/latest",
+      "description": {
+        "Package": "arrow",
+        "Title": "Integration to 'Apache' 'Arrow'",
+        "Version": "23.0.0.1",
+        "Authors@R": "c(\n    person(\"Neal\", \"Richardson\", email = \"neal.p.richardson@gmail.com\", role = c(\"aut\")),\n    person(\"Ian\", \"Cook\", email = \"ianmcook@gmail.com\", role = c(\"aut\")),\n    person(\"Nic\", \"Crane\", email = \"thisisnic@gmail.com\", role = c(\"aut\")),\n    person(\"Dewey\", \"Dunnington\", role = c(\"aut\"), email = \"dewey@fishandwhistle.net\", comment = c(ORCID = \"0000-0002-9415-4582\")),\n    person(\"Romain\", \"Fran\\u00e7ois\", role = c(\"aut\"), comment = c(ORCID = \"0000-0002-2444-4226\")),\n    person(\"Jonathan\", \"Keane\", email = \"jkeane@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Bryce\", \"Mecum\", email = \"brycemecum@gmail.com\", role = c(\"aut\")),\n    person(\"Drago\\u0219\", \"Moldovan-Gr\\u00fcnfeld\", email = \"dragos.mold@gmail.com\", role = c(\"aut\")),\n    person(\"Jeroen\", \"Ooms\", email = \"jeroen@berkeley.edu\", role = c(\"aut\")),\n    person(\"Jacob\", \"Wujciak-Jens\", email = \"jacob@wujciak.de\", role = c(\"aut\")),\n    person(\"Javier\", \"Luraschi\", email = \"javier@rstudio.com\", role = c(\"ctb\")),\n    person(\"Karl\", \"Dunkle Werner\", email = \"karldw@users.noreply.github.com\", role = c(\"ctb\"), comment = c(ORCID = \"0000-0003-0523-7309\")),\n    person(\"Jeffrey\", \"Wong\", email = \"jeffreyw@netflix.com\", role = c(\"ctb\")),\n    person(\"Apache Arrow\", email = \"dev@arrow.apache.org\", role = c(\"aut\", \"cph\"))\n  )",
+        "Description": "'Apache' 'Arrow' <https://arrow.apache.org/> is a cross-language\n    development platform for in-memory data. It specifies a standardized\n    language-independent columnar memory format for flat and hierarchical data,\n    organized for efficient analytic operations on modern hardware. This\n    package provides an interface to the 'Arrow C++' library.",
+        "Depends": "R (>= 4.1)",
+        "License": "Apache License (>= 2.0)",
+        "URL": "https://github.com/apache/arrow/, https://arrow.apache.org/docs/r/",
+        "BugReports": "https://github.com/apache/arrow/issues",
+        "Encoding": "UTF-8",
+        "Language": "en-US",
+        "SystemRequirements": "C++20; for AWS S3 support on Linux, libcurl and\nopenssl (optional); cmake >= 3.26 (build-time only, and only\nfor full source build)",
+        "Biarch": "true",
+        "Imports": "assertthat, bit64 (>= 0.9-7), glue, methods, purrr, R6, rlang\n(>= 1.0.0), stats, tidyselect (>= 1.0.0), utils, vctrs",
+        "RoxygenNote": "7.3.3",
+        "Config/testthat/edition": "3",
+        "Config/build/bootstrap": "TRUE",
+        "Suggests": "blob, curl, cli, DBI, dbplyr, decor, distro, dplyr, duckdb\n(>= 0.2.8), hms, jsonlite, knitr, lubridate, pillar, pkgload,\nreticulate, rmarkdown, stringi, stringr, sys, testthat (>=\n3.1.0), tibble, tzdb, withr",
+        "LinkingTo": "cpp11 (>= 0.4.2)",
+        "Collate": "'arrowExports.R' 'enums.R' 'arrow-object.R' 'type.R'\n'array-data.R' 'arrow-datum.R' 'array.R' 'arrow-info.R'\n'arrow-package.R' 'arrow-tabular.R' 'buffer.R'\n'chunked-array.R' 'io.R' 'compression.R' 'scalar.R' 'compute.R'\n'config.R' 'csv.R' 'dataset.R' 'dataset-factory.R'\n'dataset-format.R' 'dataset-partition.R' 'dataset-scan.R'\n'dataset-write.R' 'dictionary.R' 'dplyr-across.R'\n'dplyr-arrange.R' 'dplyr-by.R' 'dplyr-collect.R'\n'dplyr-count.R' 'dplyr-datetime-helpers.R' 'dplyr-distinct.R'\n'dplyr-eval.R' 'dplyr-filter.R' 'dplyr-funcs-agg.R'\n'dplyr-funcs-augmented.R' 'dplyr-funcs-conditional.R'\n'dplyr-funcs-datetime.R' 'dplyr-funcs-doc.R'\n'dplyr-funcs-math.R' 'dplyr-funcs-simple.R'\n'dplyr-funcs-string.R' 'dplyr-funcs-type.R' 'expression.R'\n'dplyr-funcs.R' 'dplyr-glimpse.R' 'dplyr-group-by.R'\n'dplyr-join.R' 'dplyr-mutate.R' 'dplyr-select.R'\n'dplyr-slice.R' 'dplyr-summarize.R' 'dplyr-union.R'\n'record-batch.R' 'table.R' 'dplyr.R' 'duckdb.R' 'extension.R'\n'feather.R' 'field.R' 'filesystem.R' 'flight.R'\n'install-arrow.R' 'ipc-stream.R' 'json.R' 'memory-pool.R'\n'message.R' 'metadata.R' 'parquet.R' 'python.R'\n'query-engine.R' 'record-batch-reader.R'\n'record-batch-writer.R' 'reexports-bit64.R'\n'reexports-tidyselect.R' 'schema.R' 'udf.R' 'util.R'",
+        "NeedsCompilation": "yes",
+        "Packaged": "2026-02-06 19:34:48 UTC; jkeane",
+        "Author": "Neal Richardson [aut],\n  Ian Cook [aut],\n  Nic Crane [aut],\n  Dewey Dunnington [aut] (ORCID: <https://orcid.org/0000-0002-9415-4582>),\n  Romain François [aut] (ORCID: <https://orcid.org/0000-0002-2444-4226>),\n  Jonathan Keane [aut, cre],\n  Bryce Mecum [aut],\n  Dragoș Moldovan-Grünfeld [aut],\n  Jeroen Ooms [aut],\n  Jacob Wujciak-Jens [aut],\n  Javier Luraschi [ctb],\n  Karl Dunkle Werner [ctb] (ORCID:\n    <https://orcid.org/0000-0003-0523-7309>),\n  Jeffrey Wong [ctb],\n  Apache Arrow [aut, cph]",
+        "Maintainer": "Jonathan Keane <jkeane@gmail.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2026-02-07 06:11:12 UTC",
+        "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2026-02-08 05:05:26 UTC; unix"
+      }
+    },
     "askpass": {
       "Source": "CRAN",
       "Repository": "https://p3m.dev/cran/latest",
@@ -179,6 +212,30 @@
         "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2025-12-02 12:23:48 UTC; unix"
       }
     },
+    "assertthat": {
+      "Source": "CRAN",
+      "Repository": "https://p3m.dev/cran/latest",
+      "description": {
+        "Package": "assertthat",
+        "Title": "Easy Pre and Post Assertions",
+        "Version": "0.2.1",
+        "Authors@R": "\n  person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", c(\"aut\", \"cre\"))",
+        "Description": "An extension to stopifnot() that makes it easy to declare \n    the pre and post conditions that you code should satisfy, while also \n    producing friendly error messages so that your users know what's gone\n    wrong.",
+        "License": "GPL-3",
+        "Imports": "tools",
+        "Suggests": "testthat, covr",
+        "RoxygenNote": "6.0.1",
+        "Collate": "'assert-that.r' 'on-failure.r' 'assertions-file.r'\n'assertions-scalar.R' 'assertions.r' 'base.r'\n'base-comparison.r' 'base-is.r' 'base-logical.r' 'base-misc.r'\n'utils.r' 'validate-that.R'",
+        "NeedsCompilation": "no",
+        "Packaged": "2019-03-21 13:11:01 UTC; hadley",
+        "Author": "Hadley Wickham [aut, cre]",
+        "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2019-03-21 14:53:46 UTC",
+        "Encoding": "UTF-8",
+        "Built": "R 4.5.0; ; 2025-06-23 22:02:44 UTC; unix"
+      }
+    },
     "base64enc": {
       "Source": "CRAN",
       "Repository": "https://p3m.dev/cran/latest",
@@ -201,6 +258,63 @@
         "Date/Publication": "2026-02-02 06:31:10 UTC",
         "Encoding": "UTF-8",
         "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2026-02-03 04:19:08 UTC; unix"
+      }
+    },
+    "bit": {
+      "Source": "CRAN",
+      "Repository": "https://p3m.dev/cran/latest",
+      "description": {
+        "Package": "bit",
+        "Title": "Classes and Methods for Fast Memory-Efficient Boolean Selections",
+        "Version": "4.6.0",
+        "Authors@R": "c(\n    person(\"Michael\", \"Chirico\", email = \"MichaelChirico4@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Jens\", \"Oehlschlägel\", role = \"aut\"),\n    person(\"Brian\", \"Ripley\", role = \"ctb\")\n  )",
+        "Depends": "R (>= 3.4.0)",
+        "Suggests": "testthat (>= 3.0.0), roxygen2, knitr, markdown, rmarkdown,\nmicrobenchmark, bit64 (>= 4.0.0), ff (>= 4.0.0)",
+        "Description": "Provided are classes for boolean and skewed boolean vectors,\n    fast boolean methods, fast unique and non-unique integer sorting,\n    fast set operations on sorted and unsorted sets of integers, and\n    foundations for ff (range index, compression, chunked processing).",
+        "License": "GPL-2 | GPL-3",
+        "LazyLoad": "yes",
+        "ByteCompile": "yes",
+        "Encoding": "UTF-8",
+        "URL": "https://github.com/r-lib/bit",
+        "VignetteBuilder": "knitr, rmarkdown",
+        "RoxygenNote": "7.3.2",
+        "Config/testthat/edition": "3",
+        "NeedsCompilation": "yes",
+        "Packaged": "2025-03-05 07:18:45 UTC; michael",
+        "Author": "Michael Chirico [aut, cre],\n  Jens Oehlschlägel [aut],\n  Brian Ripley [ctb]",
+        "Maintainer": "Michael Chirico <MichaelChirico4@gmail.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-03-06 10:50:01 UTC",
+        "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2025-12-02 12:21:06 UTC; unix"
+      }
+    },
+    "bit64": {
+      "Source": "CRAN",
+      "Repository": "https://p3m.dev/cran/latest",
+      "description": {
+        "Package": "bit64",
+        "Title": "A S3 Class for Vectors of 64bit Integers",
+        "Version": "4.6.0-1",
+        "Authors@R": "c(\n    person(\"Michael\", \"Chirico\", email = \"michaelchirico4@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Jens\", \"Oehlschlägel\", role = \"aut\"),\n    person(\"Leonardo\", \"Silvestri\", role = \"ctb\"),\n    person(\"Ofek\", \"Shilon\", role = \"ctb\")\n  )",
+        "Depends": "R (>= 3.4.0), bit (>= 4.0.0)",
+        "Description": "\n  Package 'bit64' provides serializable S3 atomic 64bit (signed) integers.\n  These are useful for handling database keys and exact counting in +-2^63.\n  WARNING: do not use them as replacement for 32bit integers, integer64 are not\n  supported for subscripting by R-core and they have different semantics when\n  combined with double, e.g. integer64 + double => integer64.\n  Class integer64 can be used in vectors, matrices, arrays and data.frames.\n  Methods are available for coercion from and to logicals, integers, doubles,\n  characters and factors as well as many elementwise and summary functions.\n  Many fast algorithmic operations such as 'match' and 'order' support inter-\n  active data exploration and manipulation and optionally leverage caching.",
+        "License": "GPL-2 | GPL-3",
+        "LazyLoad": "yes",
+        "ByteCompile": "yes",
+        "URL": "https://github.com/r-lib/bit64",
+        "Encoding": "UTF-8",
+        "Imports": "graphics, methods, stats, utils",
+        "Suggests": "testthat (>= 3.0.3), withr",
+        "Config/testthat/edition": "3",
+        "Config/needs/development": "testthat",
+        "RoxygenNote": "7.3.2",
+        "NeedsCompilation": "yes",
+        "Packaged": "2025-01-16 14:04:20 UTC; michael",
+        "Author": "Michael Chirico [aut, cre],\n  Jens Oehlschlägel [aut],\n  Leonardo Silvestri [ctb],\n  Ofek Shilon [ctb]",
+        "Maintainer": "Michael Chirico <michaelchirico4@gmail.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-01-16 16:00:07 UTC",
+        "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2025-12-02 12:21:36 UTC; unix"
       }
     },
     "bslib": {
@@ -261,6 +375,75 @@
         "Repository": "RSPM",
         "Date/Publication": "2024-05-16 09:50:11 UTC",
         "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2025-12-02 12:23:18 UTC; unix"
+      }
+    },
+    "charlatan": {
+      "Source": "CRAN",
+      "Repository": "https://p3m.dev/cran/latest",
+      "description": {
+        "Package": "charlatan",
+        "Type": "Package",
+        "Title": "Make Fake Data",
+        "Description": "Make fake data that looks realistic, supporting addresses, \n    person names, dates,\n    times, colors, coordinates, currencies, digital object identifiers\n    ('DOIs'), jobs, phone numbers, 'DNA' sequences, doubles and integers\n    from distributions and within a range.",
+        "Version": "0.6.2",
+        "Authors@R": "c(\n      person(\"Roel M.\", \"Hogervorst\", \n            email =\"hogervorst.rm@gmail.com\", \n            role = c(\"cre\", \"aut\"), \n            comment = c(ORCID = \"0000-0001-7509-0328\")),\n      person(\"Scott\", \"Chamberlain\", role = c(\"aut\"),\n        comment = c(ORCID = \"0000-0003-1444-9135\")),\n      person(\"Kyle\", \"Voytovich\", role = \"aut\"),\n      person(\"Martin\", \"Pedersen\", role = \"ctb\"),\n      person(\"Brooke\", \"Anderson\", role = \"rev\",\n        comment = \"Brooke Anderson reviewed the package for rOpenSci,\n        see https://github.com/ropensci/onboarding/issues/94\"),\n      person(\"Tristan\", \"Mahr\", role = \"rev\",\n        comment = \"Tristan Mahr reviewed the package for rOpenSci,\n        see https://github.com/ropensci/onboarding/issues/94\"),\n      person(\"rOpenSci\", role = \"fnd\", comment = c(ROR = \"019jywm96\"))\n    )",
+        "License": "MIT + file LICENSE",
+        "URL": "https://docs.ropensci.org/charlatan/,\nhttps://github.com/ropensci/charlatan",
+        "BugReports": "https://github.com/ropensci/charlatan/issues",
+        "LazyData": "true",
+        "Encoding": "UTF-8",
+        "Language": "en-US",
+        "VignetteBuilder": "knitr",
+        "Imports": "R6 (>= 2.2.0), tibble (>= 1.2), whisker",
+        "Suggests": "testthat, knitr, rmarkdown, ipaddress, stringi, spelling",
+        "RoxygenNote": "7.3.3",
+        "Config/testthat/edition": "3",
+        "Depends": "R (>= 2.10)",
+        "Collate": "'address-provider-en_GB.R' 'address-provider-en_NZ.R'\n'address-provider-en_US.R' 'address-provider-nl_NL.R'\n'datetime-provider.R' 'address-provider.R'\n'available_locales.R' 'available_providers.R' 'base-provider.R'\n'charlatan-package.R' 'charlatan_settings.R'\n'color-provider-en_US.R' 'color-provider-uk_UA.R'\n'color-provider.R' 'color.R' 'company-provider-bg_BG.R'\n'company-provider-cs_CZ.R' 'company-provider-de_DE.R'\n'company-provider-en_US.R' 'company-provider-es_MX.R'\n'company-provider-fa_IR.R' 'company-provider-fr_FR.R'\n'company-provider-hr_HR.R' 'company-provider-it_IT.R'\n'company-provider.R' 'company.R' 'coordinate-provider.R'\n'coordinates.R' 'credit_card-provider.R' 'credit_card.R'\n'currency-provider.R' 'currency.R' 'date_time.R'\n'doi-provider.R' 'doi.R' 'element-provider.R' 'elements.R'\n'file-provider.R' 'fraudster.R' 'generate.R' 'globals.R'\n'internet-provider-bg_BG.R' 'internet-provider-cs_CZ.R'\n'internet-provider-de_DE.R' 'internet-provider-en_AU.R'\n'internet-provider-en_NZ.R' 'internet-provider-en_US.R'\n'internet-provider-fa_IR.R' 'internet-provider-fr_FR.R'\n'internet-provider-hr_HR.R' 'internet-provider.R'\n'isbn-provider.R' 'job.R' 'jobs-provider-da_DK.R'\n'jobs-provider-en_US.R' 'jobs-provider-fa_IR.R'\n'jobs-provider-fi_FI.R' 'jobs-provider-fr_CH.R'\n'jobs-provider-fr_FR.R' 'jobs-provider-hr_HR.R'\n'jobs-provider-nl_NL.R' 'jobs-provider-pl_PL.R'\n'jobs-provider-ru_RU.R' 'jobs-provider-uk_UA.R'\n'jobs-provider-zh_TW.R' 'jobs-provider.R' 'languages.R'\n'lorem-provider-ar_AA.R' 'lorem-provider-el_GR.R'\n'lorem-provider-en_US.R' 'lorem-provider-he_IL.R'\n'lorem-provider-ja_JP.R' 'lorem-provider-la.R'\n'lorem-provider-ru_RU.R' 'lorem-provider-zh_CN.R'\n'lorem-provider-zh_TW.R' 'lorem-provider.R' 'misc-provider.R'\n'missing-data-provider.R' 'missing.R' 'name.R'\n'numerics-provider.R' 'numerics.R' 'onload.R'\n'person-provider-bg_BG.R' 'person-provider-cs_CZ.R'\n'person-provider-da_DK.R' 'person-provider-de_AT.R'\n'person-provider-de_DE.R' 'person-provider-en_GB.R'\n'person-provider-en_NZ.R' 'person-provider-en_US.R'\n'person-provider-es_ES.R' 'person-provider-es_MX.R'\n'person-provider-fa_IR.R' 'person-provider-fi_FI.R'\n'person-provider-fr_CH.R' 'person-provider-fr_FR.R'\n'person-provider-hr_HR.R' 'person-provider-it_IT.R'\n'person-provider-ja_JP.R' 'person-provider-ko_KR.R'\n'person-provider-lt_LT.R' 'person-provider-lv_LV.R'\n'person-provider-ne_NP.R' 'person-provider-nl_NL.R'\n'person-provider-no_NO.R' 'person-provider-pl_PL.R'\n'person-provider.R' 'phone_number.R'\n'phonenumber-provider-en.R' 'phonenumber-provider-es.R'\n'phonenumber-provider-fr.R' 'phonenumber-provider-nl.R'\n'phonenumber-provider-rest.R' 'phonenumber-provider.R'\n'sequence-provider.R' 'sequences.R' 'ssn-provider-all.R'\n'ssn-provider.R' 'ssn.R' 'taxonomy-provider-all.R'\n'taxonomy-provider.R' 'taxonomy.R' 'useragent-provider-all.R'\n'useragent-provider.R' 'zzz.R'",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-01-13 19:11:06 UTC; roel",
+        "Author": "Roel M. Hogervorst [cre, aut] (ORCID:\n    <https://orcid.org/0000-0001-7509-0328>),\n  Scott Chamberlain [aut] (ORCID:\n    <https://orcid.org/0000-0003-1444-9135>),\n  Kyle Voytovich [aut],\n  Martin Pedersen [ctb],\n  Brooke Anderson [rev] (Brooke Anderson reviewed the package for\n    rOpenSci, see https://github.com/ropensci/onboarding/issues/94),\n  Tristan Mahr [rev] (Tristan Mahr reviewed the package for rOpenSci, see\n    https://github.com/ropensci/onboarding/issues/94),\n  rOpenSci [fnd] (ROR: <https://ror.org/019jywm96>)",
+        "Maintainer": "Roel M. Hogervorst <hogervorst.rm@gmail.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2026-01-14 06:10:43 UTC",
+        "Built": "R 4.5.0; ; 2026-01-15 04:24:33 UTC; unix"
+      }
+    },
+    "chronicle.reports": {
+      "Source": "github",
+      "Repository": null,
+      "description": {
+        "Package": "chronicle.reports",
+        "Title": "Posit Chronicle Reports",
+        "Version": "0.2.1",
+        "Authors@R": "c(\n    person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
+        "Description": "Run reports for Posit Chronicle. You provide the\n    location of your Chronicle data and this package will generate reports\n    to help you analyze and visualize your data.",
+        "License": "MIT + file LICENSE",
+        "URL": "https://github.com/posit-dev/chronicle-reports",
+        "BugReports": "https://github.com/posit-dev/chronicle-reports/issues",
+        "Depends": "R (>= 4.1.0)",
+        "Imports": "arrow, bslib, charlatan, dplyr, DT, ggplot2, glue, lubridate,\nplotly, rlang, shiny, shinycssloaders, tidyr, withr (>= 3.0.2)",
+        "Suggests": "devtools (>= 2.4.6), shinytest2, testthat (>= 3.0.0), tibble\n(>= 3.3.0)",
+        "Encoding": "UTF-8",
+        "Roxygen": "list(markdown = TRUE)",
+        "RoxygenNote": "7.3.3",
+        "Config/testthat/edition": "3",
+        "Remotes": "r-lib/devtools, tidyverse/tibble, r-lib/withr",
+        "RemoteType": "github",
+        "RemoteHost": "api.github.com",
+        "RemoteRepo": "chronicle-reports",
+        "RemoteUsername": "posit-dev",
+        "RemoteRef": "just-generate-manifests",
+        "RemoteSha": "a7f479f0f3c3ee4d4444c75718e65e82cfde256e",
+        "GithubRepo": "chronicle-reports",
+        "GithubUsername": "posit-dev",
+        "GithubRef": "just-generate-manifests",
+        "GithubSHA1": "a7f479f0f3c3ee4d4444c75718e65e82cfde256e",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-02-18 19:34:33 UTC; root",
+        "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
+        "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
+        "Built": "R 4.5.2; ; 2026-02-18 19:34:34 UTC; unix"
       }
     },
     "cli": {
@@ -1822,10 +2005,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "11955e52915a26ec22732f53982ceec24323e436",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-02-18 17:49:51 UTC; root",
+        "Packaged": "2026-02-18 19:34:09 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.2; aarch64-unknown-linux-gnu; 2026-02-18 17:49:52 UTC; unix"
+        "Built": "R 4.5.2; aarch64-unknown-linux-gnu; 2026-02-18 19:34:09 UTC; unix"
       }
     },
     "tidyr": {
@@ -2029,6 +2212,30 @@
         "Built": "R 4.5.0; ; 2026-02-05 04:21:31 UTC; unix"
       }
     },
+    "whisker": {
+      "Source": "CRAN",
+      "Repository": "https://p3m.dev/cran/latest",
+      "description": {
+        "Package": "whisker",
+        "Maintainer": "Edwin de Jonge <edwindjonge@gmail.com>",
+        "License": "GPL-3",
+        "Title": "{{mustache}} for R, Logicless Templating",
+        "Type": "Package",
+        "LazyLoad": "yes",
+        "Author": "Edwin de Jonge",
+        "Description": "Implements 'Mustache' logicless templating.",
+        "Version": "0.4.1",
+        "URL": "https://github.com/edwindj/whisker",
+        "Suggests": "markdown",
+        "RoxygenNote": "6.1.1",
+        "NeedsCompilation": "no",
+        "Packaged": "2022-12-05 15:15:55 UTC; hornik",
+        "Repository": "RSPM",
+        "Date/Publication": "2022-12-05 15:33:50 UTC",
+        "Encoding": "UTF-8",
+        "Built": "R 4.5.0; ; 2025-06-24 18:00:12 UTC; unix"
+      }
+    },
     "withr": {
       "Source": "github",
       "Repository": null,
@@ -2062,10 +2269,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "22e392c9cc13efaa9ba042bb193991f78316edb1",
         "NeedsCompilation": "no",
-        "Packaged": "2026-02-18 17:49:54 UTC; root",
+        "Packaged": "2026-02-18 19:34:11 UTC; root",
         "Author": "Jim Hester [aut],\n  Lionel Henry [aut, cre],\n  Kirill Müller [aut],\n  Kevin Ushey [aut],\n  Hadley Wickham [aut],\n  Winston Chang [aut],\n  Jennifer Bryan [ctb],\n  Richard Cotton [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Lionel Henry <lionel@posit.co>",
-        "Built": "R 4.5.2; ; 2026-02-18 17:49:55 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-02-18 19:34:11 UTC; unix"
       }
     },
     "xfun": {
@@ -2156,7 +2363,7 @@
       "checksum": "f0b5a5f96cf47bf56ae9aafce716ab91"
     },
     "renv.lock": {
-      "checksum": "17ea6d854a8f3c0da1fab4367cfc07e0"
+      "checksum": "ddbdd07c278fe59673b6ff2c1991fe45"
     }
   },
   "users": null
