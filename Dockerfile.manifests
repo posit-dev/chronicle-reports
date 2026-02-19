@@ -1,0 +1,37 @@
+FROM posit/r-base:4.5-noble
+
+RUN apt-get update && apt-get install -y \
+    libcurl4-gnutls-dev \
+    libssl-dev \
+    libxml2-dev \
+    locales \
+    && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=en_US.UTF-8
+
+# We use this repo for package installs to use pre-built binaries
+# it does not have an impact on the renv or manifest files we generate
+ENV CRAN="https://p3m.dev/cran/__linux__/noble/latest"
+
+RUN Rscript -e 'install.packages(c("rsconnect", "renv", "remotes"), repos = Sys.getenv("CRAN"))'
+
+ARG GIT_BRANCH=main
+
+WORKDIR /workspace
+
+COPY DESCRIPTION NAMESPACE ./
+RUN Rscript -e 'remotes::install_deps(".", dependencies = TRUE, upgrade = "never", repos = Sys.getenv("CRAN"))'
+
+COPY . .
+RUN Rscript -e "remotes::install_github('posit-dev/chronicle-reports@${GIT_BRANCH}', upgrade = 'never')"
+
+CMD ["Rscript", "-e", "\
+  app_dirs <- c('inst/apps/connect', 'inst/apps/workbench'); \
+  for (app_dir in app_dirs) { \
+    message('Processing: ', app_dir); \
+    renv::snapshot(project = app_dir, prompt = FALSE, force = TRUE); \
+    rsconnect::writeManifest(appDir = app_dir); \
+  } \
+"]

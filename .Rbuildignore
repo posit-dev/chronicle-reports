@@ -1,5 +1,6 @@
 ^.*\.Rproj$
 ^CLAUDE\.md$
+^Dockerfile.*$
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.Rproj\.user$
