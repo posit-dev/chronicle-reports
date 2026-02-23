@@ -1,6 +1,6 @@
 {
   "extension": {
-    "name": "workbench-chroncile",
+    "name": "workbench",
     "title": "Chronicle Workbench Dashboard",
     "description": "Comprehensive Posit Workbench usage analytics — tracks licensed users, daily active users, session metrics, and admin activity over time.",
     "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/workbench",
