@@ -102,17 +102,39 @@ users_overview_ui <- bslib::card(
 )
 
 users_overview_server <- function(input, output, session) {
-  # Load user_totals data
+  # Load user_totals data — collected eagerly with optional window filter.
+  # When the user selects a date before the loaded window, all data is reloaded.
+  load_all <- shiny::reactiveVal(is.null(data_window_cutoff))
+
   users_data <- shiny::reactive({
+    all <- load_all()
     tryCatch(
       {
-        chronicle_data("workbench/user_totals", base_path)
+        ds <- chronicle_data("workbench/user_totals", base_path)
+        if (!all && !is.null(data_window_cutoff)) {
+          cutoff <- data_window_cutoff
+          ds <- ds |> dplyr::filter(date >= cutoff)
+        }
+        ds |> dplyr::collect()
       },
       error = function(e) {
         message("Error loading user totals: ", e$message)
         NULL
       }
     )
+  })
+
+  # Load more data when date range extends before the loaded window
+  shiny::observe({
+    data <- users_data()
+    shiny::req(data, input$users_overview_date_range)
+    if (load_all()) {
+      return()
+    }
+    loaded_min <- min(data$date, na.rm = TRUE)
+    if (input$users_overview_date_range[1] < loaded_min) {
+      load_all(TRUE)
+    }
   })
 
   # Set default date range when data loads
@@ -124,8 +146,7 @@ users_overview_server <- function(input, output, session) {
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     initial_start <- if (!is.null(data_window_cutoff)) {
       max(date_summary$min_date, data_window_cutoff)
@@ -138,26 +159,20 @@ users_overview_server <- function(input, output, session) {
       "users_overview_date_range",
       start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
 
   # Get latest data (for value boxes - always max_date)
-  # Uses Arrow partition pruning to read only the max date partition.
   latest_users_data <- shiny::reactive({
     data <- users_data()
     if (is.null(data)) {
       return(NULL)
     }
 
-    max_date <- data |>
-      dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
-      dplyr::collect() |>
-      dplyr::pull(max_date)
+    max_date <- max(data$date, na.rm = TRUE)
     data |>
       dplyr::filter(date == max_date) |>
-      dplyr::collect() |>
       dplyr::slice(1)
   })
 
@@ -170,15 +185,11 @@ users_overview_server <- function(input, output, session) {
 
     shiny::req(input$users_overview_date_range)
 
-    start_date <- input$users_overview_date_range[1]
-    end_date <- input$users_overview_date_range[2]
-
     data |>
       dplyr::filter(
-        date >= start_date,
-        date <= end_date
-      ) |>
-      dplyr::collect()
+        date >= input$users_overview_date_range[1],
+        date <= input$users_overview_date_range[2]
+      )
   })
 
   # Value boxes (always latest data)

@@ -111,8 +111,7 @@ users_overview_server <- function(input, output, session, user_totals) {
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     initial_start <- if (!is.null(data_window_cutoff)) {
       max(date_summary$min_date, data_window_cutoff)
@@ -125,7 +124,6 @@ users_overview_server <- function(input, output, session, user_totals) {
       "users_overview_date_range",
       start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
@@ -137,19 +135,13 @@ users_overview_server <- function(input, output, session, user_totals) {
       return(NULL)
     }
 
-    # Get the latest row — uses Arrow partition pruning to read only max date
-    max_date <- data |>
-      dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
-      dplyr::collect() |>
-      dplyr::pull(max_date)
+    max_date <- max(data$date, na.rm = TRUE)
     data |>
       dplyr::filter(date == max_date) |>
-      dplyr::collect() |>
       dplyr::slice(1)
   })
 
   # Filter data by date range (for charts only)
-  # Arrow partition pruning reads only the date partitions in range.
   filtered_users_data <- shiny::reactive({
     data <- users_data()
     if (is.null(data)) {
@@ -158,15 +150,11 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     shiny::req(date_range())
 
-    start_date <- date_range()[1]
-    end_date <- date_range()[2]
-
     data |>
       dplyr::filter(
-        date >= start_date,
-        date <= end_date
-      ) |>
-      dplyr::collect()
+        date >= date_range()[1],
+        date <= date_range()[2]
+      )
   })
 
   # Value boxes (always latest data)
@@ -673,7 +661,6 @@ content_overview_server <- function(input, output, session, content_totals) {
       "content_overview_date_range",
       start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
@@ -1360,7 +1347,6 @@ usage_overview_server <- function(input, output, session, content_visits) {
       "usage_overview_date_range",
       start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
@@ -1661,7 +1647,6 @@ shiny_apps_server <- function(
       "shiny_apps_date_range",
       start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
@@ -2020,7 +2005,6 @@ content_by_user_server <- function(
       "content_by_user_date_range",
       start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
@@ -2274,7 +2258,6 @@ shiny_sessions_by_user_server <- function(
       "shiny_sessions_user_date_range",
       start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
   })
@@ -2492,12 +2475,24 @@ server <- function(input, output, session) {
   # ============================================
   # Connect Data - load each dataset on demand
   # ============================================
+  # Datasets are collected eagerly (as data frames).
+  # When CHRONICLE_DATA_WINDOW is set, only the
+  # last N days are loaded initially. Selecting a date before the loaded
+  # window triggers a full reload automatically.
 
-  # user_totals: Always loaded (default visible tab).
-  # Returns an Arrow dataset (lazy) — sub-servers collect() after filtering.
+  # --- user_totals: Always loaded (default visible tab) ---
+  user_totals_load_all <- shiny::reactiveVal(is.null(data_window_cutoff))
   all_user_totals <- shiny::reactive({
+    load_all <- user_totals_load_all()
     tryCatch(
-      chronicle_data("connect/user_totals", base_path),
+      {
+        ds <- chronicle_data("connect/user_totals", base_path)
+        if (!load_all && !is.null(data_window_cutoff)) {
+          cutoff <- data_window_cutoff
+          ds <- ds |> dplyr::filter(date >= cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading user totals: ", e$message)
         NULL
@@ -2541,12 +2536,20 @@ server <- function(input, output, session) {
     )
   })
 
-  # content_totals: Deferred until Content Overview visited.
-  # Returns an Arrow dataset (lazy) — sub-servers collect() after filtering.
+  # --- content_totals: Deferred until Content Overview visited ---
+  content_totals_load_all <- shiny::reactiveVal(is.null(data_window_cutoff))
   all_content_totals <- shiny::reactive({
     shiny::req(isTRUE(visited_tabs[["content_overview"]]))
+    load_all <- content_totals_load_all()
     tryCatch(
-      chronicle_data("connect/content_totals", base_path),
+      {
+        ds <- chronicle_data("connect/content_totals", base_path)
+        if (!load_all && !is.null(data_window_cutoff)) {
+          cutoff <- data_window_cutoff
+          ds <- ds |> dplyr::filter(date >= cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading content totals: ", e$message)
         NULL
@@ -2599,12 +2602,23 @@ server <- function(input, output, session) {
       should_load_content_visits(TRUE)
     }
   })
-  # content_visits: Deferred — LARGE dataset.
-  # Returns an Arrow dataset (lazy) — sub-servers collect() after filtering.
+  # --- content_visits: Deferred — LARGE dataset ---
+  content_visits_load_all <- shiny::reactiveVal(is.null(data_window_cutoff))
   all_content_visits <- shiny::reactive({
     shiny::req(should_load_content_visits())
+    load_all <- content_visits_load_all()
     tryCatch(
-      chronicle_data("connect/content_visits_totals_by_user", base_path),
+      {
+        ds <- chronicle_data(
+          "connect/content_visits_totals_by_user",
+          base_path
+        )
+        if (!load_all && !is.null(data_window_cutoff)) {
+          cutoff <- data_window_cutoff
+          ds <- ds |> dplyr::filter(date >= cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading content visits: ", e$message)
         NULL
@@ -2623,18 +2637,79 @@ server <- function(input, output, session) {
       should_load_shiny_usage(TRUE)
     }
   })
-  # shiny_usage: Deferred — LARGE dataset.
-  # Returns an Arrow dataset (lazy) — sub-servers collect() after filtering.
+  # --- shiny_usage: Deferred — LARGE dataset ---
+  shiny_usage_load_all <- shiny::reactiveVal(is.null(data_window_cutoff))
   all_shiny_usage <- shiny::reactive({
     shiny::req(should_load_shiny_usage())
+    load_all <- shiny_usage_load_all()
     tryCatch(
-      chronicle_data("connect/shiny_usage_totals_by_user", base_path),
+      {
+        ds <- chronicle_data(
+          "connect/shiny_usage_totals_by_user",
+          base_path
+        )
+        if (!load_all && !is.null(data_window_cutoff)) {
+          cutoff <- data_window_cutoff
+          ds <- ds |> dplyr::filter(date >= cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading shiny usage: ", e$message)
         NULL
       }
     )
   })
+
+  # ============================================
+  # Load-more observers: when a date selector extends before the loaded
+  # window, flip the load_all flag so the reactive re-runs without the
+  # window filter, pulling the full dataset.
+  # ============================================
+  load_more_observer <- function(data_reactive, load_all_flag, input_id) {
+    shiny::observe({
+      data <- data_reactive()
+      date_val <- input[[input_id]]
+      shiny::req(data, date_val)
+      if (load_all_flag()) {
+        return()
+      }
+      loaded_min <- min(data$date, na.rm = TRUE)
+      if (date_val[1] < loaded_min) {
+        load_all_flag(TRUE)
+      }
+    })
+  }
+  load_more_observer(
+    all_user_totals,
+    user_totals_load_all,
+    "users_overview_date_range"
+  )
+  load_more_observer(
+    all_content_totals,
+    content_totals_load_all,
+    "content_overview_date_range"
+  )
+  load_more_observer(
+    all_content_visits,
+    content_visits_load_all,
+    "usage_overview_date_range"
+  )
+  load_more_observer(
+    all_content_visits,
+    content_visits_load_all,
+    "content_by_user_date_range"
+  )
+  load_more_observer(
+    all_shiny_usage,
+    shiny_usage_load_all,
+    "shiny_apps_date_range"
+  )
+  load_more_observer(
+    all_shiny_usage,
+    shiny_usage_load_all,
+    "shiny_sessions_user_date_range"
+  )
 
   # ============================================
   # Call sub-servers with data
