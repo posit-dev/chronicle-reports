@@ -416,15 +416,19 @@ user_list_server <- function(input, output, session) {
       {
         data <- chronicle_data("workbench/user_list", base_path)
 
-        # Get max_date snapshot - collect first, then filter to all users from max date
-        collected_data <- data |> dplyr::collect()
-        if (nrow(collected_data) == 0) {
-          return(collected_data)
+        # Find max_date in Arrow (reads only parquet metadata), then collect
+        # just that partition instead of all historical snapshots
+        max_date_result <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect()
+        if (nrow(max_date_result) == 0) {
+          return(data.frame())
         }
-        max_date <- max(collected_data$date, na.rm = TRUE)
+        max_date <- max_date_result$max_date
 
-        collected_data |>
-          dplyr::filter(date == max_date)
+        data |>
+          dplyr::filter(date == max_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading user list: ", e$message)
