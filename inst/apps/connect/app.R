@@ -158,10 +158,13 @@ users_overview_server <- function(input, output, session, user_totals) {
 
     shiny::req(date_range())
 
+    start_date <- date_range()[1]
+    end_date <- date_range()[2]
+
     data |>
       dplyr::filter(
-        date >= date_range()[1],
-        date <= date_range()[2]
+        date >= start_date,
+        date <= end_date
       ) |>
       dplyr::collect()
   })
