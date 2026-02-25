@@ -409,22 +409,27 @@ user_list_ui <- bslib::card(
   )
 )
 
-user_list_server <- function(input, output, session) {
-  # Load user_list data (snapshot at max_date)
+user_list_server <- function(input, output, session, should_load) {
+  # Load user_list data (snapshot at max_date), deferred until tab is visited
   user_list_data <- shiny::reactive({
+    shiny::req(should_load())
     tryCatch(
       {
         data <- chronicle_data("workbench/user_list", base_path)
 
-        # Get max_date snapshot - collect first, then filter to all users from max date
-        collected_data <- data |> dplyr::collect()
-        if (nrow(collected_data) == 0) {
-          return(collected_data)
+        # Find max_date in Arrow (reads only parquet metadata), then collect
+        # just that partition instead of all historical snapshots
+        max_date_result <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect()
+        if (nrow(max_date_result) == 0) {
+          return(data |> dplyr::head(0) |> dplyr::collect())
         }
-        max_date <- max(collected_data$date, na.rm = TRUE)
+        max_date <- max_date_result$max_date
 
-        collected_data |>
-          dplyr::filter(date == max_date)
+        data |>
+          dplyr::filter(date == max_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading user list: ", e$message)
@@ -556,6 +561,7 @@ user_list_server <- function(input, output, session) {
 # ==============================================
 
 ui <- bslib::page_navbar(
+  id = "main_nav",
   title = "Posit Workbench Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE,
@@ -573,11 +579,19 @@ ui <- bslib::page_navbar(
 # ==============================================
 
 server <- function(input, output, session) {
+  # Deferred loading: only load user list data when the tab is first visited
+  should_load_user_list <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    if (!should_load_user_list() && input$main_nav == "User List") {
+      should_load_user_list(TRUE)
+    }
+  })
+
   # Users → Overview
   users_overview_server(input, output, session)
 
   # Users → User List
-  user_list_server(input, output, session)
+  user_list_server(input, output, session, should_load_user_list)
 }
 
 shinyApp(ui, server)
