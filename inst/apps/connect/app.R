@@ -18,6 +18,17 @@ base_path <- Sys.getenv(
   APP_CONFIG$DEFAULT_BASE_PATH
 )
 
+# Optional data window: when set, only load the last N days of data on startup.
+# Value should be a positive integer (number of days). When unset, all data is loaded.
+data_window_days <- Sys.getenv("CHRONICLE_DATA_WINDOW", "")
+data_window_cutoff <- if (
+  nzchar(data_window_days) && as.integer(data_window_days) > 0
+) {
+  Sys.Date() - as.integer(data_window_days)
+} else {
+  NULL
+}
+
 # Brand colors
 BRAND_COLORS <- list(
   BLUE = "#447099",
@@ -2428,7 +2439,13 @@ server <- function(input, output, session) {
   # user_totals: Always loaded (default visible tab)
   all_user_totals <- shiny::reactive({
     tryCatch(
-      chronicle_data("connect/user_totals", base_path) |> dplyr::collect(),
+      {
+        ds <- chronicle_data("connect/user_totals", base_path)
+        if (!is.null(data_window_cutoff)) {
+          ds <- ds |> dplyr::filter(date >= data_window_cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading user totals: ", e$message)
         NULL
@@ -2476,7 +2493,13 @@ server <- function(input, output, session) {
   all_content_totals <- shiny::reactive({
     shiny::req(isTRUE(visited_tabs[["content_overview"]]))
     tryCatch(
-      chronicle_data("connect/content_totals", base_path) |> dplyr::collect(),
+      {
+        ds <- chronicle_data("connect/content_totals", base_path)
+        if (!is.null(data_window_cutoff)) {
+          ds <- ds |> dplyr::filter(date >= data_window_cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading content totals: ", e$message)
         NULL
@@ -2532,8 +2555,13 @@ server <- function(input, output, session) {
   all_content_visits <- shiny::reactive({
     shiny::req(should_load_content_visits())
     tryCatch(
-      chronicle_data("connect/content_visits_totals_by_user", base_path) |>
-        dplyr::collect(),
+      {
+        ds <- chronicle_data("connect/content_visits_totals_by_user", base_path)
+        if (!is.null(data_window_cutoff)) {
+          ds <- ds |> dplyr::filter(date >= data_window_cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading content visits: ", e$message)
         NULL
@@ -2555,8 +2583,13 @@ server <- function(input, output, session) {
   all_shiny_usage <- shiny::reactive({
     shiny::req(should_load_shiny_usage())
     tryCatch(
-      chronicle_data("connect/shiny_usage_totals_by_user", base_path) |>
-        dplyr::collect(),
+      {
+        ds <- chronicle_data("connect/shiny_usage_totals_by_user", base_path)
+        if (!is.null(data_window_cutoff)) {
+          ds <- ds |> dplyr::filter(date >= data_window_cutoff)
+        }
+        ds |> dplyr::collect()
+      },
       error = function(e) {
         message("Error loading shiny usage: ", e$message)
         NULL
