@@ -21,10 +21,20 @@ base_path <- Sys.getenv(
 # Optional data window: when set, only load the last N days of data on startup.
 # Value should be a positive integer (number of days). When unset, all data is loaded.
 data_window_days <- Sys.getenv("CHRONICLE_DATA_WINDOW", "")
-data_window_cutoff <- if (
-  nzchar(data_window_days) && as.integer(data_window_days) > 0
+data_window_int <- suppressWarnings(as.integer(data_window_days))
+if (
+  nzchar(data_window_days) && (is.na(data_window_int) || data_window_int <= 0)
 ) {
-  Sys.Date() - as.integer(data_window_days)
+  warning(
+    "CHRONICLE_DATA_WINDOW must be a positive integer. ",
+    "Got '",
+    data_window_days,
+    "'. Loading all available data.",
+    call. = FALSE
+  )
+}
+data_window_cutoff <- if (!is.na(data_window_int) && data_window_int > 0) {
+  Sys.Date() - data_window_int
 } else {
   NULL
 }
