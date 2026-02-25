@@ -557,11 +557,9 @@ content_overview_server <- function(input, output, session, content_totals) {
   # Use shared content_totals data (error handling in main server)
   contents_data <- content_totals
 
-  # Debounce date range input
   date_range <- shiny::reactive({
     input$content_overview_date_range
-  }) |>
-    shiny::debounce(300)
+  })
 
   # Populate environment filter dynamically based on curated data
   shiny::observe({
@@ -1240,11 +1238,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
   # Error handling in main server
   usage_data <- content_visits
 
-  # Debounce date range input
   date_range <- shiny::reactive({
     input$usage_overview_date_range
-  }) |>
-    shiny::debounce(300)
+  })
 
   # Populate environment filter dynamically
   shiny::observe({
@@ -1534,11 +1530,9 @@ shiny_apps_server <- function(
   # Error handling in main server
   shiny_usage_data <- shiny_usage
 
-  # Debounce date range input
   date_range <- shiny::reactive({
     input$shiny_apps_date_range
-  }) |>
-    shiny::debounce(300)
+  })
 
   # Use shared content_list (already latest snapshot from main server)
   shiny_content_list_latest <- shiny::reactive({
@@ -1881,11 +1875,9 @@ content_by_user_server <- function(
   # Error handling in main server
   visits_data <- content_visits
 
-  # Debounce date range input
   date_range <- shiny::reactive({
     input$content_by_user_date_range
-  }) |>
-    shiny::debounce(300)
+  })
 
   # Use shared content_list (already latest snapshot from main server)
   content_list_latest_usage <- shiny::reactive({
@@ -2133,11 +2125,9 @@ shiny_sessions_by_user_server <- function(
   # Error handling in main server
   usage_data <- shiny_usage
 
-  # Debounce date range input
   date_range <- shiny::reactive({
     input$shiny_sessions_user_date_range
-  }) |>
-    shiny::debounce(300)
+  })
 
   # Use shared content_list (already latest snapshot from main server)
   content_list_latest_usage <- shiny::reactive({
