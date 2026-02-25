@@ -2448,13 +2448,22 @@ server <- function(input, output, session) {
 
   # user_list: Deferred until a tab that needs it is visited.
   # Collects latest snapshot only (one date partition, not all dates).
+  # Use a sticky flag so the reactive only loads once, even when
+  # additional tabs in the list are visited later.
+  should_load_user_list <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    if (
+      !should_load_user_list() &&
+        (isTRUE(visited_tabs[["users_list"]]) ||
+          isTRUE(visited_tabs[["content_list"]]) ||
+          isTRUE(visited_tabs[["content_by_user"]]) ||
+          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+    ) {
+      should_load_user_list(TRUE)
+    }
+  })
   all_user_list <- shiny::reactive({
-    shiny::req(
-      isTRUE(visited_tabs[["users_list"]]) ||
-        isTRUE(visited_tabs[["content_list"]]) ||
-        isTRUE(visited_tabs[["content_by_user"]]) ||
-        isTRUE(visited_tabs[["shiny_sessions_by_user"]])
-    )
+    shiny::req(should_load_user_list())
     tryCatch(
       {
         ds <- chronicle_data("connect/user_list", base_path)
@@ -2487,13 +2496,20 @@ server <- function(input, output, session) {
 
   # content_list: Deferred until tabs that need it are visited.
   # Collects latest snapshot only (one date partition, not all dates).
+  should_load_content_list <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    if (
+      !should_load_content_list() &&
+        (isTRUE(visited_tabs[["content_list"]]) ||
+          isTRUE(visited_tabs[["shiny_apps"]]) ||
+          isTRUE(visited_tabs[["content_by_user"]]) ||
+          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+    ) {
+      should_load_content_list(TRUE)
+    }
+  })
   all_content_list <- shiny::reactive({
-    shiny::req(
-      isTRUE(visited_tabs[["content_list"]]) ||
-        isTRUE(visited_tabs[["shiny_apps"]]) ||
-        isTRUE(visited_tabs[["content_by_user"]]) ||
-        isTRUE(visited_tabs[["shiny_sessions_by_user"]])
-    )
+    shiny::req(should_load_content_list())
     tryCatch(
       {
         ds <- chronicle_data("connect/content_list", base_path)
@@ -2513,11 +2529,18 @@ server <- function(input, output, session) {
   })
 
   # content_visits: Deferred — LARGE dataset
+  should_load_content_visits <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    if (
+      !should_load_content_visits() &&
+        (isTRUE(visited_tabs[["usage_overview"]]) ||
+          isTRUE(visited_tabs[["content_by_user"]]))
+    ) {
+      should_load_content_visits(TRUE)
+    }
+  })
   all_content_visits <- shiny::reactive({
-    shiny::req(
-      isTRUE(visited_tabs[["usage_overview"]]) ||
-        isTRUE(visited_tabs[["content_by_user"]])
-    )
+    shiny::req(should_load_content_visits())
     tryCatch(
       chronicle_data("connect/content_visits_totals_by_user", base_path) |>
         dplyr::collect(),
@@ -2529,11 +2552,18 @@ server <- function(input, output, session) {
   })
 
   # shiny_usage: Deferred — LARGE dataset
+  should_load_shiny_usage <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    if (
+      !should_load_shiny_usage() &&
+        (isTRUE(visited_tabs[["shiny_apps"]]) ||
+          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+    ) {
+      should_load_shiny_usage(TRUE)
+    }
+  })
   all_shiny_usage <- shiny::reactive({
-    shiny::req(
-      isTRUE(visited_tabs[["shiny_apps"]]) ||
-        isTRUE(visited_tabs[["shiny_sessions_by_user"]])
-    )
+    shiny::req(should_load_shiny_usage())
     tryCatch(
       chronicle_data("connect/shiny_usage_totals_by_user", base_path) |>
         dplyr::collect(),

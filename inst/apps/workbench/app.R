@@ -422,7 +422,7 @@ user_list_server <- function(input, output, session) {
           dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
           dplyr::collect()
         if (nrow(max_date_result) == 0) {
-          return(data.frame())
+          return(data |> dplyr::head(0) |> dplyr::collect())
         }
         max_date <- max_date_result$max_date
 
