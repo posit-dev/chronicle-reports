@@ -113,12 +113,12 @@ chronicle.reports::chronicle_run_app("connect")
 Set `CHRONICLE_DATA_WINDOW` to limit how many days of data the dashboards load on startup. This is useful for improving load times when you have a large amount of historical data:
 
 ```r
-# Only load the last 90 days of data
+# Only load the last 90 days of data on startup
 Sys.setenv(CHRONICLE_DATA_WINDOW = 90)
 chronicle.reports::chronicle_run_app("connect")
 ```
 
-When unset or set to `0`, all available data is loaded. This setting affects time-series data only; snapshot data (e.g., user lists, content lists) always loads the latest available snapshot regardless of this setting.
+When unset or set to `0`, all available data is loaded by default.
 
 ## Available Reports
 
