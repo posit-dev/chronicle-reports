@@ -409,9 +409,10 @@ user_list_ui <- bslib::card(
   )
 )
 
-user_list_server <- function(input, output, session) {
-  # Load user_list data (snapshot at max_date)
+user_list_server <- function(input, output, session, should_load) {
+  # Load user_list data (snapshot at max_date), deferred until tab is visited
   user_list_data <- shiny::reactive({
+    shiny::req(should_load())
     tryCatch(
       {
         data <- chronicle_data("workbench/user_list", base_path)
@@ -560,6 +561,7 @@ user_list_server <- function(input, output, session) {
 # ==============================================
 
 ui <- bslib::page_navbar(
+  id = "main_nav",
   title = "Posit Workbench Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE,
@@ -577,11 +579,19 @@ ui <- bslib::page_navbar(
 # ==============================================
 
 server <- function(input, output, session) {
+  # Deferred loading: only load user list data when the tab is first visited
+  should_load_user_list <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    if (!should_load_user_list() && input$main_nav == "User List") {
+      should_load_user_list(TRUE)
+    }
+  })
+
   # Users → Overview
   users_overview_server(input, output, session)
 
   # Users → User List
-  user_list_server(input, output, session)
+  user_list_server(input, output, session, should_load_user_list)
 }
 
 shinyApp(ui, server)
