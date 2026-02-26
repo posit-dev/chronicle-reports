@@ -19,7 +19,8 @@ base_path <- Sys.getenv(
 )
 
 # Optional data window: when set, only load the last N days of data on startup.
-# Value should be a positive integer (number of days). When unset, all data is loaded.
+# Value should be a positive integer (number of days). When unset, all data is
+# loaded. Date selectors can expand the loaded range beyond the initial window.
 data_window_days <- Sys.getenv("CHRONICLE_DATA_WINDOW", "")
 data_window_int <- suppressWarnings(as.integer(data_window_days))
 if (
@@ -37,6 +38,16 @@ data_window_cutoff <- if (!is.na(data_window_int) && data_window_int > 0) {
   Sys.Date() - data_window_int
 } else {
   NULL
+}
+
+# Pick the later of data_window_cutoff and the actual data minimum so the
+# date-range selector starts at a sensible value.
+initial_date_start <- function(min_date) {
+  if (!is.null(data_window_cutoff)) {
+    max(min_date, data_window_cutoff)
+  } else {
+    min_date
+  }
 }
 
 # Brand colors
@@ -103,17 +114,24 @@ users_overview_ui <- bslib::card(
 
 users_overview_server <- function(input, output, session) {
   # Load user_totals data — collected eagerly with optional window filter.
-  # When the user selects a date before the loaded window, all data is reloaded.
-  load_all <- shiny::reactiveVal(is.null(data_window_cutoff))
+  # When a date selector extends beyond the loaded range, the range expands
+  # to cover the new dates (only the additional data is fetched via Arrow
+  # partition pruning, not the full dataset).
+  # NULL range means no restriction (load everything).
+  initial_range <- if (!is.null(data_window_cutoff)) {
+    list(min = data_window_cutoff, max = Sys.Date())
+  }
+  user_totals_range <- shiny::reactiveVal(initial_range)
 
   users_data <- shiny::reactive({
-    all <- load_all()
+    range <- user_totals_range()
     tryCatch(
       {
         ds <- chronicle_data("workbench/user_totals", base_path)
-        if (!all && !is.null(data_window_cutoff)) {
-          cutoff <- data_window_cutoff
-          ds <- ds |> dplyr::filter(date >= cutoff)
+        if (!is.null(range)) {
+          range_min <- range$min
+          range_max <- range$max
+          ds <- ds |> dplyr::filter(date >= range_min, date <= range_max)
         }
         ds |> dplyr::collect()
       },
@@ -124,22 +142,29 @@ users_overview_server <- function(input, output, session) {
     )
   })
 
-  # Load more data when date range extends before the loaded window
+  # Expand loaded range when date selector extends beyond the current range
   shiny::observe({
-    data <- users_data()
-    shiny::req(data, input$users_overview_date_range)
-    if (load_all()) {
+    date_val <- input$users_overview_date_range
+    shiny::req(date_val)
+    range <- user_totals_range()
+    if (is.null(range)) {
       return()
     }
-    loaded_min <- min(data$date, na.rm = TRUE)
-    if (input$users_overview_date_range[1] < loaded_min) {
-      load_all(TRUE)
+    new_min <- min(range$min, date_val[1])
+    new_max <- max(range$max, date_val[2])
+    if (new_min < range$min || new_max > range$max) {
+      user_totals_range(list(min = new_min, max = new_max))
     }
   })
 
-  # Set default date range when data loads
+  # Set default date range on first data load only (skip on range expansion
+  # reloads to preserve the user's current selection).
+  date_init_done <- shiny::reactiveVal(FALSE)
   shiny::observe({
     shiny::req(users_data())
+    if (date_init_done()) {
+      return()
+    }
 
     date_summary <- users_data() |>
       dplyr::filter(!is.na(date)) |>
@@ -148,11 +173,7 @@ users_overview_server <- function(input, output, session) {
         max_date = max(date, na.rm = TRUE)
       )
 
-    initial_start <- if (!is.null(data_window_cutoff)) {
-      max(date_summary$min_date, data_window_cutoff)
-    } else {
-      date_summary$min_date
-    }
+    initial_start <- initial_date_start(date_summary$min_date)
 
     shiny::updateDateRangeInput(
       session,
@@ -161,6 +182,7 @@ users_overview_server <- function(input, output, session) {
       end = date_summary$max_date,
       max = date_summary$max_date
     )
+    date_init_done(TRUE)
   })
 
   # Get latest data (for value boxes - always max_date)
