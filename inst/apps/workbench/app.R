@@ -22,19 +22,33 @@ base_path <- Sys.getenv(
 # Value should be a positive integer (number of days). When unset, all data is
 # loaded. Date selectors can expand the loaded range beyond the initial window.
 data_window_days <- Sys.getenv("CHRONICLE_DATA_WINDOW", "")
-data_window_int <- suppressWarnings(as.integer(data_window_days))
-if (
-  nzchar(data_window_days) && (is.na(data_window_int) || data_window_int <= 0)
-) {
-  warning(
-    "CHRONICLE_DATA_WINDOW must be a positive integer. ",
-    "Got '",
-    data_window_days,
-    "'. Loading all available data.",
-    call. = FALSE
-  )
+data_window_int <- NA_integer_
+if (nzchar(data_window_days)) {
+  # Require a positive integer. Reject non-integer, zero, and negative values
+  # with a warning.
+  if (!grepl("^-?[0-9]+$", data_window_days)) {
+    warning(
+      "CHRONICLE_DATA_WINDOW must be a positive integer. ",
+      "Got '",
+      data_window_days,
+      "'. Loading all available data.",
+      call. = FALSE
+    )
+  } else {
+    data_window_int <- as.integer(data_window_days)
+    if (data_window_int <= 0L) {
+      warning(
+        "CHRONICLE_DATA_WINDOW must be a positive integer. ",
+        "Got '",
+        data_window_days,
+        "'. Loading all available data.",
+        call. = FALSE
+      )
+      data_window_int <- NA_integer_
+    }
+  }
 }
-data_window_cutoff <- if (!is.na(data_window_int) && data_window_int > 0) {
+data_window_cutoff <- if (!is.na(data_window_int) && data_window_int > 0L) {
   Sys.Date() - data_window_int
 } else {
   NULL
