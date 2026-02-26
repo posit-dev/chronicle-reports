@@ -1,5 +1,10 @@
 # chronicle.reports (development version)
 
+# chronicle.reports 0.2.2
+* Added `CHRONICLE_DATA_WINDOW` environment variable to control the amount of data loaded on startup, significantly reducing startup time for large datasets in S3. When not set, all available data is loaded. Date range input changes automatically load additional data so all historical data remains accessible.
+* Improved dashboard load times by deferring data loading until the user navigates to each tab. Datasets are only fetched when their corresponding tab is first visited.
+* Fixed S3 data listing functions to correctly handle bucket paths with and without prefixes.
+
 # chronicle.reports 0.2.1
 
 * Improved Connect dashboard load time performance.

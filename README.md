@@ -101,7 +101,7 @@ chronicle.reports::chronicle_run_app(
 )
 ```
 
-#### Environment Variable
+#### Environment Variables
 
 Set `CHRONICLE_BASE_PATH` to avoid the need to pass in the path every time:
 
@@ -109,6 +109,16 @@ Set `CHRONICLE_BASE_PATH` to avoid the need to pass in the path every time:
 Sys.setenv(CHRONICLE_BASE_PATH = "/path/to/chronicle/data")
 chronicle.reports::chronicle_run_app("connect")
 ```
+
+Set `CHRONICLE_DATA_WINDOW` to limit how many days of data the dashboards load on startup. This is useful for improving load times when you have a large amount of historical data:
+
+```r
+# Only load the last 90 days of data on startup
+Sys.setenv(CHRONICLE_DATA_WINDOW = 90)
+chronicle.reports::chronicle_run_app("connect")
+```
+
+When unset all available data is loaded by default.
 
 ## Available Reports
 
@@ -204,6 +214,7 @@ Instead of hard coding the path, configure it in the Posit Connect UI:
 1. Navigate to your deployed application in Connect
 2. Go to the "Vars" panel
 3. Add environment variable: `CHRONICLE_BASE_PATH = /path/to/chronicle/data`
+4. Optionally add `CHRONICLE_DATA_WINDOW` to limit how many days of data the dashboard loads (e.g., `90` for the last 90 days)
 
 Then simplify your `app.R`:
 

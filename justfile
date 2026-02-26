@@ -33,3 +33,10 @@ check:
 docs:
   @echo "Building documentation..."
   {{R_CMD}} -e 'devtools::document()'
+
+update-manifests branch="main":
+  #!/usr/bin/env bash
+  set -euo pipefail
+
+  docker build -f Dockerfile.manifests --build-arg GIT_BRANCH={{branch}} -t chronicle-manifests .
+  docker run --rm -v "$(pwd)/inst/apps:/workspace/inst/apps" chronicle-manifests

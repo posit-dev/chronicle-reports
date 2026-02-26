@@ -18,6 +18,38 @@ base_path <- Sys.getenv(
   APP_CONFIG$DEFAULT_BASE_PATH
 )
 
+# Optional data window: when set, only load the last N days of data on startup.
+# Value should be a positive integer (number of days). When unset, all data is
+# loaded. Date selectors can expand the loaded range beyond the initial window.
+data_window_days <- Sys.getenv("CHRONICLE_DATA_WINDOW", "")
+data_window_int <- suppressWarnings(as.integer(data_window_days))
+if (
+  nzchar(data_window_days) && (is.na(data_window_int) || data_window_int <= 0)
+) {
+  warning(
+    "CHRONICLE_DATA_WINDOW must be a positive integer. ",
+    "Got '",
+    data_window_days,
+    "'. Loading all available data.",
+    call. = FALSE
+  )
+}
+data_window_cutoff <- if (!is.na(data_window_int) && data_window_int > 0) {
+  Sys.Date() - data_window_int
+} else {
+  NULL
+}
+
+# Pick the later of data_window_cutoff and the actual data minimum so the
+# date-range selector starts at a sensible value.
+initial_date_start <- function(min_date) {
+  if (!is.null(data_window_cutoff)) {
+    max(min_date, data_window_cutoff)
+  } else {
+    min_date
+  }
+}
+
 # Brand colors
 BRAND_COLORS <- list(
   BLUE = "#447099",
@@ -81,11 +113,27 @@ users_overview_ui <- bslib::card(
 )
 
 users_overview_server <- function(input, output, session) {
-  # Load user_totals data
+  # Load user_totals data — collected eagerly with optional window filter.
+  # When a date selector extends beyond the loaded range, the range expands
+  # to cover the new dates (only the additional data is fetched via Arrow
+  # partition pruning, not the full dataset).
+  # NULL range means no restriction (load everything).
+  initial_range <- if (!is.null(data_window_cutoff)) {
+    list(min = data_window_cutoff, max = Sys.Date())
+  }
+  user_totals_range <- shiny::reactiveVal(initial_range)
+
   users_data <- shiny::reactive({
+    range <- user_totals_range()
     tryCatch(
       {
-        chronicle_data("workbench/user_totals", base_path)
+        ds <- chronicle_data("workbench/user_totals", base_path)
+        if (!is.null(range)) {
+          range_min <- range$min
+          range_max <- range$max
+          ds <- ds |> dplyr::filter(date >= range_min, date <= range_max)
+        }
+        ds |> dplyr::collect()
       },
       error = function(e) {
         message("Error loading user totals: ", e$message)
@@ -94,26 +142,47 @@ users_overview_server <- function(input, output, session) {
     )
   })
 
-  # Set default date range when data loads
+  # Expand loaded range when date selector extends beyond the current range
+  shiny::observe({
+    date_val <- input$users_overview_date_range
+    shiny::req(date_val)
+    range <- user_totals_range()
+    if (is.null(range)) {
+      return()
+    }
+    new_min <- min(range$min, date_val[1])
+    new_max <- max(range$max, date_val[2])
+    if (new_min < range$min || new_max > range$max) {
+      user_totals_range(list(min = new_min, max = new_max))
+    }
+  })
+
+  # Set default date range on first data load only (skip on range expansion
+  # reloads to preserve the user's current selection).
+  date_init_done <- shiny::reactiveVal(FALSE)
   shiny::observe({
     shiny::req(users_data())
+    if (date_init_done()) {
+      return()
+    }
 
     date_summary <- users_data() |>
       dplyr::filter(!is.na(date)) |>
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
+
+    initial_start <- initial_date_start(date_summary$min_date)
 
     shiny::updateDateRangeInput(
       session,
       "users_overview_date_range",
-      start = date_summary$min_date,
+      start = initial_start,
       end = date_summary$max_date,
-      min = date_summary$min_date,
       max = date_summary$max_date
     )
+    date_init_done(TRUE)
   })
 
   # Get latest data (for value boxes - always max_date)
@@ -123,9 +192,9 @@ users_overview_server <- function(input, output, session) {
       return(NULL)
     }
 
+    max_date <- max(data$date, na.rm = TRUE)
     data |>
-      dplyr::collect() |>
-      dplyr::arrange(dplyr::desc(date)) |>
+      dplyr::filter(date == max_date) |>
       dplyr::slice(1)
   })
 
@@ -142,8 +211,7 @@ users_overview_server <- function(input, output, session) {
       dplyr::filter(
         date >= input$users_overview_date_range[1],
         date <= input$users_overview_date_range[2]
-      ) |>
-      dplyr::collect()
+      )
   })
 
   # Value boxes (always latest data)
@@ -409,22 +477,27 @@ user_list_ui <- bslib::card(
   )
 )
 
-user_list_server <- function(input, output, session) {
-  # Load user_list data (snapshot at max_date)
+user_list_server <- function(input, output, session, should_load) {
+  # Load user_list data (snapshot at max_date), deferred until tab is visited
   user_list_data <- shiny::reactive({
+    shiny::req(should_load())
     tryCatch(
       {
         data <- chronicle_data("workbench/user_list", base_path)
 
-        # Get max_date snapshot - collect first, then filter to all users from max date
-        collected_data <- data |> dplyr::collect()
-        if (nrow(collected_data) == 0) {
-          return(collected_data)
+        # Find max_date in Arrow (reads only parquet metadata), then collect
+        # just that partition instead of all historical snapshots
+        max_date_result <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect()
+        if (nrow(max_date_result) == 0) {
+          return(data |> dplyr::head(0) |> dplyr::collect())
         }
-        max_date <- max(collected_data$date, na.rm = TRUE)
+        max_date <- max_date_result$max_date
 
-        collected_data |>
-          dplyr::filter(date == max_date)
+        data |>
+          dplyr::filter(date == max_date) |>
+          dplyr::collect()
       },
       error = function(e) {
         message("Error loading user list: ", e$message)
@@ -556,6 +629,7 @@ user_list_server <- function(input, output, session) {
 # ==============================================
 
 ui <- bslib::page_navbar(
+  id = "main_nav",
   title = "Posit Workbench Dashboard",
   theme = bslib::bs_theme(preset = "shiny"),
   fillable = FALSE,
@@ -573,11 +647,19 @@ ui <- bslib::page_navbar(
 # ==============================================
 
 server <- function(input, output, session) {
+  # Deferred loading: only load user list data when the tab is first visited
+  should_load_user_list <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    if (!should_load_user_list() && input$main_nav == "User List") {
+      should_load_user_list(TRUE)
+    }
+  })
+
   # Users → Overview
   users_overview_server(input, output, session)
 
   # Users → User List
-  user_list_server(input, output, session)
+  user_list_server(input, output, session, should_load_user_list)
 }
 
 shinyApp(ui, server)
