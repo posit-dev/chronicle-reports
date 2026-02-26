@@ -665,8 +665,7 @@ content_overview_server <- function(input, output, session, content_totals) {
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     initial_start <- initial_date_start(date_summary$min_date)
 
@@ -1350,8 +1349,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+      )
 
     if (nrow(date_summary) == 0) {
       return()

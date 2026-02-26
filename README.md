@@ -118,7 +118,7 @@ Sys.setenv(CHRONICLE_DATA_WINDOW = 90)
 chronicle.reports::chronicle_run_app("connect")
 ```
 
-When unset or set to `0`, all available data is loaded by default.
+When unset all available data is loaded by default.
 
 ## Available Reports
 
