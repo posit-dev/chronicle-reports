@@ -415,7 +415,7 @@
       "description": {
         "Package": "chronicle.reports",
         "Title": "Posit Chronicle Reports",
-        "Version": "0.2.1",
+        "Version": "0.2.2",
         "Authors@R": "c(\n    person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "Run reports for Posit Chronicle. You provide the\n    location of your Chronicle data and this package will generate reports\n    to help you analyze and visualize your data.",
         "License": "MIT + file LICENSE",
@@ -433,17 +433,17 @@
         "RemoteHost": "api.github.com",
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
-        "RemoteRef": "dev",
-        "RemoteSha": "fd513e258e1b10d5d5472c895a5b325e635cb4d8",
+        "RemoteRef": "main",
+        "RemoteSha": "56c61cfa79cf9f3b5143ab0efcb86733b93194d5",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
-        "GithubRef": "dev",
-        "GithubSHA1": "fd513e258e1b10d5d5472c895a5b325e635cb4d8",
+        "GithubRef": "main",
+        "GithubSHA1": "56c61cfa79cf9f3b5143ab0efcb86733b93194d5",
         "NeedsCompilation": "no",
-        "Packaged": "2026-02-26 16:54:01 UTC; root",
+        "Packaged": "2026-02-26 19:23:35 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.2; ; 2026-02-26 16:54:01 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-02-26 19:23:35 UTC; unix"
       }
     },
     "cli": {
@@ -2005,10 +2005,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "11955e52915a26ec22732f53982ceec24323e436",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-02-26 16:53:36 UTC; root",
+        "Packaged": "2026-02-26 19:23:10 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.2; aarch64-unknown-linux-gnu; 2026-02-26 16:53:36 UTC; unix"
+        "Built": "R 4.5.2; aarch64-unknown-linux-gnu; 2026-02-26 19:23:10 UTC; unix"
       }
     },
     "tidyr": {
@@ -2269,10 +2269,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "22e392c9cc13efaa9ba042bb193991f78316edb1",
         "NeedsCompilation": "no",
-        "Packaged": "2026-02-26 16:53:38 UTC; root",
+        "Packaged": "2026-02-26 19:23:13 UTC; root",
         "Author": "Jim Hester [aut],\n  Lionel Henry [aut, cre],\n  Kirill Müller [aut],\n  Kevin Ushey [aut],\n  Hadley Wickham [aut],\n  Winston Chang [aut],\n  Jennifer Bryan [ctb],\n  Richard Cotton [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Lionel Henry <lionel@posit.co>",
-        "Built": "R 4.5.2; ; 2026-02-26 16:53:39 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-02-26 19:23:13 UTC; unix"
       }
     },
     "xfun": {
@@ -2360,10 +2360,10 @@
   },
   "files": {
     "app.R": {
-      "checksum": "8a48ca4baff2e7a9b5f6444242855c02"
+      "checksum": "0d920296e833da31dd873d8933b19961"
     },
     "renv.lock": {
-      "checksum": "9f7c85ed6141be42edf076a869732791"
+      "checksum": "91165a2d6dcf0c55c7142fbd327c91ea"
     }
   },
   "users": null
