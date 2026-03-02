@@ -43,6 +43,10 @@ repos:
           (.*/|)\.Rprofile|
           (.*/|)\.travis\.yml|
           (.*/|)appveyor\.yml|
+          (.*/|)CLAUDE.md|
+          (.*/|)Dockerfile.manifests|
+          (.*/|)justfile|
+          (.*/|)manifest\.json|
           (.*/|)NAMESPACE|
           (.*/|)renv/settings\.dcf|
           (.*/|)renv\.lock|
