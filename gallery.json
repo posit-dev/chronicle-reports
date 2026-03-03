@@ -1,0 +1,9 @@
+{
+  "categories": [
+    {
+      "id": "chronicle-reports",
+      "title": "Chronicle Reports",
+      "description": "Usage analytics dashboards powered by Posit Chronicle data."
+    }
+  ]
+}

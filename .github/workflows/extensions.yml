@@ -1,0 +1,43 @@
+name: Extensions
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  extensions:
+    strategy:
+      fail-fast: false
+      matrix:
+        extension:
+          - connect
+          - workbench
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: posit-dev/connect-gallery-action/build-extension@main
+        with:
+          extension-name: ${{ matrix.extension }}
+          extensions-dir: inst/apps
+          release: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
+
+  update-gallery:
+    runs-on: ubuntu-latest
+    needs: [extensions]
+    if: always() && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: posit-dev/connect-gallery-action@main
+        with:
+          extensions-dir: inst/apps
