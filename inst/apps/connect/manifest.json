@@ -1,25 +1,12 @@
 {
-  "extension": {
-    "name": "connect",
-    "title": "Chronicle Connect Dashboard",
-    "description": "Comprehensive Posit Connect usage analytics — tracks licensed users, daily active users, publishers, content metrics, and usage patterns over time.",
-    "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/connect",
-    "category": "chronicle-reports",
-    "tags": [
-      "Chronicle reports"
-    ],
-    "minimumConnectVersion": "2025.01.0",
-    "requiredFeatures": [],
-    "version": "0.0.1"
-  },
   "version": 1,
   "locale": "en_US",
   "platform": "4.5.2",
   "metadata": {
     "appmode": "shiny",
-    "primary_rmd": {},
-    "primary_html": {},
-    "content_category": {},
+    "primary_rmd": null,
+    "primary_html": null,
+    "content_category": null,
     "has_parameters": false
   },
   "environment": {
@@ -451,7 +438,7 @@
     },
     "chronicle.reports": {
       "Source": "github",
-      "Repository": {},
+      "Repository": null,
       "description": {
         "Package": "chronicle.reports",
         "Title": "Posit Chronicle Reports",
@@ -480,10 +467,10 @@
         "GithubRef": "main",
         "GithubSHA1": "89bac9e0e1a249ff7e4ebc34fe0a167b64a2f3f5",
         "NeedsCompilation": "no",
-        "Packaged": "2026-03-11 15:53:17 UTC; root",
+        "Packaged": "2026-03-11 15:58:04 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.2; ; 2026-03-11 15:53:18 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-03-11 15:58:04 UTC; unix"
       }
     },
     "cli": {
@@ -2010,7 +1997,7 @@
     },
     "tibble": {
       "Source": "github",
-      "Repository": {},
+      "Repository": null,
       "description": {
         "Package": "tibble",
         "Title": "Simple Data Frames",
@@ -2279,7 +2266,7 @@
     },
     "withr": {
       "Source": "github",
-      "Repository": {},
+      "Repository": null,
       "description": {
         "Package": "withr",
         "Title": "Run Code 'With' Temporarily Modified Global State",
@@ -2407,5 +2394,5 @@
       "checksum": "66740eb3862bb64387b4444b32e5e057"
     }
   },
-  "users": {}
+  "users": null
 }
