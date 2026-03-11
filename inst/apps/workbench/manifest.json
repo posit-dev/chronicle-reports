@@ -467,10 +467,10 @@
         "GithubRef": "main",
         "GithubSHA1": "89bac9e0e1a249ff7e4ebc34fe0a167b64a2f3f5",
         "NeedsCompilation": "no",
-        "Packaged": "2026-03-11 15:58:04 UTC; root",
+        "Packaged": "2026-03-11 18:56:59 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.2; ; 2026-03-11 15:58:04 UTC; unix"
+        "Built": "R 4.5.2; ; 2026-03-11 18:56:59 UTC; unix"
       }
     },
     "cli": {
@@ -2388,7 +2388,7 @@
   },
   "files": {
     "app.R": {
-      "checksum": "09c84b0d8ad5e8cdcfc824c11ffc7977"
+      "checksum": "a029121a575fcdb3d9f9f57b05b9b999"
     },
     "renv.lock": {
       "checksum": "70c23c168f322728adf6cdca0402b75a"
