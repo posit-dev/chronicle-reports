@@ -85,7 +85,10 @@ card_header_with_download <- function(title, download_id,
       title_el,
       shiny::downloadLink(
         download_id,
-        label = download_icon,
+        label = shiny::tagList(
+          download_icon,
+          shiny::span("Download CSV", class = "visually-hidden")
+        ),
         style = "text-decoration: none; color: #555; font-size: 1.1em;"
       )
     )
@@ -102,7 +105,10 @@ card_header_with_chart_downloads <- function(title, chart_download_id,
       bslib::popover(
         shiny::actionLink(
           paste0(chart_download_id, "_trigger"),
-          label = download_icon,
+          label = shiny::tagList(
+            download_icon,
+            shiny::span("Download CSV", class = "visually-hidden")
+          ),
           style = "text-decoration: none; color: #555; font-size: 1.1em;"
         ),
         title = "Download CSV",
