@@ -1,4 +1,17 @@
 {
+  "extension": {
+    "name": "connect",
+    "title": "Chronicle Connect Dashboard",
+    "description": "Comprehensive Posit Connect usage analytics — tracks licensed users, daily active users, publishers, content metrics, and usage patterns over time.",
+    "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/connect",
+    "category": "chronicle-reports",
+    "tags": [
+      "Chronicle reports"
+    ],
+    "minimumConnectVersion": "2025.01.0",
+    "requiredFeatures": [],
+    "version": "0.0.1"
+  },
   "version": 1,
   "locale": "en_US",
   "platform": "4.5.2",
