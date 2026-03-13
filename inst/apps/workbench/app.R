@@ -58,6 +58,76 @@ BRAND_COLORS <- list(
   GRAY = "#404041"
 )
 
+# ==============================================
+# Download UI Helper Functions
+# ==============================================
+
+download_icon <- bsicons::bs_icon("download")
+
+# Card header with a single download button (for tables)
+card_header_with_download <- function(title, download_id,
+                                      subtitle_output = NULL) {
+  title_el <- if (is.null(subtitle_output)) {
+    shiny::span(title)
+  } else {
+    shiny::div(
+      shiny::span(title),
+      shiny::span(
+        style = "font-weight: normal; font-size: 0.9em; color: #555;",
+        subtitle_output
+      )
+    )
+  }
+
+  bslib::card_header(
+    shiny::div(
+      style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
+      title_el,
+      shiny::downloadLink(
+        download_id,
+        label = shiny::tagList(
+          download_icon,
+          shiny::span("Download CSV", class = "visually-hidden")
+        ),
+        style = "text-decoration: none; color: #555; font-size: 1.1em;"
+      )
+    )
+  )
+}
+
+# Card header with a popover dropdown offering chart data + raw data downloads
+card_header_with_chart_downloads <- function(title, chart_download_id,
+                                             raw_download_id) {
+  bslib::card_header(
+    shiny::div(
+      style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
+      shiny::span(title),
+      bslib::popover(
+        shiny::actionLink(
+          paste0(chart_download_id, "_trigger"),
+          label = shiny::tagList(
+            download_icon,
+            shiny::span("Download CSV", class = "visually-hidden")
+          ),
+          style = "text-decoration: none; color: #555; font-size: 1.1em;"
+        ),
+        title = "Download CSV",
+        shiny::div(
+          shiny::downloadLink(
+            chart_download_id,
+            "Chart data (aggregated)",
+            style = "display: block; margin-bottom: 8px;"
+          ),
+          shiny::downloadLink(
+            raw_download_id,
+            "Raw data (filtered)",
+            style = "display: block;"
+          )
+        )
+      )
+    )
+  )
+}
 
 # ==============================================
 # Users → Overview UI/Server
@@ -102,11 +172,19 @@ users_overview_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(6, 6),
     bslib::card(
-      bslib::card_header("User Trends Over Time"),
+      card_header_with_chart_downloads(
+        "User Trends Over Time",
+        "download_user_trends_chart",
+        "download_user_trends_raw"
+      ),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_trend_plot"))
     ),
     bslib::card(
-      bslib::card_header("Average Users by Day of Week"),
+      card_header_with_chart_downloads(
+        "Average Users by Day of Week",
+        "download_user_dow_chart",
+        "download_user_dow_raw"
+      ),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_dow_plot"))
     )
   )
@@ -247,41 +325,14 @@ users_overview_server <- function(input, output, session) {
     prettyNum(data$super_administrators, big.mark = ",")
   })
 
-  # Trend chart (filtered data)
-  output$users_trend_plot <- plotly::renderPlotly({
+  # Aggregated data for User Trends chart
+  user_trends_chart_data <- shiny::reactive({
     data <- filtered_users_data()
-
     if (is.null(data) || nrow(data) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>Data not available</b>",
-                x = 0.5,
-                y = 0.55,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              ),
-              list(
-                text = "Check that Chronicle data exists at the configured path",
-                x = 0.5,
-                y = 0.45,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 14, color = "#666666")
-              )
-            )
-          )
-      )
+      return(NULL)
     }
 
-    plot_data <- data |>
+    data |>
       dplyr::select(
         "date",
         "named_users",
@@ -305,8 +356,31 @@ users_overview_server <- function(input, output, session) {
           labels = c("Licensed Users", "Daily Users", "Admins", "Super Admins")
         )
       )
+  })
 
-    if (nrow(plot_data) == 0) {
+  # Aggregated data for Day of Week chart
+  user_dow_chart_data <- shiny::reactive({
+    data <- filtered_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::mutate(
+        day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
+      ) |>
+      dplyr::group_by(.data$day_of_week) |>
+      dplyr::summarise(
+        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
+  # Trend chart (filtered data)
+  output$users_trend_plot <- plotly::renderPlotly({
+    plot_data <- user_trends_chart_data()
+
+    if (is.null(plot_data) || nrow(plot_data) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -368,49 +442,9 @@ users_overview_server <- function(input, output, session) {
 
   # Day of week chart (filtered data)
   output$users_dow_plot <- plotly::renderPlotly({
-    data <- filtered_users_data()
+    day_summary <- user_dow_chart_data()
 
-    if (is.null(data) || nrow(data) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>Data not available</b>",
-                x = 0.5,
-                y = 0.55,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              ),
-              list(
-                text = "Check that Chronicle data exists at the configured path",
-                x = 0.5,
-                y = 0.45,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 14, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    day_summary <- data |>
-      dplyr::mutate(
-        day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
-      ) |>
-      dplyr::group_by(.data$day_of_week) |>
-      dplyr::summarise(
-        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-    if (nrow(day_summary) == 0) {
+    if (is.null(day_summary) || nrow(day_summary) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -446,6 +480,60 @@ users_overview_server <- function(input, output, session) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handlers for User Trends chart
+  output$download_user_trends_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_user_trends_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_trends_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_user_trends_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_user_trends_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handlers for Day of Week chart
+  output$download_user_dow_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_user_dow_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_dow_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_user_dow_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_user_dow_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -453,7 +541,7 @@ users_overview_server <- function(input, output, session) {
 # ==============================================
 
 user_list_ui <- bslib::card(
-  bslib::card_header("Filters"),
+  card_header_with_download("Filters", "download_user_list"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
@@ -622,6 +710,37 @@ user_list_server <- function(input, output, session, should_load) {
         rownames = FALSE
       )
   })
+
+  # Download handler for User List table
+  output$download_user_list <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_user_list_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_user_list()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      } else {
+        data <- data |>
+          dplyr::mutate(
+            environment = ifelse(
+              is.na(.data$environment) |
+                .data$environment == "" |
+                .data$environment == " ",
+              "(Not Set)",
+              .data$environment
+            )
+          ) |>
+          dplyr::select(
+            "username",
+            "user_role",
+            "environment",
+            "last_active_at"
+          )
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
