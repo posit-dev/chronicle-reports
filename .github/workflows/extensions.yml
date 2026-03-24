@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - dev
 
 permissions:
   contents: write
@@ -23,21 +23,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: posit-dev/connect-gallery-action/build-extension@main
+      - uses: posit-dev/connect-gallery-action/build-extension@dev
         with:
           extension-name: ${{ matrix.extension }}
           extensions-dir: inst/apps
-          release: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
+          release: ${{ github.ref == 'refs/heads/dev' && 'true' || 'false' }}
 
   update-gallery:
     runs-on: ubuntu-latest
     needs: [extensions]
-    if: always() && github.ref == 'refs/heads/main'
+    if: always() && github.ref == 'refs/heads/dev'
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: dev
 
-      - uses: posit-dev/connect-gallery-action@main
+      - uses: posit-dev/connect-gallery-action@dev
         with:
           extensions-dir: inst/apps
