@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: posit-dev/connect-gallery-action/build-extension@dev
+      - uses: posit-dev/connect-gallery-action/build-extension@main
         with:
           extension-name: ${{ matrix.extension }}
           extensions-dir: inst/apps
@@ -38,6 +38,6 @@ jobs:
         with:
           ref: dev
 
-      - uses: posit-dev/connect-gallery-action@dev
+      - uses: posit-dev/connect-gallery-action@main
         with:
           extensions-dir: inst/apps
