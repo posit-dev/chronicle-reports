@@ -409,6 +409,24 @@
         "Built": "R 4.5.0; ; 2026-01-15 04:24:33 UTC; unix"
       }
     },
+    "connectapi": {
+      "Source": "github",
+      "Repository": null,
+      "description": {
+        "Package": "connectapi",
+        "Title": "Utilities for Interacting with the 'Posit Connect' Server API",
+        "Version": "0.12.1.9000",
+        "Imports": "bit64, fs, glue, httr, mime, jsonlite, lifecycle, magrittr, purrr, R6, rlang (>= 0.4.2), tibble, uuid, vctrs (>= 0.3.0), base64enc",
+        "RemoteType": "github",
+        "RemoteHost": "api.github.com",
+        "RemoteRepo": "connectapi",
+        "RemoteUsername": "rstudio",
+        "RemoteRef": "HEAD",
+        "GithubRepo": "connectapi",
+        "GithubUsername": "rstudio",
+        "GithubRef": "HEAD"
+      }
+    },
     "chronicle.reports": {
       "Source": "github",
       "Repository": null,
@@ -2355,6 +2373,15 @@
         "Repository": "RSPM",
         "Date/Publication": "2025-12-10 07:00:01 UTC",
         "Built": "R 4.5.0; aarch64-unknown-linux-gnu; 2025-12-10 19:14:01 UTC; unix"
+      }
+    },
+    "uuid": {
+      "Source": "CRAN",
+      "Repository": "https://cloud.r-project.org",
+      "description": {
+        "Package": "uuid",
+        "Version": "1.2-2",
+        "Title": "Tools for Generating and Handling of UUIDs"
       }
     }
   },
