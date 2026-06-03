@@ -410,21 +410,13 @@
       }
     },
     "connectapi": {
-      "Source": "github",
-      "Repository": null,
+      "Source": "CRAN",
+      "Repository": "https://cloud.r-project.org",
       "description": {
         "Package": "connectapi",
         "Title": "Utilities for Interacting with the 'Posit Connect' Server API",
-        "Version": "0.12.1.9000",
-        "Imports": "bit64, fs, glue, httr, mime, jsonlite, lifecycle, magrittr, purrr, R6, rlang (>= 0.4.2), tibble, uuid, vctrs (>= 0.3.0), base64enc",
-        "RemoteType": "github",
-        "RemoteHost": "api.github.com",
-        "RemoteRepo": "connectapi",
-        "RemoteUsername": "rstudio",
-        "RemoteRef": "HEAD",
-        "GithubRepo": "connectapi",
-        "GithubUsername": "rstudio",
-        "GithubRef": "HEAD"
+        "Version": "0.12.1",
+        "Imports": "bit64, fs, glue, httr, mime, jsonlite, lifecycle, magrittr, purrr, R6, rlang (>= 0.4.2), tibble, uuid, vctrs (>= 0.3.0), base64enc"
       }
     },
     "chronicle.reports": {
