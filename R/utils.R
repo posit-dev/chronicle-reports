@@ -13,6 +13,7 @@ chronicle_s3_bucket <- function(bucket_name) {
   if (Sys.getenv("POSIT_PRODUCT") == "CONNECT") {
     rlang::check_installed("connectapi", reason = "to use AWS credentials on Posit Connect")
     credentials <- connectapi::get_aws_content_credentials(connectapi::connect())
+    message("Using Connect AWS OAuth credentials for S3 access")
     arrow::s3_bucket(
       bucket_name,
       access_key = credentials$access_key_id,
