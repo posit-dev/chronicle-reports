@@ -2518,7 +2518,9 @@ server <- function(input, output, session) {
         ds |> dplyr::collect()
       },
       error = function(e) {
-        message("Error loading user totals: ", e$message)
+        message("Error loading user totals: ", conditionMessage(e))
+        message("Error class: ", paste(class(e), collapse = ", "))
+        message("Error call: ", deparse(e$call))
         NULL
       }
     )
