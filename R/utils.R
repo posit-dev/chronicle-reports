@@ -10,6 +10,7 @@
 #' @keywords internal
 #' @noRd
 chronicle_s3_bucket <- function(bucket_name) {
+  region <- Sys.getenv("AWS_DEFAULT_REGION", "us-east-2")
   if (Sys.getenv("POSIT_PRODUCT") == "CONNECT") {
     rlang::check_installed("connectapi", reason = "to use AWS credentials on Posit Connect")
     credentials <- connectapi::get_aws_content_credentials(connectapi::connect())
@@ -18,10 +19,11 @@ chronicle_s3_bucket <- function(bucket_name) {
       bucket_name,
       access_key = credentials$access_key_id,
       secret_key = credentials$secret_access_key,
-      session_token = credentials$session_token
+      session_token = credentials$session_token,
+      region = region
     )
   } else {
-    arrow::s3_bucket(bucket_name)
+    arrow::s3_bucket(bucket_name, region = region)
   }
 }
 
