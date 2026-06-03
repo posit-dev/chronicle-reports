@@ -1,3 +1,29 @@
+#' Create an Arrow S3 bucket filesystem with appropriate credentials
+#'
+#' On Posit Connect, exchanges the content session token for temporary AWS
+#' credentials via the configured AWS OAuth integration. Elsewhere, falls back
+#' to Arrow's default credential chain.
+#'
+#' @param bucket_name S3 bucket name
+#' @return Arrow SubTreeFileSystem rooted at the bucket
+#'
+#' @keywords internal
+#' @noRd
+chronicle_s3_bucket <- function(bucket_name) {
+  if (Sys.getenv("POSIT_PRODUCT") == "CONNECT") {
+    rlang::check_installed("connectapi", reason = "to use AWS credentials on Posit Connect")
+    credentials <- connectapi::get_aws_content_credentials(connectapi::connect())
+    arrow::s3_bucket(
+      bucket_name,
+      access_key = credentials$access_key_id,
+      secret_key = credentials$secret_access_key,
+      session_token = credentials$session_token
+    )
+  } else {
+    arrow::s3_bucket(bucket_name)
+  }
+}
+
 #' Build path to Chronicle metric data
 #'
 #' @keywords internal
@@ -30,8 +56,10 @@ chronicle_path <- function(
 #' @noRd
 chronicle_list_dirs <- function(path) {
   if (startsWith(path, "s3://")) {
-    fs <- arrow::SubTreeFileSystem$create(path)
-    selector <- arrow::FileSelector$create("", recursive = FALSE)
+    s3_parts <- strsplit(sub("^s3://", "", path), "/", fixed = TRUE)[[1]]
+    fs <- chronicle_s3_bucket(s3_parts[1])
+    key <- paste(s3_parts[-1], collapse = "/")
+    selector <- arrow::FileSelector$create(key, recursive = FALSE)
     info <- fs$GetFileInfo(selector)
     dirs <- Filter(function(fi) fi$type == arrow::FileType$Directory, info)
     vapply(dirs, function(fi) basename(fi$path), character(1))
@@ -108,8 +136,16 @@ chronicle_raw_data <- function(
     partitioning <- c("Year", "Month", "Day")
   }
 
+  if (startsWith(path, "s3://")) {
+    s3_parts <- strsplit(sub("^s3://", "", path), "/", fixed = TRUE)[[1]]
+    fs <- chronicle_s3_bucket(s3_parts[1])
+    path <- paste(s3_parts[-1], collapse = "/")
+  } else {
+    fs <- NULL
+  }
   arrow::open_dataset(
     path,
+    filesystem = fs,
     hive_style = FALSE,
     schema = schema,
     format = "parquet",
@@ -154,8 +190,16 @@ chronicle_data <- function(
 ) {
   path <- chronicle_path(base_path, metric, "curated")
 
+  if (startsWith(path, "s3://")) {
+    s3_parts <- strsplit(sub("^s3://", "", path), "/", fixed = TRUE)[[1]]
+    fs <- chronicle_s3_bucket(s3_parts[1])
+    path <- paste(s3_parts[-1], collapse = "/")
+  } else {
+    fs <- NULL
+  }
   arrow::open_dataset(
     path,
+    filesystem = fs,
     hive_style = TRUE,
     partitioning = arrow::schema(date = arrow::date32()),
     format = "parquet"

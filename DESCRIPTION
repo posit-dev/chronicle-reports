@@ -31,6 +31,7 @@ Imports:
     tidyr,
     withr (>= 3.0.2)
 Suggests:
+    connectapi,
     devtools (>= 2.4.6),
     shinytest2,
     testthat (>= 3.0.0),
