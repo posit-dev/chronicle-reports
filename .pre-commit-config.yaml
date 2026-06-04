@@ -7,6 +7,7 @@ repos:
     -   id: roxygenize
         additional_dependencies:
         - arrow
+        - bsicons
         - bslib
         - charlatan
         - dplyr
@@ -43,6 +44,10 @@ repos:
           (.*/|)\.Rprofile|
           (.*/|)\.travis\.yml|
           (.*/|)appveyor\.yml|
+          (.*/|)CLAUDE.md|
+          (.*/|)Dockerfile.manifests|
+          (.*/|)justfile|
+          (.*/|)manifest\.json|
           (.*/|)NAMESPACE|
           (.*/|)renv/settings\.dcf|
           (.*/|)renv\.lock|

@@ -36,6 +36,8 @@ The sample data includes:
 \item Connect content totals (30 days by type and environment)
 \item Connect content visits (30 days of user visit data)
 \item Connect Shiny usage (30 days of Shiny session data)
+\item Connect content hits totals (30 days of hit counts per content item)
+\item Connect content hits by user (30 days of per-user hit data)
 \item Workbench user totals (30 days of data ending yesterday)
 \item Workbench user list (21 sample users)
 \item Workbench session start totals (30 days by environment and session type)

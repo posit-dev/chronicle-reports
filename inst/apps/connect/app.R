@@ -59,6 +59,83 @@ BRAND_COLORS <- list(
 )
 
 # ==============================================
+# Download UI Helper Functions
+# ==============================================
+
+download_icon <- bsicons::bs_icon("download")
+
+# Card header with a single download button (for tables)
+card_header_with_download <- function(
+  title,
+  download_id,
+  subtitle_output = NULL
+) {
+  title_el <- if (is.null(subtitle_output)) {
+    shiny::span(title)
+  } else {
+    shiny::div(
+      shiny::span(title),
+      shiny::span(
+        style = "font-weight: normal; font-size: 0.9em; color: #555;",
+        subtitle_output
+      )
+    )
+  }
+
+  bslib::card_header(
+    shiny::div(
+      style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
+      title_el,
+      shiny::downloadLink(
+        download_id,
+        label = shiny::tagList(
+          download_icon,
+          shiny::span("Download CSV", class = "visually-hidden")
+        ),
+        style = "text-decoration: none; color: #555; font-size: 1.1em;"
+      )
+    )
+  )
+}
+
+# Card header with a popover dropdown offering chart data + raw data downloads
+card_header_with_chart_downloads <- function(
+  title,
+  chart_download_id,
+  raw_download_id
+) {
+  bslib::card_header(
+    shiny::div(
+      style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
+      shiny::span(title),
+      bslib::popover(
+        shiny::actionLink(
+          paste0(chart_download_id, "_trigger"),
+          label = shiny::tagList(
+            download_icon,
+            shiny::span("Download CSV", class = "visually-hidden")
+          ),
+          style = "text-decoration: none; color: #555; font-size: 1.1em;"
+        ),
+        title = "Download CSV",
+        shiny::div(
+          shiny::downloadLink(
+            chart_download_id,
+            "Chart data (aggregated)",
+            style = "display: block; margin-bottom: 8px;"
+          ),
+          shiny::downloadLink(
+            raw_download_id,
+            "Raw data (filtered)",
+            style = "display: block;"
+          )
+        )
+      )
+    )
+  )
+}
+
+# ==============================================
 # Users - Overview UI/Server
 # ==============================================
 
@@ -95,11 +172,19 @@ users_overview_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(6, 6),
     bslib::card(
-      bslib::card_header("User Trends Over Time"),
+      card_header_with_chart_downloads(
+        "User Trends Over Time",
+        "download_user_trends_chart",
+        "download_user_trends_raw"
+      ),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_trend_plot"))
     ),
     bslib::card(
-      bslib::card_header("Average Users by Day of Week"),
+      card_header_with_chart_downloads(
+        "Average Users by Day of Week",
+        "download_user_dow_chart",
+        "download_user_dow_raw"
+      ),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_dow_plot"))
     )
   )
@@ -170,6 +255,46 @@ users_overview_server <- function(input, output, session, user_totals) {
       )
   })
 
+  # Aggregated data for User Trends chart
+  user_trends_chart_data <- shiny::reactive({
+    data <- filtered_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::select("date", "named_users", "active_users_1day", "publishers") |>
+      dplyr::filter(!is.na(date)) |>
+      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
+      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
+      dplyr::arrange(date) |>
+      dplyr::mutate(
+        metric = factor(
+          .data$metric,
+          levels = c("named_users", "active_users_1day", "publishers"),
+          labels = c("Licensed Users", "Daily Users", "Publishers")
+        )
+      )
+  })
+
+  # Aggregated data for Day of Week chart
+  user_dow_chart_data <- shiny::reactive({
+    data <- filtered_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::mutate(
+        day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
+      ) |>
+      dplyr::group_by(.data$day_of_week) |>
+      dplyr::summarise(
+        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
   # Value boxes (always latest data)
   output$users_licensed_value <- shiny::renderText({
     data <- latest_users_data()
@@ -197,53 +322,9 @@ users_overview_server <- function(input, output, session, user_totals) {
 
   # Trend chart (filtered data)
   output$users_trend_plot <- plotly::renderPlotly({
-    data <- filtered_users_data()
+    plot_data <- user_trends_chart_data()
 
-    if (is.null(data) || nrow(data) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>Data not available</b>",
-                x = 0.5,
-                y = 0.55,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              ),
-              list(
-                text = "Check that Chronicle data exists at the configured path",
-                x = 0.5,
-                y = 0.45,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 14, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    plot_data <- data |>
-      dplyr::select("date", "named_users", "active_users_1day", "publishers") |>
-      dplyr::filter(!is.na(date)) |>
-      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
-      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
-      dplyr::arrange(date) |>
-      dplyr::mutate(
-        metric = factor(
-          .data$metric,
-          levels = c("named_users", "active_users_1day", "publishers"),
-          labels = c("Licensed Users", "Daily Users", "Publishers")
-        )
-      )
-
-    if (nrow(plot_data) == 0) {
+    if (is.null(plot_data) || nrow(plot_data) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -304,49 +385,9 @@ users_overview_server <- function(input, output, session, user_totals) {
 
   # Day of week chart (filtered data)
   output$users_dow_plot <- plotly::renderPlotly({
-    data <- filtered_users_data()
+    day_summary <- user_dow_chart_data()
 
-    if (is.null(data) || nrow(data) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>Data not available</b>",
-                x = 0.5,
-                y = 0.55,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              ),
-              list(
-                text = "Check that Chronicle data exists at the configured path",
-                x = 0.5,
-                y = 0.45,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 14, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    day_summary <- data |>
-      dplyr::mutate(
-        day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
-      ) |>
-      dplyr::group_by(.data$day_of_week) |>
-      dplyr::summarise(
-        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-    if (nrow(day_summary) == 0) {
+    if (is.null(day_summary) || nrow(day_summary) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -382,6 +423,60 @@ users_overview_server <- function(input, output, session, user_totals) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handlers for User Trends chart
+  output$download_user_trends_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_trends_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_trends_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_user_trends_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_trends_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handlers for Day of Week chart
+  output$download_user_dow_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_dow_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_dow_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_user_dow_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_dow_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -389,15 +484,10 @@ users_overview_server <- function(input, output, session, user_totals) {
 # ==============================================
 
 users_list_ui <- bslib::card(
-  bslib::card_header(
-    shiny::div(
-      style = "display: flex; justify-content: space-between; align-items: baseline;",
-      shiny::span("Filters"),
-      shiny::span(
-        style = "font-weight: normal; font-size: 0.9em; color: #555;",
-        shiny::textOutput("users_list_as_of", inline = TRUE)
-      )
-    )
+  card_header_with_download(
+    "Filters",
+    "download_users_list",
+    shiny::textOutput("users_list_as_of", inline = TRUE)
   ),
   bslib::layout_columns(
     col_widths = c(6, 6),
@@ -554,6 +644,40 @@ users_list_server <- function(input, output, session, user_list) {
         rownames = FALSE
       )
   })
+
+  # Download handler for users list
+  output$download_users_list <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_users_list_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_list()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      export_data <- data |>
+        dplyr::mutate(
+          environment = ifelse(
+            is.na(environment) |
+              environment == "" |
+              environment == " ",
+            "(Not Set)",
+            environment
+          )
+        ) |>
+        dplyr::select(
+          "username",
+          "email",
+          "first_name",
+          "last_name",
+          "environment",
+          "user_role",
+          "last_active_at"
+        )
+      utils::write.csv(export_data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -583,11 +707,19 @@ content_overview_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Content Trends Over Time"),
+    card_header_with_chart_downloads(
+      "Content Trends Over Time",
+      "download_content_trends_chart",
+      "download_content_trends_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput("content_trend_plot"))
   ),
   bslib::card(
-    bslib::card_header("Content by Type"),
+    card_header_with_chart_downloads(
+      "Content by Type",
+      "download_content_type_chart",
+      "download_content_type_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput("content_type_bar_plot"))
   )
 )
@@ -733,11 +865,46 @@ content_overview_server <- function(input, output, session, content_totals) {
       )
   })
 
+  # Aggregated data for Content Trends chart
+  content_trends_chart_data <- shiny::reactive({
+    df <- filtered_contents_in_range()
+    if (is.null(df) || nrow(df) == 0) {
+      return(NULL)
+    }
+    df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
+        total_content = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
+  # Aggregated data for Content by Type chart
+  content_type_chart_data <- shiny::reactive({
+    df <- filtered_contents_in_range()
+    if (is.null(df) || nrow(df) == 0) {
+      return(NULL)
+    }
+    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
+    df |>
+      dplyr::filter(date == latest_date) |>
+      dplyr::group_by(.data$type) |>
+      dplyr::summarise(
+        total = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      dplyr::rename(content_type = "type") |>
+      dplyr::arrange(.data$total) |>
+      dplyr::mutate(
+        content_type = factor(.data$content_type, levels = .data$content_type)
+      )
+  })
+
   # Trend chart (filtered by date range)
   output$content_trend_plot <- plotly::renderPlotly({
-    data <- contents_data()
+    total_by_date <- content_trends_chart_data()
 
-    if (is.null(data)) {
+    if (is.null(total_by_date) || nrow(total_by_date) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -767,38 +934,7 @@ content_overview_server <- function(input, output, session, content_totals) {
       )
     }
 
-    df <- filtered_contents_in_range()
-
-    if (is.null(df) || nrow(df) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>No data available for selected date range</b>",
-                x = 0.5,
-                y = 0.5,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    # Aggregate by date using canonical `count` column
-    total_by_date <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        total_content = sum(.data$count, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-    # Only plot Total Content over time (remove unique content types)
+    # Only plot Total Content over time
     plot_data <- total_by_date |>
       dplyr::mutate(
         metric = factor("Total Content", levels = "Total Content")
@@ -862,9 +998,9 @@ content_overview_server <- function(input, output, session, content_totals) {
 
   # Bar chart: content counts by type over selected date range
   output$content_type_bar_plot <- plotly::renderPlotly({
-    data <- contents_data()
+    type_summary <- content_type_chart_data()
 
-    if (is.null(data)) {
+    if (is.null(type_summary) || nrow(type_summary) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -894,57 +1030,6 @@ content_overview_server <- function(input, output, session, content_totals) {
       )
     }
 
-    df <- filtered_contents_in_range()
-
-    if (is.null(df)) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    if (nrow(df) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>No data available for selected date range</b>",
-                x = 0.5,
-                y = 0.5,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-    df <- df |>
-      dplyr::filter(date == latest_date)
-
-    # Latest-day totals are not cumulative; just use that day's counts
-    type_summary <- df |>
-      dplyr::group_by(.data$type) |>
-      dplyr::summarise(
-        total = sum(.data$count, na.rm = TRUE),
-        .groups = "drop"
-      )
-    names(type_summary)[1] <- "content_type"
-
-    if (nrow(type_summary) == 0) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    # Order by total asc so after coord_flip highest are at top
-    type_summary <- type_summary |>
-      dplyr::arrange(.data$total) |>
-      dplyr::mutate(
-        content_type = factor(.data$content_type, levels = .data$content_type)
-      )
-
     p <- ggplot2::ggplot(
       type_summary,
       ggplot2::aes(
@@ -964,6 +1049,60 @@ content_overview_server <- function(input, output, session, content_totals) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handlers for Content Trends chart
+  output$download_content_trends_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_trends_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- content_trends_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_content_trends_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_trends_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_contents_in_range()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handlers for Content by Type chart
+  output$download_content_type_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_type_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- content_type_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_content_type_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_type_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_contents_in_range()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -971,7 +1110,7 @@ content_overview_server <- function(input, output, session, content_totals) {
 # ==============================================
 
 content_list_ui <- bslib::card(
-  bslib::card_header("Content List"),
+  card_header_with_download("Content List", "download_content_list"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
@@ -1221,6 +1360,31 @@ content_list_server <- function(
       rownames = FALSE
     )
   })
+
+  # Download handler for content list
+  output$download_content_list <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_list_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_content_list()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      cols <- c(
+        "title",
+        "owner",
+        "type",
+        "environment",
+        "py_version",
+        "r_version",
+        "quarto_version",
+        "last_deployed_time"
+      )
+      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -1266,13 +1430,21 @@ usage_overview_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Total Visits by Day"),
+    card_header_with_chart_downloads(
+      "Total Visits by Day",
+      "download_usage_visits_chart",
+      "download_usage_visits_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput(
       "usage_total_visits_plot"
     ))
   ),
   bslib::card(
-    bslib::card_header("Unique Visitors by Day"),
+    card_header_with_chart_downloads(
+      "Unique Visitors by Day",
+      "download_usage_unique_chart",
+      "download_usage_unique_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput(
       "usage_unique_visitors_plot"
     ))
@@ -1402,6 +1574,34 @@ usage_overview_server <- function(input, output, session, content_visits) {
       dplyr::collect()
   })
 
+  # Aggregated data for Total Visits chart
+  usage_visits_chart_data <- shiny::reactive({
+    df <- usage_filtered()
+    if (is.null(df) || nrow(df) == 0 || !"visits" %in% names(df)) {
+      return(NULL)
+    }
+    df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
+        total_visits = sum(.data$visits, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
+  # Aggregated data for Unique Visitors chart
+  usage_unique_chart_data <- shiny::reactive({
+    df <- usage_filtered()
+    if (is.null(df) || nrow(df) == 0 || !"user_guid" %in% names(df)) {
+      return(NULL)
+    }
+    df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
+        unique_visitors = dplyr::n_distinct(.data$user_guid),
+        .groups = "drop"
+      )
+  })
+
   output$usage_visits_value <- shiny::renderText({
     df <- usage_filtered()
 
@@ -1448,24 +1648,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
   })
 
   output$usage_total_visits_plot <- plotly::renderPlotly({
-    df <- usage_filtered()
+    daily <- usage_visits_chart_data()
 
-    if (
-      is.null(df) ||
-        nrow(df) == 0 ||
-        !"visits" %in% names(df)
-    ) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    daily <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        total_visits = sum(.data$visits, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-    if (nrow(daily) == 0) {
+    if (is.null(daily) || nrow(daily) == 0) {
       return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
@@ -1487,24 +1672,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
   })
 
   output$usage_unique_visitors_plot <- plotly::renderPlotly({
-    df <- usage_filtered()
+    daily <- usage_unique_chart_data()
 
-    if (
-      is.null(df) ||
-        nrow(df) == 0 ||
-        !"user_guid" %in% names(df)
-    ) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    daily <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        unique_visitors = dplyr::n_distinct(.data$user_guid),
-        .groups = "drop"
-      )
-
-    if (nrow(daily) == 0) {
+    if (is.null(daily) || nrow(daily) == 0) {
       return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
@@ -1524,6 +1694,60 @@ usage_overview_server <- function(input, output, session, content_visits) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handlers for Total Visits chart
+  output$download_usage_visits_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_usage_visits_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- usage_visits_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_usage_visits_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_usage_visits_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- usage_filtered()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handlers for Unique Visitors chart
+  output$download_usage_unique_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_usage_unique_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- usage_unique_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_usage_unique_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_usage_unique_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- usage_filtered()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -1563,11 +1787,15 @@ shiny_apps_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Shiny Sessions by Day"),
+    card_header_with_chart_downloads(
+      "Shiny Sessions by Day",
+      "download_shiny_sessions_chart",
+      "download_shiny_sessions_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput("shiny_trend_plot"))
   ),
   bslib::card(
-    bslib::card_header("Per-App Breakdown"),
+    card_header_with_download("Per-App Breakdown", "download_shiny_apps"),
     shinycssloaders::withSpinner(DT::dataTableOutput("shiny_apps_table"))
   )
 )
@@ -1700,6 +1928,81 @@ shiny_apps_server <- function(
       dplyr::collect()
   })
 
+  # Aggregated data for Shiny Sessions chart
+  shiny_sessions_chart_data <- shiny::reactive({
+    df <- shiny_usage_filtered()
+    if (is.null(df) || nrow(df) == 0 || !"num_sessions" %in% names(df)) {
+      return(NULL)
+    }
+    df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
+        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
+        peak_concurrent_daily = if ("peak_concurrent" %in% names(df)) {
+          suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
+        } else {
+          NA_real_
+        },
+        .groups = "drop"
+      )
+  })
+
+  # Aggregated data for Per-App Breakdown table
+  shiny_apps_table_data <- shiny::reactive({
+    df <- shiny_usage_filtered()
+    if (
+      is.null(df) ||
+        nrow(df) == 0 ||
+        !"content_guid" %in% names(df) ||
+        !"num_sessions" %in% names(df) ||
+        !"user_guid" %in% names(df)
+    ) {
+      return(NULL)
+    }
+
+    app_summary <- df |>
+      dplyr::group_by(.data$environment, .data$content_guid) |>
+      dplyr::summarise(
+        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
+        unique_users = dplyr::n_distinct(.data$user_guid),
+        avg_duration_minutes = if ("duration" %in% names(df)) {
+          total_duration <- sum(.data$duration, na.rm = TRUE)
+          total_sessions_inner <- sum(.data$num_sessions, na.rm = TRUE)
+          if (total_sessions_inner > 0) {
+            round((total_duration / total_sessions_inner) / 60, 2)
+          } else {
+            NA_real_
+          }
+        } else {
+          NA_real_
+        },
+        .groups = "drop"
+      )
+
+    # Join app names from latest content list snapshot
+    content_df <- shiny_content_list_latest()
+    if (!is.null(content_df)) {
+      content_join <- content_df |>
+        dplyr::select("id", "environment", "title")
+      app_summary <- app_summary |>
+        dplyr::left_join(
+          content_join,
+          by = c("content_guid" = "id", "environment" = "environment")
+        )
+    }
+
+    app_summary |>
+      dplyr::mutate(
+        environment = ifelse(
+          is.na(environment) |
+            environment == "" |
+            environment == " ",
+          "(Not Set)",
+          environment
+        )
+      )
+  })
+
   output$shiny_sessions_value <- shiny::renderText({
     df <- shiny_usage_filtered()
 
@@ -1733,30 +2036,21 @@ shiny_apps_server <- function(
   })
 
   output$shiny_trend_plot <- plotly::renderPlotly({
-    df <- shiny_usage_filtered()
+    daily <- shiny_sessions_chart_data()
 
-    if (is.null(df) || nrow(df) == 0 || !"num_sessions" %in% names(df)) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    daily <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-        peak_concurrent_daily = if ("peak_concurrent" %in% names(df)) {
-          suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
-        } else {
-          NA_real_
-        },
-        .groups = "drop"
-      )
-
-    if (nrow(daily) == 0) {
+    if (is.null(daily) || nrow(daily) == 0) {
       return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     metrics <- c("total_sessions")
-    if ("peak_concurrent" %in% names(df)) {
+    if (
+      "peak_concurrent_daily" %in%
+        names(daily) &&
+        any(
+          !is.na(daily$peak_concurrent_daily) &
+            is.finite(daily$peak_concurrent_daily)
+        )
+    ) {
       metrics <- c(metrics, "peak_concurrent_daily")
     }
 
@@ -1809,19 +2103,13 @@ shiny_apps_server <- function(
   })
 
   output$shiny_apps_table <- DT::renderDataTable({
-    df <- shiny_usage_filtered()
+    display_df <- shiny_apps_table_data()
 
-    if (
-      is.null(df) ||
-        nrow(df) == 0 ||
-        !"content_guid" %in% names(df) ||
-        !"num_sessions" %in% names(df) ||
-        !"user_guid" %in% names(df)
-    ) {
+    if (is.null(display_df) || nrow(display_df) == 0) {
       return(
         DT::datatable(
           data.frame(
-            " " = "Data not available - Check that Chronicle data exists at the configured path."
+            " " = "Data not available - Check that Chronicle data exists at the configured path." # nolint: line_length
           ),
           options = list(
             dom = "t",
@@ -1833,49 +2121,6 @@ shiny_apps_server <- function(
         )
       )
     }
-
-    app_summary <- df |>
-      dplyr::group_by(.data$environment, .data$content_guid) |>
-      dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-        unique_users = dplyr::n_distinct(.data$user_guid),
-        avg_duration_minutes = if ("duration" %in% names(df)) {
-          total_duration <- sum(.data$duration, na.rm = TRUE)
-          total_sessions_inner <- sum(.data$num_sessions, na.rm = TRUE)
-          if (total_sessions_inner > 0) {
-            round((total_duration / total_sessions_inner) / 60, 2)
-          } else {
-            NA_real_
-          }
-        } else {
-          NA_real_
-        },
-        .groups = "drop"
-      )
-
-    # Join app names from latest content list snapshot
-    content_df <- shiny_content_list_latest()
-    if (!is.null(content_df)) {
-      content_join <- content_df |>
-        dplyr::select("id", "environment", "title")
-
-      app_summary <- app_summary |>
-        dplyr::left_join(
-          content_join,
-          by = c("content_guid" = "id", "environment" = "environment")
-        )
-    }
-
-    display_df <- app_summary |>
-      dplyr::mutate(
-        environment = ifelse(
-          is.na(environment) |
-            environment == "" |
-            environment == " ",
-          "(Not Set)",
-          environment
-        )
-      )
 
     cols <- c(
       "title",
@@ -1895,6 +2140,55 @@ shiny_apps_server <- function(
       rownames = FALSE
     )
   })
+
+  # Download handlers for Shiny Sessions chart
+  output$download_shiny_sessions_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_shiny_sessions_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- shiny_sessions_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_shiny_sessions_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_shiny_sessions_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- shiny_usage_filtered()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handler for Per-App Breakdown table
+  output$download_shiny_apps <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_shiny_apps_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- shiny_apps_table_data()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      cols <- c(
+        "title",
+        "environment",
+        "total_sessions",
+        "unique_users",
+        "avg_duration_minutes"
+      )
+      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -1902,7 +2196,10 @@ shiny_apps_server <- function(
 # ==============================================
 
 content_by_user_ui <- bslib::card(
-  bslib::card_header("Content Visits by User (Includes Shiny Apps)"),
+  card_header_with_download(
+    "Content Visits by User (Includes Shiny Apps)",
+    "download_content_by_user"
+  ),
   bslib::layout_columns(
     col_widths = c(4, 8),
     shiny::selectInput(
@@ -2059,9 +2356,9 @@ content_by_user_server <- function(
       )
   })
 
-  output$content_by_user_table <- DT::renderDataTable({
+  # Aggregated data for Content Visits by User table
+  content_by_user_table_data <- shiny::reactive({
     df <- visits_filtered()
-
     if (
       is.null(df) ||
         nrow(df) == 0 ||
@@ -2069,20 +2366,7 @@ content_by_user_server <- function(
         !"user_guid" %in% names(df) ||
         !"visits" %in% names(df)
     ) {
-      return(
-        DT::datatable(
-          data.frame(
-            " " = "Data not available - Check that Chronicle data exists at the configured path."
-          ),
-          options = list(
-            dom = "t",
-            ordering = FALSE,
-            columnDefs = list(list(className = "dt-center", targets = "_all"))
-          ),
-          rownames = FALSE,
-          colnames = ""
-        )
-      )
+      return(NULL)
     }
 
     summary_df <- df |>
@@ -2095,9 +2379,7 @@ content_by_user_server <- function(
     # Join usernames
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
-      user_join <- u_df |>
-        dplyr::select("id", "username")
-
+      user_join <- u_df |> dplyr::select("id", "username")
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
     }
@@ -2109,7 +2391,6 @@ content_by_user_server <- function(
     ) {
       content_join <- c_df |>
         dplyr::select("id", "environment", "title")
-
       summary_df <- summary_df |>
         dplyr::left_join(
           content_join,
@@ -2117,7 +2398,7 @@ content_by_user_server <- function(
         )
     }
 
-    display_df <- summary_df |>
+    summary_df |>
       dplyr::mutate(
         username = ifelse(
           is.na(.data$user_guid) | is.na(.data$username),
@@ -2132,13 +2413,29 @@ content_by_user_server <- function(
           environment
         )
       )
+  })
 
-    cols <- c(
-      "username",
-      "title",
-      "environment",
-      "total_visits"
-    )
+  output$content_by_user_table <- DT::renderDataTable({
+    display_df <- content_by_user_table_data()
+
+    if (is.null(display_df) || nrow(display_df) == 0) {
+      return(
+        DT::datatable(
+          data.frame(
+            " " = "Data not available - Check that Chronicle data exists at the configured path." # nolint: line_length
+          ),
+          options = list(
+            dom = "t",
+            ordering = FALSE,
+            columnDefs = list(list(className = "dt-center", targets = "_all"))
+          ),
+          rownames = FALSE,
+          colnames = ""
+        )
+      )
+    }
+
+    cols <- c("username", "title", "environment", "total_visits")
 
     DT::datatable(
       display_df[, cols, drop = FALSE],
@@ -2150,6 +2447,22 @@ content_by_user_server <- function(
       rownames = FALSE
     )
   })
+
+  # Download handler for Content Visits by User table
+  output$download_content_by_user <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_by_user_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- content_by_user_table_data()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      cols <- c("username", "title", "environment", "total_visits")
+      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -2157,7 +2470,10 @@ content_by_user_server <- function(
 # ==============================================
 
 shiny_sessions_by_user_ui <- bslib::card(
-  bslib::card_header("Shiny App Sessions by User"),
+  card_header_with_download(
+    "Shiny App Sessions by User",
+    "download_shiny_sessions_by_user"
+  ),
   bslib::layout_columns(
     col_widths = c(4, 8),
     shiny::selectInput(
@@ -2315,9 +2631,9 @@ shiny_sessions_by_user_server <- function(
       )
   })
 
-  output$shiny_sessions_user_table <- DT::renderDataTable({
+  # Aggregated data for Shiny Sessions by User table
+  shiny_sessions_user_table_data <- shiny::reactive({
     df <- usage_filtered()
-
     if (
       is.null(df) ||
         nrow(df) == 0 ||
@@ -2325,20 +2641,7 @@ shiny_sessions_by_user_server <- function(
         !"user_guid" %in% names(df) ||
         !"num_sessions" %in% names(df)
     ) {
-      return(
-        DT::datatable(
-          data.frame(
-            " " = "Data not available - Check that Chronicle data exists at the configured path."
-          ),
-          options = list(
-            dom = "t",
-            ordering = FALSE,
-            columnDefs = list(list(className = "dt-center", targets = "_all"))
-          ),
-          rownames = FALSE,
-          colnames = ""
-        )
-      )
+      return(NULL)
     }
 
     summary_df <- df |>
@@ -2351,9 +2654,7 @@ shiny_sessions_by_user_server <- function(
           NA_real_
         },
         .groups = "drop"
-      )
-
-    summary_df <- summary_df |>
+      ) |>
       dplyr::mutate(
         avg_duration_minutes = round(
           ifelse(
@@ -2368,9 +2669,7 @@ shiny_sessions_by_user_server <- function(
     # Join usernames
     u_df <- user_list_latest_usage()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
-      user_join <- u_df |>
-        dplyr::select("id", "username")
-
+      user_join <- u_df |> dplyr::select("id", "username")
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
     }
@@ -2382,7 +2681,6 @@ shiny_sessions_by_user_server <- function(
     ) {
       content_join <- c_df |>
         dplyr::select("id", "environment", "title")
-
       summary_df <- summary_df |>
         dplyr::left_join(
           content_join,
@@ -2390,7 +2688,7 @@ shiny_sessions_by_user_server <- function(
         )
     }
 
-    display_df <- summary_df |>
+    summary_df |>
       dplyr::mutate(
         username = ifelse(
           is.na(.data$user_guid) | is.na(.data$username),
@@ -2405,6 +2703,27 @@ shiny_sessions_by_user_server <- function(
           environment
         )
       )
+  })
+
+  output$shiny_sessions_user_table <- DT::renderDataTable({
+    display_df <- shiny_sessions_user_table_data()
+
+    if (is.null(display_df) || nrow(display_df) == 0) {
+      return(
+        DT::datatable(
+          data.frame(
+            " " = "Data not available - Check that Chronicle data exists at the configured path." # nolint: line_length
+          ),
+          options = list(
+            dom = "t",
+            ordering = FALSE,
+            columnDefs = list(list(className = "dt-center", targets = "_all"))
+          ),
+          rownames = FALSE,
+          colnames = ""
+        )
+      )
+    }
 
     cols <- c(
       "username",
@@ -2424,6 +2743,32 @@ shiny_sessions_by_user_server <- function(
       rownames = FALSE
     )
   })
+
+  # Download handler for Shiny Sessions by User table
+  output$download_shiny_sessions_by_user <- shiny::downloadHandler(
+    filename = function() {
+      paste0(
+        "chronicle_connect_shiny_sessions_by_user_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      data <- shiny_sessions_user_table_data()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      cols <- c(
+        "username",
+        "title",
+        "environment",
+        "total_sessions",
+        "avg_duration_minutes"
+      )
+      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================

@@ -17,6 +17,8 @@
 #'   \item Connect content totals (30 days by type and environment)
 #'   \item Connect content visits (30 days of user visit data)
 #'   \item Connect Shiny usage (30 days of Shiny session data)
+#'   \item Connect content hits totals (30 days of hit counts per content item)
+#'   \item Connect content hits by user (30 days of per-user hit data)
 #'   \item Workbench user totals (30 days of data ending yesterday)
 #'   \item Workbench user list (21 sample users)
 #'   \item Workbench session start totals (30 days by environment and session type)
@@ -942,6 +944,145 @@ sample_connect_shiny_by_user_internal <- function() {
 }
 
 #' @noRd
+sample_connect_content_hits_totals_by_user_internal <- function() {
+  dates <- generate_sample_date_sequence(30)
+  user_pool <- generate_user_pool(26)
+  content_pool <- generate_content_pool(150, 30, user_pool)
+
+  # Generate hits for each day
+  daily_hits <- lapply(seq_along(dates), function(i) {
+    set.seed(8000 + i)
+    date <- dates[i]
+    weekday_factor <- calculate_weekday_factor(date)
+
+    # Get active users and content for this day
+    active_user_guids <- sample_active_users(
+      user_pool,
+      i,
+      weekday_factor,
+      base_rate = 0.45
+    )
+    active_content_guids <- sample_active_content(
+      content_pool,
+      i,
+      weekday_factor
+    )
+
+    if (length(active_user_guids) == 0 || length(active_content_guids) == 0) {
+      return(NULL)
+    }
+
+    # Create hit combinations (each user hits 1-5 content items)
+    hits_list <- lapply(active_user_guids, function(ug) {
+      n_items <- sample(1:5, 1)
+      hit_content <- sample(
+        active_content_guids,
+        min(n_items, length(active_content_guids))
+      )
+
+      data.frame(
+        date = date,
+        user_guid = ug,
+        content_guid = hit_content,
+        hits = as.integer(sample(1:15, length(hit_content), replace = TRUE)),
+        stringsAsFactors = FALSE
+      )
+    })
+
+    authenticated_hits <- do.call(rbind, hits_list)
+
+    # Generate anonymous hits for public content
+    public_content <- content_pool[
+      content_pool$access_type == "all" &
+        content_pool$creation_day <= i,
+    ]
+
+    anonymous_hits <- NULL
+    if (nrow(public_content) > 0) {
+      # 30-40% of public content gets anonymous hits
+      set.seed(8500 + i)
+      n_anon_content <- max(1, round(nrow(public_content) * runif(1, 0.3, 0.4)))
+
+      # Favor high popularity content for anonymous hits
+      anon_probs <- ifelse(
+        public_content$popularity_tier == "high",
+        0.5,
+        ifelse(public_content$popularity_tier == "medium", 0.3, 0.2)
+      )
+      anon_probs <- anon_probs / sum(anon_probs)
+
+      anon_content_guids <- sample(
+        public_content$content_guid,
+        size = min(n_anon_content, nrow(public_content)),
+        prob = anon_probs
+      )
+
+      anonymous_hits <- data.frame(
+        date = date,
+        user_guid = NA_character_,
+        content_guid = anon_content_guids,
+        hits = as.integer(sample(
+          1:10,
+          length(anon_content_guids),
+          replace = TRUE
+        )),
+        stringsAsFactors = FALSE
+      )
+    }
+
+    # Combine authenticated and anonymous hits
+    if (!is.null(anonymous_hits)) {
+      rbind(authenticated_hits, anonymous_hits)
+    } else {
+      authenticated_hits
+    }
+  })
+
+  result <- do.call(rbind, Filter(Negate(is.null), daily_hits))
+
+  # Add environment from content_pool
+  result$environment <- content_pool$environment[match(
+    result$content_guid,
+    content_pool$content_guid
+  )]
+
+  result[, c(
+    "environment",
+    "content_guid",
+    "user_guid",
+    "hits",
+    "date"
+  )]
+}
+
+#' @noRd
+sample_connect_content_hits_totals_internal <- function() {
+  # Generate by-user data first, then aggregate
+  by_user <- sample_connect_content_hits_totals_by_user_internal()
+
+  # Aggregate by environment, content_guid, date
+  # Split into groups and aggregate
+  groups <- split(
+    by_user,
+    list(by_user$environment, by_user$content_guid, by_user$date),
+    drop = TRUE
+  )
+
+  totals_list <- lapply(groups, function(g) {
+    data.frame(
+      environment = g$environment[1],
+      content_guid = g$content_guid[1],
+      hits = as.integer(sum(g$hits)),
+      unique_users = as.integer(sum(!is.na(g$user_guid))),
+      date = g$date[1],
+      stringsAsFactors = FALSE
+    )
+  })
+
+  do.call(rbind, totals_list)
+}
+
+#' @noRd
 sample_workbench_user_totals_internal <- function() {
   dates <- generate_sample_date_sequence(30)
 
@@ -1267,6 +1408,18 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_connect_shiny_by_user_internal(),
     base_path,
     "connect/shiny_usage_totals_by_user"
+  )
+
+  write_sample_parquet_internal(
+    sample_connect_content_hits_totals_internal(),
+    base_path,
+    "connect/content_hits_totals"
+  )
+
+  write_sample_parquet_internal(
+    sample_connect_content_hits_totals_by_user_internal(),
+    base_path,
+    "connect/content_hits_totals_by_user"
   )
 
   write_sample_parquet_internal(
