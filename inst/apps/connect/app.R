@@ -2532,10 +2532,12 @@ server <- function(input, output, session) {
   shiny::observe({
     if (
       !should_load_user_list() &&
-        (isTRUE(visited_tabs[["users_list"]]) ||
-          isTRUE(visited_tabs[["content_list"]]) ||
-          isTRUE(visited_tabs[["content_by_user"]]) ||
-          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+        any(
+          isTRUE(visited_tabs[["users_list"]]),
+          isTRUE(visited_tabs[["content_list"]]),
+          isTRUE(visited_tabs[["content_by_user"]]),
+          isTRUE(visited_tabs[["shiny_sessions_by_user"]])
+        )
     ) {
       should_load_user_list(TRUE)
     }
@@ -2588,10 +2590,12 @@ server <- function(input, output, session) {
   shiny::observe({
     if (
       !should_load_content_list() &&
-        (isTRUE(visited_tabs[["content_list"]]) ||
-          isTRUE(visited_tabs[["shiny_apps"]]) ||
-          isTRUE(visited_tabs[["content_by_user"]]) ||
-          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+        any(
+          isTRUE(visited_tabs[["content_list"]]),
+          isTRUE(visited_tabs[["shiny_apps"]]),
+          isTRUE(visited_tabs[["content_by_user"]]),
+          isTRUE(visited_tabs[["shiny_sessions_by_user"]])
+        )
     ) {
       should_load_content_list(TRUE)
     }
@@ -2621,8 +2625,10 @@ server <- function(input, output, session) {
   shiny::observe({
     if (
       !should_load_content_visits() &&
-        (isTRUE(visited_tabs[["usage_overview"]]) ||
-          isTRUE(visited_tabs[["content_by_user"]]))
+        any(
+          isTRUE(visited_tabs[["usage_overview"]]),
+          isTRUE(visited_tabs[["content_by_user"]])
+        )
     ) {
       should_load_content_visits(TRUE)
     }
@@ -2656,8 +2662,10 @@ server <- function(input, output, session) {
   shiny::observe({
     if (
       !should_load_shiny_usage() &&
-        (isTRUE(visited_tabs[["shiny_apps"]]) ||
-          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+        any(
+          isTRUE(visited_tabs[["shiny_apps"]]),
+          isTRUE(visited_tabs[["shiny_sessions_by_user"]])
+        )
     ) {
       should_load_shiny_usage(TRUE)
     }

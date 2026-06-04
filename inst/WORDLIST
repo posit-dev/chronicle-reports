@@ -44,6 +44,8 @@ appmode
 ar
 Arenburg
 ARG
+arg
+args
 Arne
 Arni
 aron
@@ -164,6 +166,7 @@ chris
 Christophe
 chromote
 chron
+claude
 cleanrmd
 cli
 CLI
@@ -173,6 +176,7 @@ cmark
 CMD
 CN
 Cocquemas
+codebase
 codetools
 Collet
 colorbar
@@ -269,6 +273,7 @@ dk
 DK
 Dmitry
 docco
+Dockerfile
 Docstrings
 doi
 dotplot
@@ -314,6 +319,7 @@ ENV
 Eppstein
 erich
 errorbar
+euo
 Faria
 Farkas
 farver
@@ -351,6 +357,7 @@ Frederik
 freqpoly
 Freundt
 fs
+funder
 gabor
 Gabor
 gaborcsardi
@@ -523,6 +530,7 @@ jss
 JuliaCall
 julialang
 Julien
+Justfile
 jywm
 Kaiyin
 Kalinowski
@@ -630,7 +638,9 @@ Manton
 marco
 marek
 Marek
+margheim
 marianne
+markrtucker
 Markus
 Marttila
 mastny
@@ -645,6 +655,7 @@ Mecum
 Meldgaard
 Memoisation
 memoise
+MERCHANTABILITY
 Mezquita
 mgcv
 michael
@@ -843,6 +854,7 @@ nmodules
 nnycflights
 noam
 Noam
+NONINFRINGEMENT
 nopenssl
 nOpenSSL
 noreply
@@ -936,6 +948,7 @@ Petre
 Petrisor
 Pfaff
 phonenumber
+pipefail
 pkgconfig
 pkgdown
 pkgKitten
@@ -954,6 +967,7 @@ potools
 pre
 Pre
 prebuilt
+precommit
 precompile
 precompiled
 Prem
@@ -969,6 +983,7 @@ Puetz
 Punyon
 purrple
 purrr
+pwd
 pyyaml
 Qiang
 Qiu
@@ -1018,6 +1033,7 @@ RemoteUsername
 Ren
 renv
 repurrrsive
+requireNamespace
 reticulate
 rf
 rforge
@@ -1163,6 +1179,7 @@ stringr
 styler
 Stéphane
 subcomponent
+sublicense
 subscripting
 summarise
 sunholo

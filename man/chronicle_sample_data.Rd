@@ -38,6 +38,8 @@ The sample data includes:
 \item Connect Shiny usage (30 days of Shiny session data)
 \item Workbench user totals (30 days of data ending yesterday)
 \item Workbench user list (21 sample users)
+\item Workbench session start totals (30 days by environment and session type)
+\item Workbench session start totals by user (30 days, 12 sample users)
 \item Raw Connect users data (30 days, 15 users per snapshot)
 }
 

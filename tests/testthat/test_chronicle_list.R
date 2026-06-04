@@ -13,6 +13,8 @@ test_that("chronicle_list_data returns available curated metrics", {
   expect_true("connect/user_list" %in% metrics)
   expect_true("workbench/user_totals" %in% metrics)
   expect_true("workbench/user_list" %in% metrics)
+  expect_true("workbench/session_start_totals" %in% metrics)
+  expect_true("workbench/session_start_totals_by_user" %in% metrics)
 
   # Check that we have at least 4 metrics
   expect_gte(length(metrics), 4)

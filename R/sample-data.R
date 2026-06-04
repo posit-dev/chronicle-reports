@@ -19,6 +19,8 @@
 #'   \item Connect Shiny usage (30 days of Shiny session data)
 #'   \item Workbench user totals (30 days of data ending yesterday)
 #'   \item Workbench user list (21 sample users)
+#'   \item Workbench session start totals (30 days by environment and session type)
+#'   \item Workbench session start totals by user (30 days, 12 sample users)
 #'   \item Raw Connect users data (30 days, 15 users per snapshot)
 #' }
 #'
@@ -1062,6 +1064,124 @@ sample_workbench_user_list_internal <- function() {
 }
 
 #' @noRd
+sample_wb_session_starts_internal <- function() {
+  dates <- generate_sample_date_sequence(30)
+  session_types <- c("RStudio Pro", "JupyterLab", "VS Code", "Positron")
+  environments <- c("Production", "Development", "Staging")
+
+  set.seed(123)
+
+  # Relative popularity of each session type and a typical startup time (ms).
+  type_volume <- c(
+    "RStudio Pro" = 40,
+    "JupyterLab" = 25,
+    "VS Code" = 18,
+    "Positron" = 12
+  )
+  type_median_ms <- c(
+    "RStudio Pro" = 3200,
+    "JupyterLab" = 4500,
+    "VS Code" = 2100,
+    "Positron" = 2600
+  )
+  env_scale <- c("Production" = 1.0, "Development" = 0.5, "Staging" = 0.25)
+
+  rows <- list()
+  for (di in seq_along(dates)) {
+    date <- dates[di]
+    weekday_factor <- calculate_weekday_factor(date)
+    for (env in environments) {
+      for (st in session_types) {
+        sessions_started <- max(
+          0L,
+          as.integer(round(
+            type_volume[[st]] *
+              env_scale[[env]] *
+              weekday_factor *
+              runif(1, 0.8, 1.2)
+          ))
+        )
+
+        median_ms <- as.integer(round(
+          type_median_ms[[st]] * runif(1, 0.85, 1.15)
+        ))
+        p95_ms <- as.integer(round(median_ms * runif(1, 1.8, 2.6)))
+
+        rows[[length(rows) + 1]] <- data.frame(
+          environment = env,
+          session_type = st,
+          sessions_started = sessions_started,
+          median_startup_duration_ms = median_ms,
+          p95_startup_duration_ms = p95_ms,
+          date = date,
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+
+  do.call(rbind, rows)
+}
+
+#' @noRd
+sample_wb_session_starts_user_internal <- function() {
+  dates <- generate_sample_date_sequence(30)
+  session_types <- c("RStudio Pro", "JupyterLab", "VS Code", "Positron")
+
+  set.seed(321)
+
+  n_users <- 12
+  user_guids <- sprintf("wb-user-guid-%03d", seq_len(n_users))
+  user_envs <- c(
+    rep("Production", 5),
+    rep("Development", 4),
+    rep("Staging", 3)
+  )
+  # Each user habitually uses one or two session types.
+  user_types <- lapply(seq_len(n_users), function(u) {
+    sample(session_types, sample(1:2, 1))
+  })
+
+  type_median_ms <- c(
+    "RStudio Pro" = 3200,
+    "JupyterLab" = 4500,
+    "VS Code" = 2100,
+    "Positron" = 2600
+  )
+
+  rows <- list()
+  for (di in seq_along(dates)) {
+    date <- dates[di]
+    weekday_factor <- calculate_weekday_factor(date)
+    for (u in seq_len(n_users)) {
+      for (st in user_types[[u]]) {
+        sessions_started <- max(
+          1L,
+          as.integer(round(runif(1, 1, 6) * weekday_factor))
+        )
+        median_ms <- as.integer(round(
+          type_median_ms[[st]] * runif(1, 0.8, 1.2)
+        ))
+        p95_ms <- as.integer(round(median_ms * runif(1, 1.5, 2.5)))
+
+        rows[[length(rows) + 1]] <- data.frame(
+          environment = user_envs[u],
+          user_guid = user_guids[u],
+          session_type = st,
+          sessions_started = sessions_started,
+          median_startup_duration_ms = median_ms,
+          p95_startup_duration_ms = p95_ms,
+          date = date,
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+
+  do.call(rbind, rows)
+}
+
+#' @noRd
 sample_raw_connect_users_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   user_pool <- generate_user_pool(26)
@@ -1159,6 +1279,18 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_workbench_user_list_internal(),
     base_path,
     "workbench/user_list"
+  )
+
+  write_sample_parquet_internal(
+    sample_wb_session_starts_internal(),
+    base_path,
+    "workbench/session_start_totals"
+  )
+
+  write_sample_parquet_internal(
+    sample_wb_session_starts_user_internal(),
+    base_path,
+    "workbench/session_start_totals_by_user"
   )
 
   base_path
