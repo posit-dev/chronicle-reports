@@ -875,8 +875,17 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
       return()
     }
 
-    date_summary <- sessions_data() |>
-      dplyr::filter(!is.na(date)) |>
+    dated_sessions <- sessions_data() |>
+      dplyr::filter(!is.na(date))
+
+    # Nothing to initialize if no dated rows remain (e.g. CHRONICLE_DATA_WINDOW
+    # filtered them all out); min()/max() would otherwise yield Inf/-Inf and
+    # feed invalid dates to updateDateRangeInput().
+    if (nrow(dated_sessions) == 0) {
+      return()
+    }
+
+    date_summary <- dated_sessions |>
       dplyr::summarise(
         min_date = min(date, na.rm = TRUE),
         max_date = max(date, na.rm = TRUE)
