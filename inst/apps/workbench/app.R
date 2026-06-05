@@ -73,8 +73,11 @@ SESSION_PALETTE <- c(
 download_icon <- bsicons::bs_icon("download")
 
 # Card header with a single download button (for tables)
-card_header_with_download <- function(title, download_id,
-                                      subtitle_output = NULL) {
+card_header_with_download <- function(
+  title,
+  download_id,
+  subtitle_output = NULL
+) {
   title_el <- if (is.null(subtitle_output)) {
     shiny::span(title)
   } else {
@@ -104,8 +107,11 @@ card_header_with_download <- function(title, download_id,
 }
 
 # Card header with a popover dropdown offering chart data + raw data downloads
-card_header_with_chart_downloads <- function(title, chart_download_id,
-                                             raw_download_id) {
+card_header_with_chart_downloads <- function(
+  title,
+  chart_download_id,
+  raw_download_id
+) {
   bslib::card_header(
     shiny::div(
       style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
@@ -792,15 +798,15 @@ sessions_overview_ui <- bslib::card(
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
     ),
     bslib::value_box(
-      title = "Top Session Type",
+      title = "Median Startup",
       max_height = "120px",
-      value = shiny::textOutput("sessions_top_type_value"),
+      value = shiny::textOutput("sessions_median_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
     ),
     bslib::value_box(
-      title = "Session Types",
+      title = "P95 Startup",
       max_height = "120px",
-      value = shiny::textOutput("sessions_types_value"),
+      value = shiny::textOutput("sessions_p95_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GRAY)
     )
   ),
@@ -857,6 +863,32 @@ sessions_empty_plot <- function(
       yaxis = list(showgrid = FALSE, zeroline = FALSE),
       annotations = annotations
     )
+}
+
+# Sessions-weighted mean of a per-group duration column (ms). The dataset stores
+# a daily median/p95 per (environment, session type); those can't be re-medianed
+# exactly, so each group's value is weighted by the sessions it represents —
+# a sound "typical startup" proxy across the selected range and environment.
+sessions_weighted_ms <- function(data, col) {
+  value <- data[[col]]
+  weight <- data$sessions_started
+  ok <- !is.na(value) & is.finite(value) & !is.na(weight) & weight > 0
+  if (!any(ok)) {
+    return(NA_real_)
+  }
+  sum(value[ok] * weight[ok]) / sum(weight[ok])
+}
+
+# Format a duration in milliseconds for a value box (e.g. "2.4s", "850 ms").
+format_startup_ms <- function(ms) {
+  if (is.na(ms) || !is.finite(ms)) {
+    return("-")
+  }
+  if (ms >= 1000) {
+    paste0(formatC(ms / 1000, format = "f", digits = 1), "s")
+  } else {
+    paste0(round(ms), " ms")
+  }
 }
 
 sessions_overview_server <- function(input, output, session, sessions_data) {
@@ -986,34 +1018,22 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
     prettyNum(sum(data$sessions_started, na.rm = TRUE), big.mark = ",")
   })
 
-  output$sessions_top_type_value <- shiny::renderText({
+  # Startup-duration boxes: sessions-weighted across the selected range and
+  # environment (daily medians/p95s can't be re-medianed exactly).
+  output$sessions_median_value <- shiny::renderText({
     data <- filtered_sessions_data()
     if (is.null(data) || nrow(data) == 0) {
       return("-")
     }
-    totals <- data |>
-      dplyr::filter(!is.na(.data$session_type)) |>
-      dplyr::group_by(.data$session_type) |>
-      dplyr::summarise(
-        sessions_started = sum(.data$sessions_started, na.rm = TRUE),
-        .groups = "drop"
-      ) |>
-      dplyr::arrange(dplyr::desc(.data$sessions_started))
-    if (nrow(totals) == 0) {
-      return("-")
-    }
-    totals$session_type[1]
+    format_startup_ms(sessions_weighted_ms(data, "median_startup_duration_ms"))
   })
 
-  output$sessions_types_value <- shiny::renderText({
+  output$sessions_p95_value <- shiny::renderText({
     data <- filtered_sessions_data()
     if (is.null(data) || nrow(data) == 0) {
       return("-")
     }
-    prettyNum(
-      length(unique(data$session_type[!is.na(data$session_type)])),
-      big.mark = ","
-    )
+    format_startup_ms(sessions_weighted_ms(data, "p95_startup_duration_ms"))
   })
 
   # Sessions started over time, one line per session type. Counts are summed
@@ -1083,11 +1103,12 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Startup duration over time. The curated data has exactly one row per
-  # (environment, session_type) per day, so each line below is an exact curated
-  # percentile — never an aggregate across groups. The selector chooses which
-  # percentile (median or p95) to display; one line is drawn per
-  # (environment, session_type), with color by type and linetype by environment.
+  # Startup duration over time, one line per session type — consistent with the
+  # Sessions Started chart. The selector chooses the percentile (median or p95).
+  # The curated data stores a percentile per (environment, session_type) per day;
+  # when more than one environment is present they are combined into a single
+  # line via a sessions-weighted average. Use the Environment filter at the top
+  # to view a single environment's exact curated percentile.
   output$sessions_duration_plot <- plotly::renderPlotly({
     data <- filtered_sessions_data()
     if (is.null(data) || nrow(data) == 0) {
@@ -1105,17 +1126,22 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
       dplyr::filter(!is.na(date)) |>
       dplyr::transmute(
         date = date,
-        environment = ifelse(
-          is.na(.data$environment) |
-            .data$environment == "" |
-            .data$environment == " ",
-          "(Not Set)",
-          .data$environment
-        ),
         session_type = .data$session_type,
-        value = .data[[metric_col]]
+        value = .data[[metric_col]],
+        weight = .data$sessions_started
       ) |>
       dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
+      # Collapse environments into one line per session type, weighting each
+      # environment's percentile by the sessions it represents.
+      dplyr::group_by(date, .data$session_type) |>
+      dplyr::summarise(
+        value = stats::weighted.mean(
+          .data$value,
+          w = dplyr::coalesce(.data$weight, 0)
+        ),
+        .groups = "drop"
+      ) |>
+      dplyr::filter(is.finite(.data$value)) |>
       dplyr::arrange(date)
 
     if (nrow(plot_data) == 0) {
@@ -1137,9 +1163,7 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
         ggplot2::aes(
           x = date,
           y = .data$value,
-          color = .data$session_type,
-          linetype = .data$environment,
-          group = interaction(.data$environment, .data$session_type)
+          color = .data$session_type
         )
       ) +
         ggplot2::geom_line(linewidth = 0.5) +
@@ -1149,8 +1173,6 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
               format(date, "%B %d, %Y"),
               "<br>",
               .data$session_type,
-              " — ",
-              .data$environment,
               "<br>",
               metric_label,
               ": ",
@@ -1164,8 +1186,7 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
         ggplot2::labs(
           x = "",
           y = paste0(metric_label, " Startup Duration (ms)"),
-          color = "",
-          linetype = ""
+          color = ""
         ) +
         ggplot2::scale_color_manual(values = pal)
     )
