@@ -764,7 +764,7 @@ user_list_server <- function(input, output, session, should_load) {
 sessions_overview_ui <- bslib::card(
   bslib::card_header("Filters"),
   bslib::layout_columns(
-    col_widths = c(6, 3, 3),
+    col_widths = c(8, 4),
     shiny::dateRangeInput(
       "sessions_overview_date_range",
       "Date Range:",
@@ -776,11 +776,6 @@ sessions_overview_ui <- bslib::card(
       "sessions_overview_environment",
       "Environment:",
       choices = c("All")
-    ),
-    shiny::selectInput(
-      "sessions_overview_metric",
-      "Startup Metric:",
-      choices = c("Median", "P95")
     )
   ),
   bslib::layout_columns(
@@ -798,30 +793,36 @@ sessions_overview_ui <- bslib::card(
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
     ),
     bslib::value_box(
-      title = "Median Startup",
+      title = "Median Startup (range avg)",
       max_height = "120px",
       value = shiny::textOutput("sessions_median_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
     ),
     bslib::value_box(
-      title = "P95 Startup",
+      title = "P95 Startup (range avg)",
       max_height = "120px",
       value = shiny::textOutput("sessions_p95_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GRAY)
     )
   ),
+  bslib::card(
+    bslib::card_header("Sessions Started Over Time"),
+    shinycssloaders::withSpinner(
+      plotly::plotlyOutput("sessions_trend_plot")
+    )
+  ),
   bslib::layout_columns(
     col_widths = c(6, 6),
     bslib::card(
-      bslib::card_header("Sessions Started Over Time"),
+      bslib::card_header("Startup Duration Over Time (Median)"),
       shinycssloaders::withSpinner(
-        plotly::plotlyOutput("sessions_trend_plot")
+        plotly::plotlyOutput("sessions_duration_median_plot")
       )
     ),
     bslib::card(
-      bslib::card_header("Startup Duration Over Time"),
+      bslib::card_header("Startup Duration Over Time (P95)"),
       shinycssloaders::withSpinner(
-        plotly::plotlyOutput("sessions_duration_plot")
+        plotly::plotlyOutput("sessions_duration_p95_plot")
       )
     )
   )
@@ -889,6 +890,83 @@ format_startup_ms <- function(ms) {
   } else {
     paste0(round(ms), " ms")
   }
+}
+
+# Build a startup-duration plotly for one metric column (median or p95).
+# Collapses multiple environments into one line per session type via a
+# sessions-weighted average, consistent with the value box calculation.
+render_startup_duration_plot <- function(data, metric_col, metric_label) {
+  if (is.null(data) || nrow(data) == 0) {
+    return(sessions_empty_plot())
+  }
+
+  plot_data <- data |>
+    dplyr::filter(!is.na(date)) |>
+    dplyr::transmute(
+      date = date,
+      session_type = .data$session_type,
+      value = .data[[metric_col]],
+      weight = .data$sessions_started
+    ) |>
+    dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
+    dplyr::group_by(date, .data$session_type) |>
+    dplyr::summarise(
+      value = stats::weighted.mean(
+        .data$value,
+        w = dplyr::coalesce(.data$weight, 0)
+      ),
+      .groups = "drop"
+    ) |>
+    dplyr::filter(is.finite(.data$value)) |>
+    dplyr::arrange(date)
+
+  if (nrow(plot_data) == 0) {
+    return(sessions_empty_plot("No data available for selected date range", ""))
+  }
+
+  types <- sort(unique(plot_data$session_type))
+  pal <- stats::setNames(
+    rep(SESSION_PALETTE, length.out = length(types)),
+    types
+  )
+
+  p <- suppressWarnings(
+    ggplot2::ggplot(
+      plot_data,
+      ggplot2::aes(x = date, y = .data$value, color = .data$session_type)
+    ) +
+      ggplot2::geom_line(linewidth = 0.5) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          text = paste0(
+            format(date, "%B %d, %Y"),
+            "<br>",
+            .data$session_type,
+            "<br>",
+            metric_label,
+            ": ",
+            prettyNum(round(.data$value), big.mark = ","),
+            " ms"
+          )
+        ),
+        size = 0.5
+      ) +
+      ggplot2::theme_minimal() +
+      ggplot2::labs(
+        x = "",
+        y = paste0(metric_label, " Startup Duration (ms)"),
+        color = ""
+      ) +
+      ggplot2::scale_color_manual(values = pal)
+  )
+
+  plotly::ggplotly(p, tooltip = "text") |>
+    plotly::layout(
+      xaxis = list(fixedrange = TRUE),
+      yaxis = list(fixedrange = TRUE),
+      legend = list(orientation = "h", x = 0.5, xanchor = "center")
+    ) |>
+    plotly::config(displayModeBar = FALSE)
 }
 
 sessions_overview_server <- function(input, output, session, sessions_data) {
@@ -1103,101 +1181,20 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Startup duration over time, one line per session type — consistent with the
-  # Sessions Started chart. The selector chooses the percentile (median or p95).
-  # The curated data stores a percentile per (environment, session_type) per day;
-  # when more than one environment is present they are combined into a single
-  # line via a sessions-weighted average. Use the Environment filter at the top
-  # to view a single environment's exact curated percentile.
-  output$sessions_duration_plot <- plotly::renderPlotly({
-    data <- filtered_sessions_data()
-    if (is.null(data) || nrow(data) == 0) {
-      return(sessions_empty_plot())
-    }
-
-    metric_label <- input$sessions_overview_metric %||% "Median"
-    metric_col <- if (identical(metric_label, "P95")) {
-      "p95_startup_duration_ms"
-    } else {
-      "median_startup_duration_ms"
-    }
-
-    plot_data <- data |>
-      dplyr::filter(!is.na(date)) |>
-      dplyr::transmute(
-        date = date,
-        session_type = .data$session_type,
-        value = .data[[metric_col]],
-        weight = .data$sessions_started
-      ) |>
-      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
-      # Collapse environments into one line per session type, weighting each
-      # environment's percentile by the sessions it represents.
-      dplyr::group_by(date, .data$session_type) |>
-      dplyr::summarise(
-        value = stats::weighted.mean(
-          .data$value,
-          w = dplyr::coalesce(.data$weight, 0)
-        ),
-        .groups = "drop"
-      ) |>
-      dplyr::filter(is.finite(.data$value)) |>
-      dplyr::arrange(date)
-
-    if (nrow(plot_data) == 0) {
-      return(sessions_empty_plot(
-        "No data available for selected date range",
-        ""
-      ))
-    }
-
-    types <- sort(unique(plot_data$session_type))
-    pal <- stats::setNames(
-      rep(SESSION_PALETTE, length.out = length(types)),
-      types
+  output$sessions_duration_median_plot <- plotly::renderPlotly({
+    render_startup_duration_plot(
+      filtered_sessions_data(),
+      "median_startup_duration_ms",
+      "Median"
     )
+  })
 
-    p <- suppressWarnings(
-      ggplot2::ggplot(
-        plot_data,
-        ggplot2::aes(
-          x = date,
-          y = .data$value,
-          color = .data$session_type
-        )
-      ) +
-        ggplot2::geom_line(linewidth = 0.5) +
-        ggplot2::geom_point(
-          ggplot2::aes(
-            text = paste0(
-              format(date, "%B %d, %Y"),
-              "<br>",
-              .data$session_type,
-              "<br>",
-              metric_label,
-              ": ",
-              prettyNum(round(.data$value), big.mark = ","),
-              " ms"
-            )
-          ),
-          size = 0.5
-        ) +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(
-          x = "",
-          y = paste0(metric_label, " Startup Duration (ms)"),
-          color = ""
-        ) +
-        ggplot2::scale_color_manual(values = pal)
+  output$sessions_duration_p95_plot <- plotly::renderPlotly({
+    render_startup_duration_plot(
+      filtered_sessions_data(),
+      "p95_startup_duration_ms",
+      "P95"
     )
-
-    plotly::ggplotly(p, tooltip = "text") |>
-      plotly::layout(
-        xaxis = list(fixedrange = TRUE),
-        yaxis = list(fixedrange = TRUE),
-        legend = list(orientation = "h", x = 0.5, xanchor = "center")
-      ) |>
-      plotly::config(displayModeBar = FALSE)
   })
 }
 
