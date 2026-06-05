@@ -959,8 +959,9 @@ render_startup_duration_plot <- function(data, metric_col, metric_label) {
       ) +
       ggplot2::scale_color_manual(values = pal)
   )
-
-  plotly::ggplotly(p, tooltip = "text") |>
+  # across environments stay exact (they are additive). Startup-duration
+  # percentiles are combined across environments via a sessions-weighted mean
+  # when "All" is selected; filter to a single environment to view exact values.
     plotly::layout(
       xaxis = list(fixedrange = TRUE),
       yaxis = list(fixedrange = TRUE),
