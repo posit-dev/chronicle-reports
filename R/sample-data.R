@@ -1133,29 +1133,34 @@ sample_workbench_user_totals_internal <- function() {
 }
 
 #' @noRd
+generate_workbench_user_pool <- function() {
+  n_users <- 21
+  set.seed(50)
+  fake <- charlatan::PersonProvider_en_US$new()
+  names_list <- lapply(seq_len(n_users), function(i) {
+    list(first = fake$first_name(), last = fake$last_name())
+  })
+  usernames <- tolower(sprintf(
+    "%s.%s",
+    sapply(names_list, function(x) x$first),
+    sapply(names_list, function(x) x$last)
+  ))
+  data.frame(
+    id = sprintf("wb-user-guid-%03d", seq_len(n_users)),
+    username = usernames,
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @noRd
 sample_workbench_user_list_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   last_date <- max(dates)
   first_date <- min(dates)
   n_users <- 21
 
-  set.seed(50)
-
-  # Generate fake names using charlatan for usernames
-  fake <- charlatan::PersonProvider_en_US$new()
-  names_list <- lapply(1:n_users, function(i) {
-    list(
-      first = fake$first_name(),
-      last = fake$last_name()
-    )
-  })
-
-  # Create usernames from first.last format
-  usernames <- tolower(sprintf(
-    "%s.%s",
-    sapply(names_list, function(x) x$first),
-    sapply(names_list, function(x) x$last)
-  ))
+  wb_pool <- generate_workbench_user_pool()
+  usernames <- wb_pool$username
 
   # Create emails from username@example.com
   emails <- sprintf("%s@example.com", usernames)
@@ -1187,7 +1192,7 @@ sample_workbench_user_list_internal <- function() {
 
   data.frame(
     environment = envs,
-    id = sprintf("wb-user-guid-%03d", 1:n_users),
+    id = wb_pool$id,
     username = usernames,
     email = emails,
     user_role = roles,
@@ -1271,8 +1276,11 @@ sample_wb_session_starts_user_internal <- function() {
 
   set.seed(321)
 
+  # Use the same pool as sample_workbench_user_list_internal() so names
+  # in Sessions → By User match the Users → User List.
+  wb_pool <- generate_workbench_user_pool()
   n_users <- 12
-  user_guids <- sprintf("wb-user-guid-%03d", seq_len(n_users))
+  users <- wb_pool[seq_len(n_users), ]
   user_envs <- c(
     rep("Production", 5),
     rep("Development", 4),
@@ -1307,7 +1315,8 @@ sample_wb_session_starts_user_internal <- function() {
 
         rows[[length(rows) + 1]] <- data.frame(
           environment = user_envs[u],
-          user_guid = user_guids[u],
+          user_guid = users$id[u],
+          username = users$username[u],
           session_type = st,
           sessions_started = sessions_started,
           median_startup_duration_ms = median_ms,
