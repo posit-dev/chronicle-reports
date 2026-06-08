@@ -24,7 +24,7 @@
   },
   "environment": {
     "r": {
-      "requires": "~=4.1.0"
+      "requires": ">=4.1.0"
     }
   },
   "packages": {
@@ -195,7 +195,7 @@
         "Maintainer": "Jonathan Keane <jkeane@gmail.com>",
         "Repository": "RSPM",
         "Date/Publication": "2026-04-29 13:00:15 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:55:51 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:33:40 UTC; unix"
       }
     },
     "askpass": {
@@ -328,7 +328,7 @@
         "Maintainer": "Michael Chirico <michaelchirico4@gmail.com>",
         "Repository": "RSPM",
         "Date/Publication": "2026-05-19 09:40:02 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:48:26 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:26:06 UTC; unix"
       }
     },
     "bsicons": {
@@ -388,7 +388,7 @@
         "Maintainer": "Carson Sievert <carson@posit.co>",
         "Repository": "RSPM",
         "Date/Publication": "2026-05-16 08:10:07 UTC",
-        "Built": "R 4.1.3; ; 2026-06-08 13:57:31 UTC; unix"
+        "Built": "R 4.1.3; ; 2026-06-08 14:35:23 UTC; unix"
       }
     },
     "cachem": {
@@ -463,7 +463,7 @@
         "URL": "https://github.com/posit-dev/chronicle-reports",
         "BugReports": "https://github.com/posit-dev/chronicle-reports/issues",
         "Depends": "R (>= 4.1.0)",
-        "Imports": "arrow, bslib, charlatan, dplyr, DT, ggplot2, glue, lubridate,\nplotly, rlang, shiny, shinycssloaders, tidyr, withr (>= 3.0.2)",
+        "Imports": "arrow, bsicons, bslib, charlatan, dplyr, DT, ggplot2, glue,\nlubridate, plotly, rlang, shiny, shinycssloaders, tidyr, withr\n(>= 3.0.2)",
         "Suggests": "devtools (>= 2.4.6), shinytest2, testthat (>= 3.0.0), tibble\n(>= 3.3.0)",
         "Encoding": "UTF-8",
         "Roxygen": "list(markdown = TRUE)",
@@ -474,17 +474,17 @@
         "RemoteHost": "api.github.com",
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
-        "RemoteRef": "main",
-        "RemoteSha": "45e0bb0f0974a2f63ee371c413425bd20152a07f",
+        "RemoteRef": "dev",
+        "RemoteSha": "378a51554c9c855b7c1c3ad52152f40f340bd5e8",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
-        "GithubRef": "main",
-        "GithubSHA1": "45e0bb0f0974a2f63ee371c413425bd20152a07f",
+        "GithubRef": "dev",
+        "GithubSHA1": "378a51554c9c855b7c1c3ad52152f40f340bd5e8",
         "NeedsCompilation": "no",
-        "Packaged": "2026-06-08 13:57:54 UTC; root",
+        "Packaged": "2026-06-08 14:35:46 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Posit Software, PBC [cph, fnd] (03wc8by49)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.1.3; ; 2026-06-08 13:57:54 UTC; unix"
+        "Built": "R 4.1.3; ; 2026-06-08 14:35:46 UTC; unix"
       }
     },
     "cli": {
@@ -568,7 +568,7 @@
         "Maintainer": "Davis Vaughan <davis@posit.co>",
         "Repository": "RSPM",
         "Date/Publication": "2026-05-06 14:40:12 UTC",
-        "Built": "R 4.1.3; ; 2026-06-08 13:46:39 UTC; unix"
+        "Built": "R 4.1.3; ; 2026-06-08 14:24:17 UTC; unix"
       }
     },
     "crosstalk": {
@@ -651,7 +651,7 @@
         "Maintainer": "Tyson Barrett <t.barrett88@gmail.com>",
         "Repository": "RSPM",
         "Date/Publication": "2026-05-06 05:10:20 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:47:45 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:25:24 UTC; unix"
       }
     },
     "digest": {
@@ -1092,7 +1092,7 @@
         "Maintainer": "Winston Chang <winston@posit.co>",
         "Repository": "RSPM",
         "Date/Publication": "2026-03-18 06:12:59 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:48:32 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:26:12 UTC; unix"
       }
     },
     "httr": {
@@ -1151,7 +1151,7 @@
         "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
         "Repository": "RSPM",
         "Date/Publication": "2025-12-07 06:10:07 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:48:16 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:25:55 UTC; unix"
       }
     },
     "jquerylib": {
@@ -1287,7 +1287,7 @@
         "Maintainer": "Charlie Gao <charlie.gao@posit.co>",
         "Repository": "RSPM",
         "Date/Publication": "2026-03-05 07:50:02 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:46:40 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:24:17 UTC; unix"
       }
     },
     "lazyeval": {
@@ -2053,10 +2053,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "c51fe5d0f7fda6dc142fc7212f1727de4d10e664",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-06-08 13:45:20 UTC; root",
+        "Packaged": "2026-06-08 14:23:13 UTC; root",
         "Author": "Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (03wc8by49)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:45:20 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:23:13 UTC; unix"
       }
     },
     "tidyr": {
@@ -2088,7 +2088,7 @@
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
         "Repository": "RSPM",
         "Date/Publication": "2025-12-19 09:20:02 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:57:34 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:35:25 UTC; unix"
       }
     },
     "tidyselect": {
@@ -2145,7 +2145,7 @@
         "Maintainer": "Vitalie Spinu <spinuvit@gmail.com>",
         "Repository": "RSPM",
         "Date/Publication": "2026-01-29 22:20:08 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:48:20 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:25:59 UTC; unix"
       }
     },
     "tinytex": {
@@ -2340,7 +2340,7 @@
         "Maintainer": "Yihui Xie <xie@yihui.name>",
         "Repository": "RSPM",
         "Date/Publication": "2026-06-01 05:10:03 UTC",
-        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 13:46:37 UTC; unix"
+        "Built": "R 4.1.3; aarch64-unknown-linux-gnu; 2026-06-08 14:24:14 UTC; unix"
       }
     },
     "xtable": {
@@ -2403,7 +2403,7 @@
       "checksum": "d72489cfeda309c3c259a17ad29f1593"
     },
     "renv.lock": {
-      "checksum": "dc1bd0a9cc383d3c2689133415771c6a"
+      "checksum": "fa50ce4975fd2794c864ed7a8fc760f8"
     }
   },
   "users": {}

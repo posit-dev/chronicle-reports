@@ -545,6 +545,7 @@
       ],
       "Imports": [
         "arrow",
+        "bsicons",
         "bslib",
         "charlatan",
         "dplyr",
@@ -574,8 +575,8 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
-      "RemoteRef": "main",
-      "RemoteSha": "45e0bb0f0974a2f63ee371c413425bd20152a07f",
+      "RemoteRef": "dev",
+      "RemoteSha": "378a51554c9c855b7c1c3ad52152f40f340bd5e8",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Posit Software, PBC [cph, fnd] (03wc8by49)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
