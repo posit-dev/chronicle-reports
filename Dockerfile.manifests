@@ -42,7 +42,7 @@ CMD ["Rscript", "-e", "\
   if (!is.null(ext_meta)) { \
   manifest <- jsonlite::fromJSON(manifest_path, simplifyVector = FALSE); \
   manifest <- c(list(extension = ext_meta), manifest); \
-  jsonlite::write_json(manifest, manifest_path, auto_unbox = TRUE, pretty = TRUE); \
+  jsonlite::write_json(manifest, manifest_path, auto_unbox = TRUE, pretty = TRUE, null = "null"); \
   message('Restored extension metadata for: ', app_dir); \
   }; \
   } \
