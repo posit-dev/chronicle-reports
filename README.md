@@ -157,6 +157,9 @@ A multi-page dashboard for Posit Workbench user analytics:
 - **Users**:
   - Overview: Licensed users, daily active users, administrators, and super administrators with trend analysis
   - User List: Searchable, Filterable table showing all users with role and activity information
+- **Sessions**:
+  - Overview: Sessions started over time by session type, plus startup-duration trends (median or p95) shown per environment and session type, with environment and metric filters
+  - By User: Searchable, filterable table of session counts and startup durations per user and session type
 
 Run it: `chronicle_run_app("workbench")`
 
@@ -282,8 +285,10 @@ chronicle.reports::chronicle_list_data(base_path = "/path/to/chronicle/data")
 [4] "connect/shiny_usage_totals_by_user"
 [5] "connect/user_list"
 [6] "connect/user_totals"
-[7] "workbench/user_list"
-[8] "workbench/user_totals"
+[7] "workbench/session_start_totals"
+[8] "workbench/session_start_totals_by_user"
+[9] "workbench/user_list"
+[10] "workbench/user_totals"
 ```
 
 ### Raw Metrics (Advanced)

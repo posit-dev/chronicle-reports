@@ -52,6 +52,72 @@ test_that("chronicle_data works with different metrics", {
   expect_equal(nrow(collected), 21) # 21 sample users
 })
 
+test_that("chronicle_data loads workbench session start totals", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+
+  data <- chronicle_data("workbench/session_start_totals", base_path)
+  collected <- dplyr::collect(data)
+
+  # Expected columns
+  expect_true(all(
+    c(
+      "environment",
+      "session_type",
+      "sessions_started",
+      "median_startup_duration_ms",
+      "p95_startup_duration_ms",
+      "date"
+    ) %in%
+      names(collected)
+  ))
+
+  # Data types and sanity checks
+  expect_s3_class(collected$date, "Date")
+  expect_type(collected$sessions_started, "integer")
+  expect_true(all(collected$sessions_started >= 0))
+  # p95 should be >= median for every group
+  expect_true(all(
+    collected$p95_startup_duration_ms >= collected$median_startup_duration_ms
+  ))
+  # 30 days x 3 environments x 4 session types
+  expect_equal(nrow(collected), 30 * 3 * 4)
+})
+
+test_that("chronicle_data loads workbench session start totals by user", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+
+  data <- chronicle_data(
+    "workbench/session_start_totals_by_user",
+    base_path
+  )
+  collected <- dplyr::collect(data)
+
+  # Expected columns (includes user_guid)
+  expect_true(all(
+    c(
+      "environment",
+      "user_guid",
+      "session_type",
+      "sessions_started",
+      "median_startup_duration_ms",
+      "p95_startup_duration_ms",
+      "date"
+    ) %in%
+      names(collected)
+  ))
+
+  expect_s3_class(collected$date, "Date")
+  expect_type(collected$sessions_started, "integer")
+  expect_true(all(collected$sessions_started >= 1))
+  expect_true(all(
+    collected$p95_startup_duration_ms >= collected$median_startup_duration_ms
+  ))
+  # 12 sample users
+  expect_equal(length(unique(collected$user_guid)), 12)
+})
+
 test_that("chronicle_data supports date filtering", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
