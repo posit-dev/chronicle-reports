@@ -65,8 +65,11 @@ BRAND_COLORS <- list(
 download_icon <- bsicons::bs_icon("download")
 
 # Card header with a single download button (for tables)
-card_header_with_download <- function(title, download_id,
-                                      subtitle_output = NULL) {
+card_header_with_download <- function(
+  title,
+  download_id,
+  subtitle_output = NULL
+) {
   title_el <- if (is.null(subtitle_output)) {
     shiny::span(title)
   } else {
@@ -96,8 +99,11 @@ card_header_with_download <- function(title, download_id,
 }
 
 # Card header with a popover dropdown offering chart data + raw data downloads
-card_header_with_chart_downloads <- function(title, chart_download_id,
-                                             raw_download_id) {
+card_header_with_chart_downloads <- function(
+  title,
+  chart_download_id,
+  raw_download_id
+) {
   bslib::card_header(
     shiny::div(
       style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
@@ -661,8 +667,13 @@ users_list_server <- function(input, output, session, user_list) {
           )
         ) |>
         dplyr::select(
-          "username", "email", "first_name", "last_name",
-          "environment", "user_role", "last_active_at"
+          "username",
+          "email",
+          "first_name",
+          "last_name",
+          "environment",
+          "user_role",
+          "last_active_at"
         )
       utils::write.csv(export_data, file, row.names = FALSE)
     }
@@ -1046,7 +1057,9 @@ content_overview_server <- function(input, output, session, content_totals) {
     },
     content = function(file) {
       data <- content_trends_chart_data()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1057,7 +1070,9 @@ content_overview_server <- function(input, output, session, content_totals) {
     },
     content = function(file) {
       data <- filtered_contents_in_range()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1069,7 +1084,9 @@ content_overview_server <- function(input, output, session, content_totals) {
     },
     content = function(file) {
       data <- content_type_chart_data()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1080,7 +1097,9 @@ content_overview_server <- function(input, output, session, content_totals) {
     },
     content = function(file) {
       data <- filtered_contents_in_range()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1354,8 +1373,14 @@ content_list_server <- function(
         return()
       }
       cols <- c(
-        "title", "owner", "type", "environment",
-        "py_version", "r_version", "quarto_version", "last_deployed_time"
+        "title",
+        "owner",
+        "type",
+        "environment",
+        "py_version",
+        "r_version",
+        "quarto_version",
+        "last_deployed_time"
       )
       utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
     }
@@ -1677,7 +1702,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
     },
     content = function(file) {
       data <- usage_visits_chart_data()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1688,7 +1715,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
     },
     content = function(file) {
       data <- usage_filtered()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1700,7 +1729,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
     },
     content = function(file) {
       data <- usage_unique_chart_data()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1711,7 +1742,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
     },
     content = function(file) {
       data <- usage_filtered()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -1918,7 +1951,8 @@ shiny_apps_server <- function(
   shiny_apps_table_data <- shiny::reactive({
     df <- shiny_usage_filtered()
     if (
-      is.null(df) || nrow(df) == 0 ||
+      is.null(df) ||
+        nrow(df) == 0 ||
         !"content_guid" %in% names(df) ||
         !"num_sessions" %in% names(df) ||
         !"user_guid" %in% names(df)
@@ -2009,9 +2043,14 @@ shiny_apps_server <- function(
     }
 
     metrics <- c("total_sessions")
-    if ("peak_concurrent_daily" %in% names(daily) &&
-      any(!is.na(daily$peak_concurrent_daily) &
-        is.finite(daily$peak_concurrent_daily))) {
+    if (
+      "peak_concurrent_daily" %in%
+        names(daily) &&
+        any(
+          !is.na(daily$peak_concurrent_daily) &
+            is.finite(daily$peak_concurrent_daily)
+        )
+    ) {
       metrics <- c(metrics, "peak_concurrent_daily")
     }
 
@@ -2109,7 +2148,9 @@ shiny_apps_server <- function(
     },
     content = function(file) {
       data <- shiny_sessions_chart_data()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -2120,7 +2161,9 @@ shiny_apps_server <- function(
     },
     content = function(file) {
       data <- shiny_usage_filtered()
-      if (is.null(data) || nrow(data) == 0) data <- data.frame()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
       utils::write.csv(data, file, row.names = FALSE)
     }
   )
@@ -2137,8 +2180,11 @@ shiny_apps_server <- function(
         return()
       }
       cols <- c(
-        "title", "environment", "total_sessions",
-        "unique_users", "avg_duration_minutes"
+        "title",
+        "environment",
+        "total_sessions",
+        "unique_users",
+        "avg_duration_minutes"
       )
       utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
     }
@@ -2314,7 +2360,8 @@ content_by_user_server <- function(
   content_by_user_table_data <- shiny::reactive({
     df <- visits_filtered()
     if (
-      is.null(df) || nrow(df) == 0 ||
+      is.null(df) ||
+        nrow(df) == 0 ||
         !"content_guid" %in% names(df) ||
         !"user_guid" %in% names(df) ||
         !"visits" %in% names(df)
@@ -2588,7 +2635,8 @@ shiny_sessions_by_user_server <- function(
   shiny_sessions_user_table_data <- shiny::reactive({
     df <- usage_filtered()
     if (
-      is.null(df) || nrow(df) == 0 ||
+      is.null(df) ||
+        nrow(df) == 0 ||
         !"content_guid" %in% names(df) ||
         !"user_guid" %in% names(df) ||
         !"num_sessions" %in% names(df)
@@ -2678,8 +2726,11 @@ shiny_sessions_by_user_server <- function(
     }
 
     cols <- c(
-      "username", "title", "environment",
-      "total_sessions", "avg_duration_minutes"
+      "username",
+      "title",
+      "environment",
+      "total_sessions",
+      "avg_duration_minutes"
     )
 
     DT::datatable(
@@ -2697,7 +2748,9 @@ shiny_sessions_by_user_server <- function(
   output$download_shiny_sessions_by_user <- shiny::downloadHandler(
     filename = function() {
       paste0(
-        "chronicle_connect_shiny_sessions_by_user_", Sys.Date(), ".csv"
+        "chronicle_connect_shiny_sessions_by_user_",
+        Sys.Date(),
+        ".csv"
       )
     },
     content = function(file) {
@@ -2707,8 +2760,11 @@ shiny_sessions_by_user_server <- function(
         return()
       }
       cols <- c(
-        "username", "title", "environment",
-        "total_sessions", "avg_duration_minutes"
+        "username",
+        "title",
+        "environment",
+        "total_sessions",
+        "avg_duration_minutes"
       )
       utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
     }
