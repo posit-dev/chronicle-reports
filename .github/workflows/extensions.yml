@@ -40,6 +40,9 @@ jobs:
 
   update-gallery:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     needs: [extensions]
     if: always() && github.ref == 'refs/heads/dev'
     steps:
