@@ -43,6 +43,14 @@ jobs:
     needs: [extensions]
     if: always() && github.ref == 'refs/heads/dev'
     steps:
+      - name: Generate token for GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.POSIT_CHRONICLE_APP_ID }}
+          private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
+          permission-contents: write
+
       - uses: actions/checkout@v6
         with:
           ref: dev
