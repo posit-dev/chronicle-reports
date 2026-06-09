@@ -18,10 +18,19 @@ jobs:
           - connect
           - workbench
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Generate token for GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.POSIT_CHRONICLE_APP_ID }}
+          private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
+          permission-contents: write
+
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
 
       - uses: posit-dev/connect-gallery-action/build-extension@main
         with:
@@ -34,9 +43,18 @@ jobs:
     needs: [extensions]
     if: always() && github.ref == 'refs/heads/dev'
     steps:
-      - uses: actions/checkout@v4
+      - name: Generate token for GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.POSIT_CHRONICLE_APP_ID }}
+          private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
+          permission-contents: write
+
+      - uses: actions/checkout@v6
         with:
           ref: dev
+          token: ${{ steps.generate-token.outputs.token }}
 
       - uses: posit-dev/connect-gallery-action@main
         with:
