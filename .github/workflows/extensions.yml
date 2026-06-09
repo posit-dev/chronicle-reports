@@ -18,6 +18,8 @@ jobs:
           - connect
           - workbench
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Generate token for GitHub App
