@@ -1,0 +1,83 @@
+{
+  "categories": [
+    {
+      "id": "chronicle-reports",
+      "title": "Chronicle Reports",
+      "description": "Usage analytics dashboards powered by Posit Chronicle data."
+    }
+  ],
+  "tags": [
+    "Chronicle reports"
+  ],
+  "requiredFeatures": [],
+  "extensions": [
+    {
+      "name": "connect",
+      "title": "Chronicle Connect Dashboard",
+      "description": "Comprehensive Posit Connect usage analytics — tracks licensed users, daily active users, publishers, content metrics, and usage patterns over time.",
+      "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/connect",
+      "latestVersion": {
+        "version": "0.0.1",
+        "released": "2026-03-24T23:14:09Z",
+        "url": "https://github.com/posit-dev/chronicle-reports/releases/download/connect%40v0.0.1/connect.tar.gz",
+        "minimumConnectVersion": "2025.01.0",
+        "requiredEnvironment": {
+          "r": {
+            "requires": "~=4.5.0"
+          }
+        }
+      },
+      "versions": [
+        {
+          "version": "0.0.1",
+          "released": "2026-03-24T23:14:09Z",
+          "url": "https://github.com/posit-dev/chronicle-reports/releases/download/connect%40v0.0.1/connect.tar.gz",
+          "minimumConnectVersion": "2025.01.0",
+          "requiredEnvironment": {
+            "r": {
+              "requires": "~=4.5.0"
+            }
+          }
+        }
+      ],
+      "tags": [
+        "Chronicle reports"
+      ],
+      "category": "chronicle-reports"
+    },
+    {
+      "name": "workbench",
+      "title": "Chronicle Workbench Dashboard",
+      "description": "Comprehensive Posit Workbench usage analytics — tracks licensed users, daily active users, session metrics, and admin activity over time.",
+      "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/workbench",
+      "latestVersion": {
+        "version": "0.0.1",
+        "released": "2026-03-24T23:14:10Z",
+        "url": "https://github.com/posit-dev/chronicle-reports/releases/download/workbench%40v0.0.1/workbench.tar.gz",
+        "minimumConnectVersion": "2025.01.0",
+        "requiredEnvironment": {
+          "r": {
+            "requires": "~=4.5.0"
+          }
+        }
+      },
+      "versions": [
+        {
+          "version": "0.0.1",
+          "released": "2026-03-24T23:14:10Z",
+          "url": "https://github.com/posit-dev/chronicle-reports/releases/download/workbench%40v0.0.1/workbench.tar.gz",
+          "minimumConnectVersion": "2025.01.0",
+          "requiredEnvironment": {
+            "r": {
+              "requires": "~=4.5.0"
+            }
+          }
+        }
+      ],
+      "tags": [
+        "Chronicle reports"
+      ],
+      "category": "chronicle-reports"
+    }
+  ]
+}
