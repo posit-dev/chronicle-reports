@@ -28,7 +28,7 @@ jobs:
           private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
           permission-contents: write
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ steps.generate-token.outputs.token }}
 
@@ -43,9 +43,10 @@ jobs:
     needs: [extensions]
     if: always() && github.ref == 'refs/heads/dev'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: dev
+          token: ${{ steps.generate-token.outputs.token }}
 
       - uses: posit-dev/connect-gallery-action@main
         with:
