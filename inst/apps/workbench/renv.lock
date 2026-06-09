@@ -4,7 +4,7 @@
     "Repositories": [
       {
         "Name": "CRAN",
-        "URL": "https://cloud.r-project.org"
+        "URL": "https://p3m.dev/cran/latest"
       }
     ]
   },
@@ -576,7 +576,7 @@
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
       "RemoteRef": "dev",
-      "RemoteSha": "378a51554c9c855b7c1c3ad52152f40f340bd5e8",
+      "RemoteSha": "2c25b4f846e0bcc44690f8f91801b3b28a3a6cff",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Posit Software, PBC [cph, fnd] (03wc8by49)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"

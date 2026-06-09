@@ -1,3 +1,8 @@
+# Record the same repository packages were installed from, so renv.lock's
+# repositories and per-package "Repository" fields match the install source
+# (avoids CRAN<->RSPM changes).
+options(repos = c(CRAN = Sys.getenv("CRAN")))
+
 app_dirs <- c('inst/apps/connect', 'inst/apps/workbench')
 
 for (app_dir in app_dirs) {

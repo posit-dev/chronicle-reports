@@ -1,6 +1,7 @@
 FROM posit/r-base:4.1-noble
 
 RUN apt-get update && apt-get install -y \
+  git \
   libcurl4-gnutls-dev \
   libssl-dev \
   libxml2-dev \
@@ -12,7 +13,6 @@ RUN apt-get update && apt-get install -y \
 ENV LANG=en_US.UTF-8
 
 # We use this repo for package installs to use pre-built binaries
-# it does not have an impact on the renv or manifest files we generate
 ENV CRAN="https://p3m.dev/cran/__linux__/noble/latest"
 
 RUN Rscript -e 'install.packages(c("rsconnect", "renv", "remotes", "jsonlite"), repos = Sys.getenv("CRAN"))'
