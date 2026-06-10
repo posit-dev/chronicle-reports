@@ -223,6 +223,10 @@ Then simplify your `app.R`:
 chronicle.reports::chronicle_run_app("connect")
 ```
 
+#### Granting access to Chronicle data
+
+The deployed content must be able to read the Chronicle data files on the Connect server. By default, Chronicle writes its data files with group-only permissions (`LocalStorage.Access = "group"`). Rather than loosening those permissions, a Connect admin can configure the content to [run as](https://docs.posit.co/connect/admin/process-management/#runas) a Unix account that belongs to the group that owns the Chronicle data.
+
 ## Sample Data
 
 Use `chronicle_sample_data()` to explore Chronicle Reports without access to real Chronicle data. This function creates a temporary directory with minimal sample metrics for both Connect and Workbench.
