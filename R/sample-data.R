@@ -1251,7 +1251,6 @@ sample_wb_session_starts_internal <- function() {
         median_ms <- as.integer(round(
           type_median_ms[[st]] * runif(1, 0.85, 1.15)
         ))
-        # With a single observation, every quantile collapses to that value.
         p95_ms <- if (sessions_started <= 1L) {
           median_ms
         } else {
@@ -1316,7 +1315,6 @@ sample_wb_session_starts_user_internal <- function() {
         median_ms <- as.integer(round(
           type_median_ms[[st]] * runif(1, 0.8, 1.2)
         ))
-        # With a single observation, every quantile collapses to that value.
         p95_ms <- if (sessions_started <= 1L) {
           median_ms
         } else {
