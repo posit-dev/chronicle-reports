@@ -114,6 +114,14 @@ test_that("chronicle_data loads workbench session start totals by user", {
   expect_true(all(
     collected$p95_startup_duration_ms >= collected$median_startup_duration_ms
   ))
+  # With a single session, p95 must equal median.
+  single_session <- collected[collected$sessions_started == 1L, ]
+  if (nrow(single_session) > 0) {
+    expect_equal(
+      single_session$p95_startup_duration_ms,
+      single_session$median_startup_duration_ms
+    )
+  }
   # 12 sample users
   expect_equal(length(unique(collected$user_guid)), 12)
 })
