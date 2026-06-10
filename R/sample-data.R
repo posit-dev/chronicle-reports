@@ -1251,7 +1251,11 @@ sample_wb_session_starts_internal <- function() {
         median_ms <- as.integer(round(
           type_median_ms[[st]] * runif(1, 0.85, 1.15)
         ))
-        p95_ms <- as.integer(round(median_ms * runif(1, 1.8, 2.6)))
+        p95_ms <- if (sessions_started <= 1L) {
+          median_ms
+        } else {
+          as.integer(round(median_ms * runif(1, 1.8, 2.6)))
+        }
 
         rows[[length(rows) + 1]] <- data.frame(
           environment = env,
@@ -1311,7 +1315,11 @@ sample_wb_session_starts_user_internal <- function() {
         median_ms <- as.integer(round(
           type_median_ms[[st]] * runif(1, 0.8, 1.2)
         ))
-        p95_ms <- as.integer(round(median_ms * runif(1, 1.5, 2.5)))
+        p95_ms <- if (sessions_started <= 1L) {
+          median_ms
+        } else {
+          as.integer(round(median_ms * runif(1, 1.5, 2.5)))
+        }
 
         rows[[length(rows) + 1]] <- data.frame(
           environment = user_envs[u],
