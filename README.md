@@ -140,10 +140,8 @@ A multi-page dashboard for Posit Connect usage analysis with three main sections
   - Overview: Content metrics and trends
   - Content List: Searchable inventory of all published content
 - **Usage**:
-  - Overview: Visit trends and patterns
-  - Shiny Apps: Overall usage trends and a breakdown of usage by app
-  - Content Visits by User: Detailed view of content visits per user
-  - Shiny Sessions by User: Detailed view of Shiny app sessions per user
+  - Content Hits: Hit trends and patterns
+  - Content Hits by User: Detailed view of content hits per user
 
 Run it: `chronicle_run_app("connect")`
 
@@ -281,8 +279,8 @@ chronicle.reports::chronicle_list_data(base_path = "/path/to/chronicle/data")
 # Returns:
 [1] "connect/content_list"
 [2] "connect/content_totals"
-[3] "connect/content_visits_totals_by_user"
-[4] "connect/shiny_usage_totals_by_user"
+[3] "connect/content_hits_totals"
+[4] "connect/content_hits_totals_by_user"
 [5] "connect/user_list"
 [6] "connect/user_totals"
 [7] "workbench/session_start_totals"
