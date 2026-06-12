@@ -140,10 +140,8 @@ A multi-page dashboard for Posit Connect usage analysis with three main sections
   - Overview: Content metrics and trends
   - Content List: Searchable inventory of all published content
 - **Usage**:
-  - Overview: Visit trends and patterns
-  - Shiny Apps: Overall usage trends and a breakdown of usage by app
-  - Content Visits by User: Detailed view of content visits per user
-  - Shiny Sessions by User: Detailed view of Shiny app sessions per user
+  - Content Hits: Hit trends and patterns
+  - Content Hits by User: Detailed view of content hits per user
 
 Run it: `chronicle_run_app("connect")`
 
@@ -226,6 +224,10 @@ Then simplify your `app.R`:
 chronicle.reports::chronicle_run_app("connect")
 ```
 
+#### Granting access to Chronicle data
+
+The deployed content must be able to read the Chronicle data files on the Connect server. By default, Chronicle writes its data files with group-only permissions. Rather than loosening those permissions, a Connect admin can configure the content to [run as](https://docs.posit.co/connect/admin/process-management/#runas) a Unix account that belongs to the group that owns the Chronicle data.
+
 ## Sample Data
 
 Use `chronicle_sample_data()` to explore Chronicle Reports without access to real Chronicle data. This function creates a temporary directory with minimal sample metrics for both Connect and Workbench.
@@ -281,8 +283,8 @@ chronicle.reports::chronicle_list_data(base_path = "/path/to/chronicle/data")
 # Returns:
 [1] "connect/content_list"
 [2] "connect/content_totals"
-[3] "connect/content_visits_totals_by_user"
-[4] "connect/shiny_usage_totals_by_user"
+[3] "connect/content_hits_totals"
+[4] "connect/content_hits_totals_by_user"
 [5] "connect/user_list"
 [6] "connect/user_totals"
 [7] "workbench/session_start_totals"
