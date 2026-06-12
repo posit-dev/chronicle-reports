@@ -851,6 +851,8 @@ sessions_empty_plot <- function(
 }
 
 # Format a duration in seconds for a value box (e.g. "1.4h", "32m", "45s").
+# Sub-hour values truncate (integer division) rather than round so labels
+# never cross their unit boundary (e.g. 3599s is "59m", never "60m").
 format_duration_secs <- function(secs) {
   if (is.na(secs) || !is.finite(secs)) {
     return("-")
@@ -858,9 +860,9 @@ format_duration_secs <- function(secs) {
   if (secs >= 3600) {
     paste0(formatC(secs / 3600, format = "f", digits = 1), "h")
   } else if (secs >= 60) {
-    paste0(round(secs / 60), "m")
+    paste0(secs %/% 60, "m")
   } else {
-    paste0(round(secs), "s")
+    paste0(floor(secs), "s")
   }
 }
 
@@ -893,8 +895,25 @@ username_lookup <- function(user_list) {
     dplyr::rename(user_guid = "id")
 }
 
+# Collect an Arrow query, returning NULL (with a message) on failure. Used
+# wherever a lazy duration query is materialized, since collect-time errors
+# (e.g. missing data path) surface here rather than when the query is built.
+collect_or_null <- function(query, context) {
+  if (is.null(query)) {
+    return(NULL)
+  }
+  tryCatch(
+    dplyr::collect(query),
+    error = function(e) {
+      message("Error collecting ", context, ": ", e$message)
+      NULL
+    }
+  )
+}
+
 # Filter session-level duration rows by an environment selection ("All",
-# "(Not Set)", or a specific environment). Shared by Overview and Duration.
+# "(Not Set)", or a specific environment). Works on both data frames and
+# lazy Arrow queries. Shared by Overview and Duration.
 filter_duration_env <- function(data, env) {
   if (is.null(env) || env == "All") {
     return(data)
@@ -1118,28 +1137,33 @@ sessions_overview_server <- function(
     prettyNum(sum(data$sessions_started, na.rm = TRUE), big.mark = ",")
   })
 
-  # Session-level duration rows scoped to the overview's date range and
-  # environment filter. Exact statistics — no weighting approximations needed.
-  filtered_overview_duration <- shiny::reactive({
-    data <- duration_data()
-    if (is.null(data) || nrow(data) == 0) {
+  # Total session time over the selected range and environment, aggregated in
+  # Arrow — only a single summary row is collected.
+  overview_duration_summary <- shiny::reactive({
+    ds <- duration_data()
+    if (is.null(ds)) {
       return(NULL)
     }
     shiny::req(input$sessions_overview_date_range)
-    data |>
+    query <- ds |>
       dplyr::filter(
         date >= input$sessions_overview_date_range[1],
         date <= input$sessions_overview_date_range[2]
       ) |>
-      filter_duration_env(input$sessions_overview_environment)
+      filter_duration_env(input$sessions_overview_environment) |>
+      dplyr::summarise(
+        sessions = dplyr::n(),
+        total_duration_seconds = sum(.data$duration_seconds, na.rm = TRUE)
+      )
+    collect_or_null(query, "session duration summary")
   })
 
   output$sessions_total_hours_value <- shiny::renderText({
-    data <- filtered_overview_duration()
-    if (is.null(data) || nrow(data) == 0) {
+    summary <- overview_duration_summary()
+    if (is.null(summary) || nrow(summary) == 0 || summary$sessions == 0) {
       return("-")
     }
-    format_total_hours(sum(data$duration_seconds, na.rm = TRUE))
+    format_total_hours(summary$total_duration_seconds)
   })
 
   # Sessions started over time, one line per session type. Counts are summed
@@ -1354,25 +1378,30 @@ render_session_duration_plot <- function(plot_data, metric_label) {
 }
 
 sessions_duration_server <- function(input, output, session, duration_data) {
-  # Set default date range on first data load only.
+  # Set default date range on first load: min/max dates aggregated in Arrow.
   date_init_done <- shiny::reactiveVal(FALSE)
   shiny::observe({
-    shiny::req(duration_data())
-    if (date_init_done()) {
+    ds <- duration_data()
+    if (date_init_done() || is.null(ds)) {
       return()
     }
 
-    dated_rows <- duration_data() |>
-      dplyr::filter(!is.na(date))
-    if (nrow(dated_rows) == 0) {
+    date_summary <- collect_or_null(
+      ds |>
+        dplyr::filter(!is.na(date)) |>
+        dplyr::summarise(
+          min_date = min(date, na.rm = TRUE),
+          max_date = max(date, na.rm = TRUE)
+        ),
+      "session duration date bounds"
+    )
+    if (
+      is.null(date_summary) ||
+        nrow(date_summary) == 0 ||
+        is.na(date_summary$min_date)
+    ) {
       return()
     }
-
-    date_summary <- dated_rows |>
-      dplyr::summarise(
-        min_date = min(date, na.rm = TRUE),
-        max_date = max(date, na.rm = TRUE)
-      )
 
     initial_start <- initial_date_start(date_summary$min_date)
 
@@ -1386,16 +1415,21 @@ sessions_duration_server <- function(input, output, session, duration_data) {
     date_init_done(TRUE)
   })
 
-  # Populate the environment filter from the loaded data.
+  # Populate the environment filter (distinct values computed in Arrow).
   shiny::observe({
-    data <- duration_data()
-    if (is.null(data) || nrow(data) == 0) {
+    ds <- duration_data()
+    if (is.null(ds)) {
       return()
     }
 
-    env_values <- data |>
-      dplyr::pull(.data$environment) |>
-      unique()
+    env_df <- collect_or_null(
+      ds |> dplyr::distinct(.data$environment),
+      "session duration environments"
+    )
+    if (is.null(env_df) || nrow(env_df) == 0) {
+      return()
+    }
+    env_values <- env_df$environment
 
     has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
 
@@ -1415,16 +1449,21 @@ sessions_duration_server <- function(input, output, session, duration_data) {
     )
   })
 
-  # Populate the session type filter from the loaded data.
+  # Populate the session type filter (distinct values computed in Arrow).
   shiny::observe({
-    data <- duration_data()
-    if (is.null(data) || nrow(data) == 0) {
+    ds <- duration_data()
+    if (is.null(ds)) {
       return()
     }
 
-    type_values <- data |>
-      dplyr::pull(.data$session_type) |>
-      unique()
+    type_df <- collect_or_null(
+      ds |> dplyr::distinct(.data$session_type),
+      "session duration types"
+    )
+    if (is.null(type_df) || nrow(type_df) == 0) {
+      return()
+    }
+    type_values <- type_df$session_type
     type_values <- sort(type_values[!is.na(type_values)])
 
     shiny::updateSelectInput(
@@ -1434,14 +1473,14 @@ sessions_duration_server <- function(input, output, session, duration_data) {
     )
   })
 
-  # Date-range-, environment-, and type-scoped session rows.
-  filtered_duration_data <- shiny::reactive({
-    data <- duration_data()
-    if (is.null(data) || nrow(data) == 0) {
+  # Date-range-, environment-, and type-scoped LAZY query (not collected).
+  filtered_duration_query <- shiny::reactive({
+    ds <- duration_data()
+    if (is.null(ds)) {
       return(NULL)
     }
     shiny::req(input$sessions_duration_date_range)
-    data <- data |>
+    query <- ds |>
       dplyr::filter(
         date >= input$sessions_duration_date_range[1],
         date <= input$sessions_duration_date_range[2]
@@ -1452,16 +1491,23 @@ sessions_duration_server <- function(input, output, session, duration_data) {
       !is.null(input$sessions_duration_type) &&
         input$sessions_duration_type != "All"
     ) {
-      data <- data |>
+      query <- query |>
         dplyr::filter(.data$session_type == input$sessions_duration_type)
     }
 
-    data
+    query
+  })
+
+  # Collected rows for the median trend chart and value boxes. Exact medians
+  # can't be pushed down to Arrow (only approximate t-digest versions), so
+  # this is the one place the filtered range is materialized.
+  duration_rows <- shiny::reactive({
+    collect_or_null(filtered_duration_query(), "session duration rows")
   })
 
   # Value boxes — exact statistics over session-level rows.
   output$duration_sessions_value <- shiny::renderText({
-    data <- filtered_duration_data()
+    data <- duration_rows()
     if (is.null(data) || nrow(data) == 0) {
       return("-")
     }
@@ -1469,7 +1515,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
   })
 
   output$duration_median_value <- shiny::renderText({
-    data <- filtered_duration_data()
+    data <- duration_rows()
     if (is.null(data) || nrow(data) == 0) {
       return("-")
     }
@@ -1477,16 +1523,16 @@ sessions_duration_server <- function(input, output, session, duration_data) {
   })
 
   output$duration_hours_value <- shiny::renderText({
-    data <- filtered_duration_data()
+    data <- duration_rows()
     if (is.null(data) || nrow(data) == 0) {
       return("-")
     }
     format_total_hours(sum(data$duration_seconds, na.rm = TRUE))
   })
 
-  # Daily duration statistics (minutes) per session type for the trend charts.
+  # Daily duration statistics (minutes) per session type for the trend chart.
   duration_trend_data <- shiny::reactive({
-    data <- filtered_duration_data()
+    data <- duration_rows()
     if (is.null(data) || nrow(data) == 0) {
       return(NULL)
     }
@@ -1506,19 +1552,28 @@ sessions_duration_server <- function(input, output, session, duration_data) {
       dplyr::arrange(date)
   })
 
-  # Exit reason breakdown (counts by exit reason, split by session type).
+  # Exit reason breakdown — counts aggregated in Arrow; only the small
+  # (exit_reason x session_type) summary is collected.
   duration_exit_data <- shiny::reactive({
-    data <- filtered_duration_data()
-    if (is.null(data) || nrow(data) == 0) {
+    query <- filtered_duration_query()
+    if (is.null(query)) {
       return(NULL)
     }
 
-    data |>
+    counts <- collect_or_null(
+      query |>
+        dplyr::group_by(.data$exit_reason, .data$session_type) |>
+        dplyr::summarise(sessions = dplyr::n(), .groups = "drop"),
+      "exit reason summary"
+    )
+    if (is.null(counts) || nrow(counts) == 0) {
+      return(NULL)
+    }
+
+    counts |>
       dplyr::mutate(
         exit_reason = dplyr::coalesce(.data$exit_reason, "(Unknown)")
       ) |>
-      dplyr::group_by(.data$exit_reason, .data$session_type) |>
-      dplyr::summarise(sessions = dplyr::n(), .groups = "drop") |>
       dplyr::arrange(dplyr::desc(.data$sessions))
   })
 
@@ -1615,7 +1670,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
     "session_duration_trend_chart"
   )
   output$download_duration_median_raw <- duration_download(
-    filtered_duration_data,
+    duration_rows,
     "session_duration_raw"
   )
   output$download_duration_exit_chart <- duration_download(
@@ -1623,7 +1678,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
     "session_exit_reason_chart"
   )
   output$download_duration_exit_raw <- duration_download(
-    filtered_duration_data,
+    duration_rows,
     "session_duration_raw"
   )
 }
@@ -1914,21 +1969,11 @@ sessions_by_user_server <- function(
 
 sessions_user_detail_ui <- bslib::card(
   bslib::card_header("Filters"),
-  bslib::layout_columns(
-    col_widths = c(6, 6),
-    shiny::selectizeInput(
-      "user_detail_user",
-      "User:",
-      choices = NULL,
-      options = list(placeholder = "Select a user")
-    ),
-    shiny::dateRangeInput(
-      "user_detail_date_range",
-      "Date Range:",
-      start = NULL,
-      end = NULL,
-      format = "yyyy-mm-dd"
-    )
+  shiny::selectizeInput(
+    "user_detail_user",
+    "User:",
+    choices = NULL,
+    options = list(placeholder = "Select a user")
   ),
   bslib::layout_columns(
     col_widths = c(3, 3, 3, 3),
@@ -1979,15 +2024,23 @@ sessions_user_detail_server <- function(
   user_list_data
 ) {
   # Populate the searchable user dropdown (single user at a time, no "All").
-  # Options are labeled with usernames from the latest user list snapshot so
-  # users can be found by name or GUID.
+  # Distinct users are computed in Arrow; options are labeled with usernames
+  # from the latest user list snapshot so users can be found by name or GUID.
   shiny::observe({
-    data <- duration_data()
-    if (is.null(data) || nrow(data) == 0) {
+    ds <- duration_data()
+    if (is.null(ds)) {
       return()
     }
 
-    users <- sort(unique(data$user_guid))
+    users_df <- collect_or_null(
+      ds |> dplyr::distinct(.data$user_guid),
+      "session users"
+    )
+    if (is.null(users_df) || nrow(users_df) == 0) {
+      return()
+    }
+
+    users <- sort(users_df$user_guid)
     labels <- users
     lookup <- username_lookup(user_list_data())
     if (!is.null(lookup)) {
@@ -2017,49 +2070,23 @@ sessions_user_detail_server <- function(
     )
   })
 
-  # Set default date range on first data load only (full loaded range, like
-  # the other pages; skip on reloads to preserve the user's selection).
-  date_init_done <- shiny::reactiveVal(FALSE)
-  shiny::observe({
-    data <- duration_data()
-    if (date_init_done() || is.null(data) || nrow(data) == 0) {
-      return()
-    }
-
-    dated_rows <- data |> dplyr::filter(!is.na(date))
-    if (nrow(dated_rows) == 0) {
-      return()
-    }
-
-    max_date <- max(dated_rows$date, na.rm = TRUE)
-    min_date <- min(dated_rows$date, na.rm = TRUE)
-
-    shiny::updateDateRangeInput(
-      session,
-      "user_detail_date_range",
-      start = initial_date_start(min_date),
-      end = max_date,
-      max = max_date
-    )
-    date_init_done(TRUE)
-  })
-
-  # Session rows for the selected user within the date range (scopes every
-  # output on this page: value boxes, timeline, and the sessions table),
-  # with username attached.
+  # Session rows for the selected user — the user_guid filter is pushed down
+  # to Arrow, so only that user's rows are ever collected. Scopes every
+  # output on this page: value boxes, timeline, and the sessions table.
   user_sessions <- shiny::reactive({
-    data <- duration_data()
-    if (is.null(data) || nrow(data) == 0) {
+    ds <- duration_data()
+    if (is.null(ds)) {
       return(NULL)
     }
     shiny::req(input$user_detail_user)
-    shiny::req(input$user_detail_date_range)
-    data <- data |>
-      dplyr::filter(
-        .data$user_guid == input$user_detail_user,
-        date >= input$user_detail_date_range[1],
-        date <= input$user_detail_date_range[2]
-      )
+    selected_user <- input$user_detail_user
+    data <- collect_or_null(
+      ds |> dplyr::filter(.data$user_guid == selected_user),
+      "sessions for selected user"
+    )
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
 
     data <- data |> dplyr::select(-dplyr::any_of("username"))
     lookup <- username_lookup(user_list_data())
@@ -2116,10 +2143,7 @@ sessions_user_detail_server <- function(
   output$user_detail_timeline_plot <- plotly::renderPlotly({
     data <- user_sessions()
     if (is.null(data) || nrow(data) == 0) {
-      return(sessions_empty_plot(
-        "No sessions in selected date range",
-        "Adjust the timeline date range to see more sessions"
-      ))
+      return(sessions_empty_plot("No sessions for selected user", ""))
     }
 
     plot_data <- data |>
@@ -2131,7 +2155,7 @@ sessions_user_detail_server <- function(
       dplyr::mutate(lane = dplyr::row_number())
 
     if (nrow(plot_data) == 0) {
-      return(sessions_empty_plot("No sessions in selected date range", ""))
+      return(sessions_empty_plot("No sessions for selected user", ""))
     }
 
     # format_duration_secs() is scalar; precompute the tooltip labels.
@@ -2429,10 +2453,13 @@ server <- function(input, output, session) {
     }
   })
 
-  # Session-level duration data, shared by Sessions → Overview (summary value
-  # boxes), Sessions → Duration (charts), and Sessions → User Detail. Loaded
-  # deferred when any of those tabs is first visited; the loaded range expands
-  # when a date selector extends beyond it.
+  # Session-level duration data as a LAZY Arrow query (date-range filtered,
+  # never collected here) shared by Sessions → Overview, Duration, and User
+  # Detail. The dataset can be very large in real deployments, so each
+  # consumer pushes the narrowest possible filters/aggregations down to Arrow
+  # and collects only what it needs (e.g. one user's rows, or a grouped
+  # summary). Creation is deferred until one of those tabs is first visited;
+  # the date range expands when a selector extends beyond it.
   should_load_duration <- shiny::reactiveVal(FALSE)
   shiny::observe({
     duration_tabs <- c(
@@ -2461,7 +2488,7 @@ server <- function(input, output, session) {
           range_max <- range$max
           ds <- ds |> dplyr::filter(date >= range_min, date <= range_max)
         }
-        ds |> dplyr::collect()
+        ds
       },
       error = function(e) {
         message("Error loading session duration: ", e$message)
@@ -2473,8 +2500,7 @@ server <- function(input, output, session) {
   shiny::observe({
     overview_val <- input$sessions_overview_date_range
     duration_val <- input$sessions_duration_date_range
-    detail_val <- input$user_detail_date_range
-    date_vals <- c(overview_val, duration_val, detail_val)
+    date_vals <- c(overview_val, duration_val)
     date_vals <- date_vals[!is.na(date_vals)]
     shiny::req(length(date_vals) > 0)
     range <- duration_range()

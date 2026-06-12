@@ -159,7 +159,7 @@ A multi-page dashboard for Posit Workbench user analytics:
   - Overview: Sessions started over time by session type, plus startup-duration trends (median and P95) per session type, with date and environment filters; includes total session hours for the selected range
   - Duration: Median session-duration trend by session type and a sessions-by-exit-reason breakdown (one bar per session type, colored by exit reason), with date, environment, and session type filters
   - User Summary: One row per user (with usernames from the latest user list) and session counts pivoted by session type, with date range and environment filters, searchable by username or GUID
-  - User Detail: Single-user drill-down with a searchable user selector (labeled by username) and a date range filter, totals, a Gantt-style session timeline colored by session type, and a table of that user's sessions
+  - User Detail: Single-user drill-down with a searchable user selector (labeled by username), totals, a Gantt-style session timeline colored by session type, and a table of that user's sessions
 
 Run it: `chronicle_run_app("workbench")`
 
