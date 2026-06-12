@@ -66,6 +66,18 @@ SESSION_PALETTE <- c(
   BRAND_COLORS$GRAY
 )
 
+# Wider palette for exit reasons (up to 7 distinct values). Green leads so the
+# most common reason — normally NormalExit — reads as healthy.
+EXIT_PALETTE <- c(
+  BRAND_COLORS$GREEN,
+  BRAND_COLORS$BLUE,
+  BRAND_COLORS$BURGUNDY,
+  "#EE6331",
+  BRAND_COLORS$GRAY,
+  "#419599",
+  "#C0A33E"
+)
+
 # ==============================================
 # Download UI Helper Functions
 # ==============================================
@@ -579,34 +591,9 @@ user_list_ui <- bslib::card(
   )
 )
 
-user_list_server <- function(input, output, session, should_load) {
-  # Load user_list data (snapshot at max_date), deferred until tab is visited
-  user_list_data <- shiny::reactive({
-    shiny::req(should_load())
-    tryCatch(
-      {
-        data <- chronicle_data("workbench/user_list", base_path)
-
-        # Find max_date in Arrow (reads only parquet metadata), then collect
-        # just that partition instead of all historical snapshots
-        max_date_result <- data |>
-          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
-          dplyr::collect()
-        if (nrow(max_date_result) == 0) {
-          return(data |> dplyr::head(0) |> dplyr::collect())
-        }
-        max_date <- max_date_result$max_date
-
-        data |>
-          dplyr::filter(date == max_date) |>
-          dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading user list: ", e$message)
-        NULL
-      }
-    )
-  })
+user_list_server <- function(input, output, session, user_list_data) {
+  # Uses the shared user_list reactive (latest snapshot, loaded in the main
+  # server and shared with the Sessions user tables for username lookups).
 
   # Populate environment filter dynamically
   shiny::observe({
@@ -719,7 +706,10 @@ user_list_server <- function(input, output, session, should_load) {
         options = list(
           pageLength = 25,
           autoWidth = TRUE,
-          scrollX = TRUE
+          scrollX = TRUE,
+          # No built-in DataTables search box — each page provides at most
+          # one search/select control of its own.
+          dom = "lrtip"
         ),
         rownames = FALSE
       )
@@ -779,7 +769,7 @@ sessions_overview_ui <- bslib::card(
     )
   ),
   bslib::layout_columns(
-    col_widths = c(3, 3, 3, 3),
+    col_widths = c(4, 4, 4),
     bslib::value_box(
       title = "Sessions Started (latest day)",
       max_height = "120px",
@@ -793,16 +783,10 @@ sessions_overview_ui <- bslib::card(
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
     ),
     bslib::value_box(
-      title = "Median Startup (range avg)",
+      title = "Total Session Hours (range)",
       max_height = "120px",
-      value = shiny::textOutput("sessions_median_value"),
+      value = shiny::textOutput("sessions_total_hours_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
-    ),
-    bslib::value_box(
-      title = "P95 Startup (range avg)",
-      max_height = "120px",
-      value = shiny::textOutput("sessions_p95_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$GRAY)
     )
   ),
   bslib::card(
@@ -866,35 +850,68 @@ sessions_empty_plot <- function(
     )
 }
 
-# Sessions-weighted mean of a per-group duration column (ms). The dataset stores
-# a daily median/p95 per (environment, session type); those can't be re-medianed
-# exactly, so each group's value is weighted by the sessions it represents —
-# a sound "typical startup" proxy across the selected range and environment.
-sessions_weighted_ms <- function(data, col) {
-  value <- data[[col]]
-  weight <- data$sessions_started
-  ok <- !is.na(value) & is.finite(value) & !is.na(weight) & weight > 0
-  if (!any(ok)) {
-    return(NA_real_)
-  }
-  sum(value[ok] * weight[ok]) / sum(weight[ok])
-}
-
-# Format a duration in milliseconds for a value box (e.g. "2.4s", "850 ms").
-format_startup_ms <- function(ms) {
-  if (is.na(ms) || !is.finite(ms)) {
+# Format a duration in seconds for a value box (e.g. "1.4h", "32m", "45s").
+format_duration_secs <- function(secs) {
+  if (is.na(secs) || !is.finite(secs)) {
     return("-")
   }
-  if (ms >= 1000) {
-    paste0(formatC(ms / 1000, format = "f", digits = 1), "s")
+  if (secs >= 3600) {
+    paste0(formatC(secs / 3600, format = "f", digits = 1), "h")
+  } else if (secs >= 60) {
+    paste0(round(secs / 60), "m")
   } else {
-    paste0(round(ms), " ms")
+    paste0(round(secs), "s")
+  }
+}
+
+# Format total session time (seconds) as hours for a value box.
+format_total_hours <- function(secs) {
+  if (is.na(secs) || !is.finite(secs)) {
+    return("-")
+  }
+  hours <- secs / 3600
+  if (hours >= 100) {
+    prettyNum(round(hours), big.mark = ",")
+  } else {
+    formatC(hours, format = "f", digits = 1)
+  }
+}
+
+# Map user GUIDs to usernames using the latest user list snapshot. Returns a
+# two-column data frame (user_guid, username), or NULL when the user list is
+# unavailable. Mirrors how the Connect app labels content visits.
+username_lookup <- function(user_list) {
+  if (
+    is.null(user_list) ||
+      nrow(user_list) == 0 ||
+      !all(c("id", "username") %in% names(user_list))
+  ) {
+    return(NULL)
+  }
+  user_list |>
+    dplyr::distinct(.data$id, .data$username) |>
+    dplyr::rename(user_guid = "id")
+}
+
+# Filter session-level duration rows by an environment selection ("All",
+# "(Not Set)", or a specific environment). Shared by Overview and Duration.
+filter_duration_env <- function(data, env) {
+  if (is.null(env) || env == "All") {
+    return(data)
+  }
+  if (env == "(Not Set)") {
+    data |>
+      dplyr::filter(
+        is.na(environment) | environment == "" | environment == " "
+      )
+  } else {
+    data |> dplyr::filter(environment == env)
   }
 }
 
 # Build a startup-duration plotly for one metric column (median or p95).
 # Collapses multiple environments into one line per session type via a
-# sessions-weighted average, consistent with the value box calculation.
+# sessions-weighted average (daily percentiles can't be re-medianed exactly).
 render_startup_duration_plot <- function(data, metric_col, metric_label) {
   if (is.null(data) || nrow(data) == 0) {
     return(sessions_empty_plot())
@@ -968,7 +985,13 @@ render_startup_duration_plot <- function(data, metric_col, metric_label) {
     plotly::config(displayModeBar = FALSE)
 }
 
-sessions_overview_server <- function(input, output, session, sessions_data) {
+sessions_overview_server <- function(
+  input,
+  output,
+  session,
+  sessions_data,
+  duration_data
+) {
   # Set default date range on first data load only (skip on reloads to
   # preserve the user's current selection).
   date_init_done <- shiny::reactiveVal(FALSE)
@@ -1095,22 +1118,28 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
     prettyNum(sum(data$sessions_started, na.rm = TRUE), big.mark = ",")
   })
 
-  # Startup-duration boxes: sessions-weighted across the selected range and
-  # environment (daily medians/p95s can't be re-medianed exactly).
-  output$sessions_median_value <- shiny::renderText({
-    data <- filtered_sessions_data()
+  # Session-level duration rows scoped to the overview's date range and
+  # environment filter. Exact statistics — no weighting approximations needed.
+  filtered_overview_duration <- shiny::reactive({
+    data <- duration_data()
     if (is.null(data) || nrow(data) == 0) {
-      return("-")
+      return(NULL)
     }
-    format_startup_ms(sessions_weighted_ms(data, "median_startup_duration_ms"))
+    shiny::req(input$sessions_overview_date_range)
+    data |>
+      dplyr::filter(
+        date >= input$sessions_overview_date_range[1],
+        date <= input$sessions_overview_date_range[2]
+      ) |>
+      filter_duration_env(input$sessions_overview_environment)
   })
 
-  output$sessions_p95_value <- shiny::renderText({
-    data <- filtered_sessions_data()
+  output$sessions_total_hours_value <- shiny::renderText({
+    data <- filtered_overview_duration()
     if (is.null(data) || nrow(data) == 0) {
       return("-")
     }
-    format_startup_ms(sessions_weighted_ms(data, "p95_startup_duration_ms"))
+    format_total_hours(sum(data$duration_seconds, na.rm = TRUE))
   })
 
   # Sessions started over time, one line per session type. Counts are summed
@@ -1198,21 +1227,425 @@ sessions_overview_server <- function(input, output, session, sessions_data) {
 }
 
 # ==============================================
-# Sessions → By User UI/Server
+# Sessions → Duration UI/Server
 # ==============================================
 
-sessions_by_user_ui <- bslib::card(
+sessions_duration_ui <- bslib::card(
   bslib::card_header("Filters"),
   bslib::layout_columns(
-    col_widths = c(4, 4, 4),
+    col_widths = c(6, 3, 3),
+    shiny::dateRangeInput(
+      "sessions_duration_date_range",
+      "Date Range:",
+      start = NULL,
+      end = NULL,
+      format = "yyyy-mm-dd"
+    ),
     shiny::selectInput(
-      "sessions_by_user_environment",
+      "sessions_duration_environment",
       "Environment:",
       choices = c("All")
     ),
     shiny::selectInput(
-      "sessions_by_user_type",
+      "sessions_duration_type",
       "Session Type:",
+      choices = c("All")
+    )
+  ),
+  bslib::layout_columns(
+    col_widths = c(4, 4, 4),
+    bslib::value_box(
+      title = "Sessions Completed (range)",
+      max_height = "120px",
+      value = shiny::textOutput("duration_sessions_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
+    ),
+    bslib::value_box(
+      title = "Median Duration",
+      max_height = "120px",
+      value = shiny::textOutput("duration_median_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
+    ),
+    bslib::value_box(
+      title = "Total Session Hours",
+      max_height = "120px",
+      value = shiny::textOutput("duration_hours_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
+    )
+  ),
+  bslib::card(
+    card_header_with_chart_downloads(
+      "Session Duration Over Time (Median)",
+      "download_duration_median_chart",
+      "download_duration_median_raw"
+    ),
+    shinycssloaders::withSpinner(
+      plotly::plotlyOutput("duration_trend_median_plot")
+    )
+  ),
+  bslib::card(
+    card_header_with_chart_downloads(
+      "Sessions by Exit Reason",
+      "download_duration_exit_chart",
+      "download_duration_exit_raw"
+    ),
+    shinycssloaders::withSpinner(
+      plotly::plotlyOutput("duration_exit_plot")
+    )
+  )
+)
+
+# Build a session-duration trend plotly for one statistic (median or p95).
+# Computed exactly from session-level rows, one line per session type,
+# plotted in minutes for readability.
+render_session_duration_plot <- function(plot_data, metric_label) {
+  if (is.null(plot_data) || nrow(plot_data) == 0) {
+    return(sessions_empty_plot())
+  }
+
+  types <- sort(unique(plot_data$session_type))
+  pal <- stats::setNames(
+    rep(SESSION_PALETTE, length.out = length(types)),
+    types
+  )
+
+  # format_duration_secs() is scalar; precompute the tooltip labels.
+  plot_data$duration_label <- vapply(
+    plot_data$value * 60,
+    format_duration_secs,
+    character(1)
+  )
+
+  p <- suppressWarnings(
+    ggplot2::ggplot(
+      plot_data,
+      ggplot2::aes(x = date, y = .data$value, color = .data$session_type)
+    ) +
+      ggplot2::geom_line(linewidth = 0.5) +
+      ggplot2::geom_point(
+        ggplot2::aes(
+          text = paste0(
+            format(date, "%B %d, %Y"),
+            "<br>",
+            .data$session_type,
+            "<br>",
+            metric_label,
+            ": ",
+            .data$duration_label
+          )
+        ),
+        size = 0.5
+      ) +
+      ggplot2::theme_minimal() +
+      ggplot2::labs(
+        x = "",
+        y = paste0(metric_label, " Session Duration (minutes)"),
+        color = ""
+      ) +
+      ggplot2::scale_color_manual(values = pal)
+  )
+  plotly::ggplotly(p, tooltip = "text") |>
+    plotly::layout(
+      xaxis = list(fixedrange = TRUE),
+      yaxis = list(fixedrange = TRUE),
+      legend = list(orientation = "h", x = 0.5, xanchor = "center")
+    ) |>
+    plotly::config(displayModeBar = FALSE)
+}
+
+sessions_duration_server <- function(input, output, session, duration_data) {
+  # Set default date range on first data load only.
+  date_init_done <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    shiny::req(duration_data())
+    if (date_init_done()) {
+      return()
+    }
+
+    dated_rows <- duration_data() |>
+      dplyr::filter(!is.na(date))
+    if (nrow(dated_rows) == 0) {
+      return()
+    }
+
+    date_summary <- dated_rows |>
+      dplyr::summarise(
+        min_date = min(date, na.rm = TRUE),
+        max_date = max(date, na.rm = TRUE)
+      )
+
+    initial_start <- initial_date_start(date_summary$min_date)
+
+    shiny::updateDateRangeInput(
+      session,
+      "sessions_duration_date_range",
+      start = initial_start,
+      end = date_summary$max_date,
+      max = date_summary$max_date
+    )
+    date_init_done(TRUE)
+  })
+
+  # Populate the environment filter from the loaded data.
+  shiny::observe({
+    data <- duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return()
+    }
+
+    env_values <- data |>
+      dplyr::pull(.data$environment) |>
+      unique()
+
+    has_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
+
+    env_values <- env_values[
+      !is.na(env_values) & env_values != "" & env_values != " "
+    ] |>
+      sort()
+
+    if (has_na) {
+      env_values <- c(env_values, "(Not Set)")
+    }
+
+    shiny::updateSelectInput(
+      session,
+      "sessions_duration_environment",
+      choices = c("All", env_values)
+    )
+  })
+
+  # Populate the session type filter from the loaded data.
+  shiny::observe({
+    data <- duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return()
+    }
+
+    type_values <- data |>
+      dplyr::pull(.data$session_type) |>
+      unique()
+    type_values <- sort(type_values[!is.na(type_values)])
+
+    shiny::updateSelectInput(
+      session,
+      "sessions_duration_type",
+      choices = c("All", type_values)
+    )
+  })
+
+  # Date-range-, environment-, and type-scoped session rows.
+  filtered_duration_data <- shiny::reactive({
+    data <- duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+    shiny::req(input$sessions_duration_date_range)
+    data <- data |>
+      dplyr::filter(
+        date >= input$sessions_duration_date_range[1],
+        date <= input$sessions_duration_date_range[2]
+      ) |>
+      filter_duration_env(input$sessions_duration_environment)
+
+    if (
+      !is.null(input$sessions_duration_type) &&
+        input$sessions_duration_type != "All"
+    ) {
+      data <- data |>
+        dplyr::filter(.data$session_type == input$sessions_duration_type)
+    }
+
+    data
+  })
+
+  # Value boxes — exact statistics over session-level rows.
+  output$duration_sessions_value <- shiny::renderText({
+    data <- filtered_duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(nrow(data), big.mark = ",")
+  })
+
+  output$duration_median_value <- shiny::renderText({
+    data <- filtered_duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    format_duration_secs(stats::median(data$duration_seconds, na.rm = TRUE))
+  })
+
+  output$duration_hours_value <- shiny::renderText({
+    data <- filtered_duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    format_total_hours(sum(data$duration_seconds, na.rm = TRUE))
+  })
+
+  # Daily duration statistics (minutes) per session type for the trend charts.
+  duration_trend_data <- shiny::reactive({
+    data <- filtered_duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::filter(
+        !is.na(date),
+        !is.na(.data$duration_seconds),
+        is.finite(.data$duration_seconds)
+      ) |>
+      dplyr::group_by(date, .data$session_type) |>
+      dplyr::summarise(
+        sessions = dplyr::n(),
+        median_duration_minutes = stats::median(.data$duration_seconds) / 60,
+        .groups = "drop"
+      ) |>
+      dplyr::arrange(date)
+  })
+
+  # Exit reason breakdown (counts by exit reason, split by session type).
+  duration_exit_data <- shiny::reactive({
+    data <- filtered_duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::mutate(
+        exit_reason = dplyr::coalesce(.data$exit_reason, "(Unknown)")
+      ) |>
+      dplyr::group_by(.data$exit_reason, .data$session_type) |>
+      dplyr::summarise(sessions = dplyr::n(), .groups = "drop") |>
+      dplyr::arrange(dplyr::desc(.data$sessions))
+  })
+
+  output$duration_trend_median_plot <- plotly::renderPlotly({
+    trend <- duration_trend_data()
+    if (is.null(trend) || nrow(trend) == 0) {
+      return(sessions_empty_plot())
+    }
+    render_session_duration_plot(
+      trend |>
+        dplyr::transmute(
+          date = date,
+          session_type = .data$session_type,
+          value = .data$median_duration_minutes
+        ),
+      "Median"
+    )
+  })
+
+  output$duration_exit_plot <- plotly::renderPlotly({
+    exit_summary <- duration_exit_data()
+    if (is.null(exit_summary) || nrow(exit_summary) == 0) {
+      return(sessions_empty_plot())
+    }
+
+    # Color by exit reason, most common reason first in the legend.
+    reason_order <- exit_summary |>
+      dplyr::group_by(.data$exit_reason) |>
+      dplyr::summarise(total = sum(.data$sessions), .groups = "drop") |>
+      dplyr::arrange(dplyr::desc(.data$total)) |>
+      dplyr::pull(.data$exit_reason)
+
+    plot_data <- exit_summary |>
+      dplyr::mutate(
+        exit_reason = factor(.data$exit_reason, levels = reason_order)
+      )
+
+    pal <- stats::setNames(
+      rep(EXIT_PALETTE, length.out = length(reason_order)),
+      reason_order
+    )
+
+    p <- suppressWarnings(
+      ggplot2::ggplot(
+        plot_data,
+        ggplot2::aes(
+          x = .data$session_type,
+          y = .data$sessions,
+          fill = .data$exit_reason,
+          text = paste0(
+            .data$session_type,
+            "<br>",
+            .data$exit_reason,
+            "<br>",
+            prettyNum(.data$sessions, big.mark = ","),
+            " sessions"
+          )
+        )
+      ) +
+        ggplot2::geom_col() +
+        ggplot2::theme_minimal() +
+        ggplot2::labs(x = "", y = "Sessions", fill = "") +
+        ggplot2::scale_fill_manual(values = pal)
+    )
+
+    plotly::ggplotly(p, tooltip = "text") |>
+      plotly::layout(
+        barmode = "stack",
+        xaxis = list(fixedrange = TRUE),
+        yaxis = list(fixedrange = TRUE),
+        legend = list(orientation = "h", x = 0.5, xanchor = "center")
+      ) |>
+      plotly::config(displayModeBar = FALSE)
+  })
+
+  # Download handlers
+  duration_download <- function(data_fn, suffix) {
+    shiny::downloadHandler(
+      filename = function() {
+        paste0("chronicle_workbench_", suffix, "_", Sys.Date(), ".csv")
+      },
+      content = function(file) {
+        data <- data_fn()
+        if (is.null(data) || nrow(data) == 0) {
+          data <- data.frame()
+        }
+        utils::write.csv(data, file, row.names = FALSE)
+      }
+    )
+  }
+
+  output$download_duration_median_chart <- duration_download(
+    duration_trend_data,
+    "session_duration_trend_chart"
+  )
+  output$download_duration_median_raw <- duration_download(
+    filtered_duration_data,
+    "session_duration_raw"
+  )
+  output$download_duration_exit_chart <- duration_download(
+    duration_exit_data,
+    "session_exit_reason_chart"
+  )
+  output$download_duration_exit_raw <- duration_download(
+    filtered_duration_data,
+    "session_duration_raw"
+  )
+}
+
+# ==============================================
+# Sessions → User Summary UI/Server
+# ==============================================
+
+sessions_by_user_ui <- bslib::card(
+  card_header_with_download("Filters", "download_user_summary"),
+  bslib::layout_columns(
+    col_widths = c(4, 4, 4),
+    shiny::dateRangeInput(
+      "sessions_by_user_date_range",
+      "Date Range:",
+      start = NULL,
+      end = NULL,
+      format = "yyyy-mm-dd"
+    ),
+    shiny::selectInput(
+      "sessions_by_user_environment",
+      "Environment:",
       choices = c("All")
     ),
     shiny::textInput(
@@ -1226,35 +1659,87 @@ sessions_by_user_ui <- bslib::card(
   )
 )
 
-sessions_by_user_server <- function(input, output, session, should_load) {
-  # Load by-user session data (latest snapshot), deferred until tab is visited.
+sessions_by_user_server <- function(
+  input,
+  output,
+  session,
+  should_load,
+  user_list_data
+) {
+  # Daily by-user rows, deferred until the tab is first visited. The loaded
+  # range expands when the date selector extends beyond it (only the
+  # additional partitions are fetched via Arrow partition pruning).
+  by_user_initial_range <- if (!is.null(data_window_cutoff)) {
+    list(min = data_window_cutoff, max = Sys.Date())
+  }
+  by_user_range <- shiny::reactiveVal(by_user_initial_range)
+
   sessions_by_user_data <- shiny::reactive({
     shiny::req(should_load())
+    range <- by_user_range()
     tryCatch(
       {
-        data <- chronicle_data(
+        ds <- chronicle_data(
           "workbench/session_start_totals_by_user",
           base_path
         )
-
-        # Find max_date via Arrow metadata, then collect only that partition.
-        max_date_result <- data |>
-          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
-          dplyr::collect()
-        if (nrow(max_date_result) == 0) {
-          return(data |> dplyr::head(0) |> dplyr::collect())
+        if (!is.null(range)) {
+          range_min <- range$min
+          range_max <- range$max
+          ds <- ds |> dplyr::filter(date >= range_min, date <= range_max)
         }
-        max_date <- max_date_result$max_date
-
-        data |>
-          dplyr::filter(date == max_date) |>
-          dplyr::collect()
+        ds |> dplyr::collect()
       },
       error = function(e) {
         message("Error loading session totals by user: ", e$message)
         NULL
       }
     )
+  })
+
+  shiny::observe({
+    date_val <- input$sessions_by_user_date_range
+    shiny::req(date_val)
+    range <- by_user_range()
+    if (is.null(range)) {
+      return()
+    }
+    date_val <- date_val[!is.na(date_val)]
+    if (length(date_val) == 0) {
+      return()
+    }
+    new_min <- min(range$min, date_val)
+    new_max <- max(range$max, date_val)
+    if (new_min < range$min || new_max > range$max) {
+      by_user_range(list(min = new_min, max = new_max))
+    }
+  })
+
+  # Set default date range on first data load only (skip on range expansion
+  # reloads to preserve the user's current selection).
+  date_init_done <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    data <- sessions_by_user_data()
+    if (date_init_done() || is.null(data) || nrow(data) == 0) {
+      return()
+    }
+
+    dated_rows <- data |> dplyr::filter(!is.na(date))
+    if (nrow(dated_rows) == 0) {
+      return()
+    }
+
+    max_date <- max(dated_rows$date, na.rm = TRUE)
+    min_date <- min(dated_rows$date, na.rm = TRUE)
+
+    shiny::updateDateRangeInput(
+      session,
+      "sessions_by_user_date_range",
+      start = initial_date_start(min_date),
+      end = max_date,
+      max = max_date
+    )
+    date_init_done(TRUE)
   })
 
   # Populate environment filter dynamically
@@ -1286,31 +1771,22 @@ sessions_by_user_server <- function(input, output, session, should_load) {
     )
   })
 
-  # Populate session type filter dynamically
-  shiny::observe({
-    data <- sessions_by_user_data()
-    if (is.null(data) || nrow(data) == 0) {
-      return()
-    }
-
-    type_values <- data |>
-      dplyr::pull(.data$session_type) |>
-      unique()
-    type_values <- sort(type_values[!is.na(type_values)])
-
-    shiny::updateSelectInput(
-      session,
-      "sessions_by_user_type",
-      choices = c("All", type_values)
-    )
-  })
-
-  # Apply filters
-  filtered_sessions_by_user <- shiny::reactive({
+  # Pivoted summary: one row per user, one column per session type, plus a
+  # Total column. The environment filter scopes the counts but environment is
+  # intentionally not shown as a column.
+  user_summary_data <- shiny::reactive({
     data <- sessions_by_user_data()
     if (is.null(data)) {
       return(NULL)
     }
+
+    # Date range filter
+    shiny::req(input$sessions_by_user_date_range)
+    data <- data |>
+      dplyr::filter(
+        date >= input$sessions_by_user_date_range[1],
+        date <= input$sessions_by_user_date_range[2]
+      )
 
     # Environment filter
     if (input$sessions_by_user_environment != "All") {
@@ -1327,25 +1803,56 @@ sessions_by_user_server <- function(input, output, session, should_load) {
       }
     }
 
-    # Session type filter
-    if (input$sessions_by_user_type != "All") {
-      data <- data |>
-        dplyr::filter(.data$session_type == input$sessions_by_user_type)
+    # Attach usernames from the latest user list snapshot (guid -> username).
+    # Any username column already present is dropped so the user list is the
+    # single source of display names.
+    data <- data |> dplyr::select(-dplyr::any_of("username"))
+    lookup <- username_lookup(user_list_data())
+    if (!is.null(lookup)) {
+      data <- data |> dplyr::left_join(lookup, by = "user_guid")
+    } else {
+      data$username <- NA_character_
     }
+    data <- data |>
+      dplyr::mutate(
+        username = ifelse(is.na(.data$username), "(unknown)", .data$username)
+      )
 
-    # Search filter (on user_guid)
+    # Search filter (matches username or GUID)
     if (nzchar(input$sessions_by_user_search)) {
       search_term <- tolower(input$sessions_by_user_search)
       data <- data |>
-        dplyr::filter(grepl(search_term, tolower(.data$user_guid)))
+        dplyr::filter(
+          grepl(search_term, tolower(.data$user_guid)) |
+            grepl(search_term, tolower(.data$username))
+        )
     }
 
-    data
+    if (nrow(data) == 0) {
+      return(data.frame())
+    }
+
+    wide <- data |>
+      dplyr::group_by(.data$username, .data$user_guid, .data$session_type) |>
+      dplyr::summarise(
+        sessions = sum(.data$sessions_started, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      tidyr::pivot_wider(
+        names_from = "session_type",
+        values_from = "sessions",
+        values_fill = 0L
+      )
+
+    type_cols <- sort(setdiff(names(wide), c("username", "user_guid")))
+    wide$Total <- rowSums(wide[type_cols])
+    wide[, c("username", "user_guid", type_cols, "Total")] |>
+      dplyr::arrange(dplyr::desc(.data$Total))
   })
 
   # Render table
   output$sessions_by_user_table <- DT::renderDataTable({
-    data <- filtered_sessions_by_user()
+    data <- user_summary_data()
 
     if (is.null(data) || nrow(data) == 0) {
       return(
@@ -1367,7 +1874,334 @@ sessions_by_user_server <- function(input, output, session, should_load) {
     }
 
     data |>
+      # GUID stays in the underlying data (and CSV download) but is not shown.
+      dplyr::select(-"user_guid") |>
+      DT::datatable(
+        colnames = c("Username" = "username"),
+        # Fill the card width (autoWidth would shrink the table to fit its
+        # content, leaving the card mostly empty with few columns).
+        width = "100%",
+        options = list(
+          pageLength = 25,
+          autoWidth = FALSE,
+          scrollX = TRUE,
+          # No built-in DataTables search box — each page provides at most
+          # one search/select control of its own.
+          dom = "lrtip"
+        ),
+        rownames = FALSE
+      )
+  })
+
+  # Download handler for the pivoted summary table
+  output$download_user_summary <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_user_summary_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_summary_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+}
+
+# ==============================================
+# Sessions → User Detail UI/Server
+# ==============================================
+
+sessions_user_detail_ui <- bslib::card(
+  bslib::card_header("Filters"),
+  bslib::layout_columns(
+    col_widths = c(6, 6),
+    shiny::selectizeInput(
+      "user_detail_user",
+      "User:",
+      choices = NULL,
+      options = list(placeholder = "Select a user")
+    ),
+    shiny::dateRangeInput(
+      "user_detail_date_range",
+      "Date Range:",
+      start = NULL,
+      end = NULL,
+      format = "yyyy-mm-dd"
+    )
+  ),
+  bslib::layout_columns(
+    col_widths = c(3, 3, 3, 3),
+    bslib::value_box(
+      title = "Total Sessions",
+      max_height = "120px",
+      value = shiny::textOutput("user_detail_sessions_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
+    ),
+    bslib::value_box(
+      title = "Total Session Hours",
+      max_height = "120px",
+      value = shiny::textOutput("user_detail_hours_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
+    ),
+    bslib::value_box(
+      title = "Median Duration",
+      max_height = "120px",
+      value = shiny::textOutput("user_detail_median_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
+    ),
+    bslib::value_box(
+      title = "Last Active",
+      max_height = "120px",
+      value = shiny::textOutput("user_detail_last_active_value"),
+      theme = bslib::value_box_theme(bg = BRAND_COLORS$GRAY)
+    )
+  ),
+  bslib::card(
+    bslib::card_header("Session Timeline"),
+    shinycssloaders::withSpinner(
+      plotly::plotlyOutput("user_detail_timeline_plot")
+    )
+  ),
+  bslib::card(
+    card_header_with_download("Sessions", "download_user_detail_sessions"),
+    shinycssloaders::withSpinner(
+      DT::dataTableOutput("user_detail_sessions_table")
+    )
+  )
+)
+
+sessions_user_detail_server <- function(
+  input,
+  output,
+  session,
+  duration_data,
+  user_list_data
+) {
+  # Populate the searchable user dropdown (single user at a time, no "All").
+  # Options are labeled with usernames from the latest user list snapshot so
+  # users can be found by name or GUID.
+  shiny::observe({
+    data <- duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return()
+    }
+
+    users <- sort(unique(data$user_guid))
+    labels <- users
+    lookup <- username_lookup(user_list_data())
+    if (!is.null(lookup)) {
+      idx <- match(users, lookup$user_guid)
+      found <- !is.na(idx)
+      labels[found] <- paste0(
+        lookup$username[idx[found]],
+        " (",
+        users[found],
+        ")"
+      )
+    }
+
+    current <- shiny::isolate(input$user_detail_user)
+    selected <- if (!is.null(current) && current %in% users) {
+      current
+    } else {
+      users[1]
+    }
+
+    shiny::updateSelectizeInput(
+      session,
+      "user_detail_user",
+      choices = stats::setNames(users, labels),
+      selected = selected,
+      server = TRUE
+    )
+  })
+
+  # Set default date range on first data load only (full loaded range, like
+  # the other pages; skip on reloads to preserve the user's selection).
+  date_init_done <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    data <- duration_data()
+    if (date_init_done() || is.null(data) || nrow(data) == 0) {
+      return()
+    }
+
+    dated_rows <- data |> dplyr::filter(!is.na(date))
+    if (nrow(dated_rows) == 0) {
+      return()
+    }
+
+    max_date <- max(dated_rows$date, na.rm = TRUE)
+    min_date <- min(dated_rows$date, na.rm = TRUE)
+
+    shiny::updateDateRangeInput(
+      session,
+      "user_detail_date_range",
+      start = initial_date_start(min_date),
+      end = max_date,
+      max = max_date
+    )
+    date_init_done(TRUE)
+  })
+
+  # Session rows for the selected user within the date range (scopes every
+  # output on this page: value boxes, timeline, and the sessions table),
+  # with username attached.
+  user_sessions <- shiny::reactive({
+    data <- duration_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+    shiny::req(input$user_detail_user)
+    shiny::req(input$user_detail_date_range)
+    data <- data |>
+      dplyr::filter(
+        .data$user_guid == input$user_detail_user,
+        date >= input$user_detail_date_range[1],
+        date <= input$user_detail_date_range[2]
+      )
+
+    data <- data |> dplyr::select(-dplyr::any_of("username"))
+    lookup <- username_lookup(user_list_data())
+    if (!is.null(lookup)) {
+      data <- data |> dplyr::left_join(lookup, by = "user_guid")
+    } else {
+      data$username <- NA_character_
+    }
+    data |>
       dplyr::mutate(
+        username = ifelse(is.na(.data$username), "(unknown)", .data$username)
+      )
+  })
+
+  # Totals for the selected user
+  output$user_detail_sessions_value <- shiny::renderText({
+    data <- user_sessions()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    prettyNum(nrow(data), big.mark = ",")
+  })
+
+  output$user_detail_hours_value <- shiny::renderText({
+    data <- user_sessions()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    format_total_hours(sum(data$duration_seconds, na.rm = TRUE))
+  })
+
+  output$user_detail_median_value <- shiny::renderText({
+    data <- user_sessions()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    format_duration_secs(stats::median(data$duration_seconds, na.rm = TRUE))
+  })
+
+  output$user_detail_last_active_value <- shiny::renderText({
+    data <- user_sessions()
+    if (is.null(data) || nrow(data) == 0) {
+      return("-")
+    }
+    last_seen <- suppressWarnings(max(data$session_ended_at, na.rm = TRUE))
+    if (!is.finite(as.numeric(last_seen))) {
+      return("-")
+    }
+    format(last_seen, "%b %d, %Y")
+  })
+
+  # Gantt-style timeline: one horizontal segment per session, ordered by start
+  # time, colored by session type.
+  output$user_detail_timeline_plot <- plotly::renderPlotly({
+    data <- user_sessions()
+    if (is.null(data) || nrow(data) == 0) {
+      return(sessions_empty_plot(
+        "No sessions in selected date range",
+        "Adjust the timeline date range to see more sessions"
+      ))
+    }
+
+    plot_data <- data |>
+      dplyr::filter(
+        !is.na(.data$session_started_at),
+        !is.na(.data$session_ended_at)
+      ) |>
+      dplyr::arrange(.data$session_started_at) |>
+      dplyr::mutate(lane = dplyr::row_number())
+
+    if (nrow(plot_data) == 0) {
+      return(sessions_empty_plot("No sessions in selected date range", ""))
+    }
+
+    # format_duration_secs() is scalar; precompute the tooltip labels.
+    plot_data$duration_label <- vapply(
+      as.numeric(plot_data$duration_seconds),
+      format_duration_secs,
+      character(1)
+    )
+
+    types <- sort(unique(plot_data$session_type))
+    pal <- stats::setNames(
+      rep(SESSION_PALETTE, length.out = length(types)),
+      types
+    )
+
+    p <- suppressWarnings(
+      ggplot2::ggplot(
+        plot_data,
+        ggplot2::aes(
+          x = .data$session_started_at,
+          xend = .data$session_ended_at,
+          y = .data$lane,
+          yend = .data$lane,
+          color = .data$session_type,
+          text = paste0(
+            format(.data$session_started_at, "%B %d, %Y %H:%M"),
+            "<br>",
+            .data$session_type,
+            "<br>Duration: ",
+            .data$duration_label,
+            "<br>Exit: ",
+            .data$exit_reason
+          )
+        )
+      ) +
+        ggplot2::geom_segment(linewidth = 2) +
+        ggplot2::theme_minimal() +
+        ggplot2::labs(x = "", y = "", color = "") +
+        ggplot2::scale_color_manual(values = pal) +
+        ggplot2::theme(
+          axis.text.y = ggplot2::element_blank(),
+          panel.grid.major.y = ggplot2::element_blank(),
+          panel.grid.minor.y = ggplot2::element_blank()
+        )
+    )
+
+    plotly::ggplotly(p, tooltip = "text") |>
+      plotly::layout(
+        xaxis = list(fixedrange = TRUE),
+        yaxis = list(fixedrange = TRUE),
+        legend = list(orientation = "h", x = 0.5, xanchor = "center")
+      ) |>
+      plotly::config(displayModeBar = FALSE)
+  })
+
+  # Session-level table for the selected user.
+  user_detail_table_data <- shiny::reactive({
+    data <- user_sessions()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::arrange(dplyr::desc(.data$session_started_at)) |>
+      dplyr::mutate(
+        duration = vapply(
+          as.numeric(.data$duration_seconds),
+          format_duration_secs,
+          character(1)
+        ),
         environment = ifelse(
           is.na(.data$environment) |
             .data$environment == "" |
@@ -1376,32 +2210,78 @@ sessions_by_user_server <- function(input, output, session, should_load) {
           .data$environment
         )
       ) |>
-      dplyr::arrange(dplyr::desc(.data$sessions_started)) |>
       dplyr::select(
-        "user_guid",
+        "username",
+        "session_started_at",
+        "session_ended_at",
         "session_type",
+        "duration",
         "environment",
-        "sessions_started",
-        "median_startup_duration_ms",
-        "p95_startup_duration_ms"
-      ) |>
+        "exit_reason"
+      )
+  })
+
+  output$user_detail_sessions_table <- DT::renderDataTable({
+    data <- user_detail_table_data()
+
+    if (is.null(data) || nrow(data) == 0) {
+      return(
+        DT::datatable(
+          data.frame(
+            " " = "Data not available - Check that Chronicle data exists at the configured path."
+          ),
+          options = list(
+            dom = "t",
+            ordering = FALSE,
+            columnDefs = list(
+              list(className = "dt-center", targets = "_all")
+            )
+          ),
+          rownames = FALSE,
+          colnames = ""
+        )
+      )
+    }
+
+    data |>
       DT::datatable(
         colnames = c(
-          "User" = "user_guid",
+          "Username" = "username",
+          "Started" = "session_started_at",
+          "Ended" = "session_ended_at",
           "Session Type" = "session_type",
+          "Duration" = "duration",
           "Environment" = "environment",
-          "Sessions Started" = "sessions_started",
-          "Median Startup (ms)" = "median_startup_duration_ms",
-          "P95 Startup (ms)" = "p95_startup_duration_ms"
+          "Exit Reason" = "exit_reason"
         ),
+        # Fill the card width (autoWidth would shrink the table to fit its
+        # content, leaving the card mostly empty).
+        width = "100%",
         options = list(
           pageLength = 25,
-          autoWidth = TRUE,
-          scrollX = TRUE
+          autoWidth = FALSE,
+          scrollX = TRUE,
+          # No built-in DataTables search box — each page provides at most
+          # one search/select control of its own.
+          dom = "lrtip"
         ),
         rownames = FALSE
       )
   })
+
+  # Download handler for the user's sessions
+  output$download_user_detail_sessions <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_user_detail_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_sessions()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -1429,7 +2309,21 @@ ui <- bslib::page_navbar(
       sessions_overview_ui,
       value = "sessions_overview"
     ),
-    bslib::nav_panel("By User", sessions_by_user_ui, value = "sessions_by_user")
+    bslib::nav_panel(
+      "Duration",
+      sessions_duration_ui,
+      value = "sessions_duration"
+    ),
+    bslib::nav_panel(
+      "User Summary",
+      sessions_by_user_ui,
+      value = "sessions_by_user"
+    ),
+    bslib::nav_panel(
+      "User Detail",
+      sessions_user_detail_ui,
+      value = "sessions_user_detail"
+    )
   )
 )
 
@@ -1438,19 +2332,53 @@ ui <- bslib::page_navbar(
 # ==============================================
 
 server <- function(input, output, session) {
-  # Deferred loading: only load user list data when the tab is first visited
+  # Latest user list snapshot (one date partition), shared by Users → User
+  # List and the Sessions → User Summary / User Detail username lookups.
+  # Deferred until a tab that needs it is first visited.
   should_load_user_list <- shiny::reactiveVal(FALSE)
   shiny::observe({
-    if (!should_load_user_list() && input$main_nav == "user_list") {
+    user_list_tabs <- c(
+      "user_list",
+      "sessions_by_user",
+      "sessions_user_detail"
+    )
+    if (!should_load_user_list() && input$main_nav %in% user_list_tabs) {
       should_load_user_list(TRUE)
     }
+  })
+
+  user_list_data <- shiny::reactive({
+    shiny::req(should_load_user_list())
+    tryCatch(
+      {
+        data <- chronicle_data("workbench/user_list", base_path)
+
+        # Find max_date in Arrow (reads only parquet metadata), then collect
+        # just that partition instead of all historical snapshots
+        max_date_result <- data |>
+          dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+          dplyr::collect()
+        if (nrow(max_date_result) == 0) {
+          return(data |> dplyr::head(0) |> dplyr::collect())
+        }
+        max_date <- max_date_result$max_date
+
+        data |>
+          dplyr::filter(date == max_date) |>
+          dplyr::collect()
+      },
+      error = function(e) {
+        message("Error loading user list: ", e$message)
+        NULL
+      }
+    )
   })
 
   # Users → Overview
   users_overview_server(input, output, session)
 
   # Users → User List
-  user_list_server(input, output, session, should_load_user_list)
+  user_list_server(input, output, session, user_list_data)
 
   # Sessions → Overview: load session totals deferred until the tab is visited.
   # The loaded range expands when the date selector extends beyond it (only the
@@ -1501,9 +2429,86 @@ server <- function(input, output, session) {
     }
   })
 
-  sessions_overview_server(input, output, session, sessions_data)
+  # Session-level duration data, shared by Sessions → Overview (summary value
+  # boxes), Sessions → Duration (charts), and Sessions → User Detail. Loaded
+  # deferred when any of those tabs is first visited; the loaded range expands
+  # when a date selector extends beyond it.
+  should_load_duration <- shiny::reactiveVal(FALSE)
+  shiny::observe({
+    duration_tabs <- c(
+      "sessions_overview",
+      "sessions_duration",
+      "sessions_user_detail"
+    )
+    if (!should_load_duration() && input$main_nav %in% duration_tabs) {
+      should_load_duration(TRUE)
+    }
+  })
 
-  # Sessions → By User: load the latest by-user snapshot deferred until visited.
+  duration_initial_range <- if (!is.null(data_window_cutoff)) {
+    list(min = data_window_cutoff, max = Sys.Date())
+  }
+  duration_range <- shiny::reactiveVal(duration_initial_range)
+
+  duration_data <- shiny::reactive({
+    shiny::req(should_load_duration())
+    range <- duration_range()
+    tryCatch(
+      {
+        ds <- chronicle_data("workbench/session_duration", base_path)
+        if (!is.null(range)) {
+          range_min <- range$min
+          range_max <- range$max
+          ds <- ds |> dplyr::filter(date >= range_min, date <= range_max)
+        }
+        ds |> dplyr::collect()
+      },
+      error = function(e) {
+        message("Error loading session duration: ", e$message)
+        NULL
+      }
+    )
+  })
+
+  shiny::observe({
+    overview_val <- input$sessions_overview_date_range
+    duration_val <- input$sessions_duration_date_range
+    detail_val <- input$user_detail_date_range
+    date_vals <- c(overview_val, duration_val, detail_val)
+    date_vals <- date_vals[!is.na(date_vals)]
+    shiny::req(length(date_vals) > 0)
+    range <- duration_range()
+    if (is.null(range)) {
+      return()
+    }
+    new_min <- min(range$min, date_vals)
+    new_max <- max(range$max, date_vals)
+    if (new_min < range$min || new_max > range$max) {
+      duration_range(list(min = new_min, max = new_max))
+    }
+  })
+
+  sessions_overview_server(
+    input,
+    output,
+    session,
+    sessions_data,
+    duration_data
+  )
+
+  # Sessions → Duration
+  sessions_duration_server(input, output, session, duration_data)
+
+  # Sessions → User Detail
+  sessions_user_detail_server(
+    input,
+    output,
+    session,
+    duration_data,
+    user_list_data
+  )
+
+  # Sessions → User Summary: load the by-user totals deferred until visited.
   should_load_sessions_by_user <- shiny::reactiveVal(FALSE)
   shiny::observe({
     if (
@@ -1518,7 +2523,8 @@ server <- function(input, output, session) {
     input,
     output,
     session,
-    should_load_sessions_by_user
+    should_load_sessions_by_user,
+    user_list_data
   )
 }
 

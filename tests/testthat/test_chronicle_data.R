@@ -75,13 +75,15 @@ test_that("chronicle_data loads workbench session start totals", {
   # Data types and sanity checks
   expect_s3_class(collected$date, "Date")
   expect_type(collected$sessions_started, "integer")
-  expect_true(all(collected$sessions_started >= 0))
+  # Groups only exist where sessions occurred (derived from session-level rows)
+  expect_true(all(collected$sessions_started >= 1))
   # p95 should be >= median for every group
   expect_true(all(
     collected$p95_startup_duration_ms >= collected$median_startup_duration_ms
   ))
-  # 30 days x 3 environments x 4 session types
-  expect_equal(nrow(collected), 30 * 3 * 4)
+  # At most one row per (environment, session type) per day over 30 days
+  expect_gt(nrow(collected), 0)
+  expect_lte(nrow(collected), 30 * 3 * 4)
 })
 
 test_that("chronicle_data loads workbench session start totals by user", {
@@ -124,6 +126,94 @@ test_that("chronicle_data loads workbench session start totals by user", {
   }
   # 12 sample users
   expect_equal(length(unique(collected$user_guid)), 12)
+})
+
+test_that("chronicle_data loads workbench session duration", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+
+  data <- chronicle_data("workbench/session_duration", base_path)
+  collected <- dplyr::collect(data)
+
+  # Expected columns (session-level rows)
+  expect_true(all(
+    c(
+      "host_name",
+      "environment",
+      "user_guid",
+      "session_type",
+      "session_id",
+      "duration_seconds",
+      "session_started_at",
+      "session_ended_at",
+      "exit_code",
+      "exit_reason",
+      "date"
+    ) %in%
+      names(collected)
+  ))
+
+  # Data types and sanity checks
+  expect_s3_class(collected$date, "Date")
+  expect_type(collected$duration_seconds, "integer")
+  expect_true(all(collected$duration_seconds > 0))
+  expect_s3_class(collected$session_started_at, "POSIXct")
+  expect_s3_class(collected$session_ended_at, "POSIXct")
+  # Ended-at must always follow started-at by exactly the duration.
+  expect_equal(
+    as.numeric(
+      collected$session_ended_at - collected$session_started_at,
+      units = "secs"
+    ),
+    as.numeric(collected$duration_seconds)
+  )
+  # Exit reasons drawn from the expected set
+  expect_true(all(
+    collected$exit_reason %in%
+      c(
+        "NormalExit",
+        "Killed",
+        "Crashed",
+        "MemoryLimitExceeded",
+        "TooManyOpenFiles",
+        "NotEnoughMemory",
+        "Unknown"
+      )
+  ))
+  # 12 sample users, matching the by-user dataset
+  expect_equal(length(unique(collected$user_guid)), 12)
+
+  # Every session user resolves to a username via the user list (the apps
+  # join user_guid -> user_list$id for display).
+  user_list <- chronicle_data("workbench/user_list", base_path) |>
+    dplyr::collect()
+  expect_true(all(collected$user_guid %in% user_list$id))
+
+  # All three session datasets are derived from the same master sessions, so
+  # the startup totals must count exactly the sessions in session_duration.
+  totals <- chronicle_data("workbench/session_start_totals", base_path) |>
+    dplyr::collect()
+  expect_equal(sum(totals$sessions_started), nrow(collected))
+
+  by_user <- chronicle_data(
+    "workbench/session_start_totals_by_user",
+    base_path
+  ) |>
+    dplyr::collect()
+  expect_equal(sum(by_user$sessions_started), nrow(collected))
+
+  # Per-user, per-type session counts agree between the two datasets.
+  duration_counts <- table(collected$user_guid, collected$session_type)
+  for (u in rownames(duration_counts)) {
+    for (st in colnames(duration_counts)) {
+      expect_equal(
+        sum(by_user$sessions_started[
+          by_user$user_guid == u & by_user$session_type == st
+        ]),
+        as.integer(duration_counts[u, st])
+      )
+    }
+  }
 })
 
 test_that("chronicle_data supports date filtering", {
