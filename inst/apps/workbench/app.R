@@ -1967,7 +1967,12 @@ sessions_user_detail_ui <- bslib::card(
     "user_detail_user",
     "User:",
     choices = NULL,
-    options = list(placeholder = "Select a user")
+    # Labels show the username only, but the option value is the user GUID, so
+    # searching both fields keeps users findable by GUID as well as name.
+    options = list(
+      placeholder = "Select a user",
+      searchField = c("label", "value")
+    )
   ),
   bslib::layout_columns(
     col_widths = c(3, 3, 3, 3),
@@ -2019,7 +2024,10 @@ sessions_user_detail_server <- function(
 ) {
   # Populate the searchable user dropdown (single user at a time, no "All").
   # Distinct users are computed in Arrow; options are labeled with usernames
-  # from the latest user list snapshot so users can be found by name or GUID.
+  # from the latest user list snapshot. The option value is the GUID and the
+  # input searches both fields, so users can be found by name or GUID even
+  # though only the username is shown. Users with no matching username fall
+  # back to showing their GUID as the label.
   shiny::observe({
     ds <- duration_data()
     if (is.null(ds)) {
@@ -2040,12 +2048,7 @@ sessions_user_detail_server <- function(
     if (!is.null(lookup)) {
       idx <- match(users, lookup$user_guid)
       found <- !is.na(idx)
-      labels[found] <- paste0(
-        lookup$username[idx[found]],
-        " (",
-        users[found],
-        ")"
-      )
+      labels[found] <- lookup$username[idx[found]]
     }
 
     current <- shiny::isolate(input$user_detail_user)
