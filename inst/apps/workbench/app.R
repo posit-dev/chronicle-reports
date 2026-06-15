@@ -1279,7 +1279,7 @@ sessions_duration_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     bslib::value_box(
-      title = "Sessions Completed (range)",
+      title = "Sessions Completed",
       max_height = "120px",
       value = shiny::textOutput("duration_sessions_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
