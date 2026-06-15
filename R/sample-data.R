@@ -949,93 +949,111 @@ sample_workbench_user_list_internal <- function() {
   )
 }
 
+#' Aggregate the master session table into daily startup totals, optionally
+#' per user. Every STARTED session is counted here (including sessions that are
+#' still running), and startup percentiles are computed from the same rows.
+#' workbench/session_duration covers only the sessions that have ENDED, so the
+#' startup totals are always >= the session_duration row counts.
+#' @noRd
+derive_wb_session_starts_internal <- function(master, by_user = FALSE) {
+  keys <- c(
+    "environment",
+    if (by_user) c("user_guid", "username"),
+    "session_type",
+    "date"
+  )
+
+  groups <- split(
+    master,
+    do.call(interaction, c(master[keys], drop = TRUE))
+  )
+  rows <- lapply(groups, function(g) {
+    out <- g[1, keys, drop = FALSE]
+    out$sessions_started <- nrow(g)
+    out$median_startup_duration_ms <- as.integer(round(
+      stats::median(g$startup_duration_ms)
+    ))
+    out$p95_startup_duration_ms <- as.integer(round(
+      stats::quantile(g$startup_duration_ms, probs = 0.95, names = FALSE)
+    ))
+    out
+  })
+
+  result <- do.call(rbind, rows)
+  rownames(result) <- NULL
+  col_order <- c(
+    setdiff(keys, "date"),
+    "sessions_started",
+    "median_startup_duration_ms",
+    "p95_startup_duration_ms",
+    "date"
+  )
+  result[order(result$date), col_order]
+}
+
 #' @noRd
 sample_wb_session_starts_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
-  session_types <- c("RStudio Pro", "JupyterLab", "VS Code", "Positron")
-  environments <- c("Production", "Development", "Staging")
-
-  set.seed(123)
-
-  # Relative popularity of each session type and a typical startup time (ms).
-  type_volume <- c(
-    "RStudio Pro" = 40,
-    "JupyterLab" = 25,
-    "VS Code" = 18,
-    "Positron" = 12
+  derive_wb_session_starts_internal(
+    sample_wb_sessions_master_internal(),
+    by_user = FALSE
   )
-  type_median_ms <- c(
-    "RStudio Pro" = 3200,
-    "JupyterLab" = 4500,
-    "VS Code" = 2100,
-    "Positron" = 2600
-  )
-  env_scale <- c("Production" = 1.0, "Development" = 0.5, "Staging" = 0.25)
-
-  rows <- list()
-  for (di in seq_along(dates)) {
-    date <- dates[di]
-    weekday_factor <- calculate_weekday_factor(date)
-    for (env in environments) {
-      for (st in session_types) {
-        sessions_started <- max(
-          0L,
-          as.integer(round(
-            type_volume[[st]] *
-              env_scale[[env]] *
-              weekday_factor *
-              runif(1, 0.8, 1.2)
-          ))
-        )
-
-        median_ms <- as.integer(round(
-          type_median_ms[[st]] * runif(1, 0.85, 1.15)
-        ))
-        p95_ms <- if (sessions_started <= 1L) {
-          median_ms
-        } else {
-          as.integer(round(median_ms * runif(1, 1.8, 2.6)))
-        }
-
-        rows[[length(rows) + 1]] <- data.frame(
-          environment = env,
-          session_type = st,
-          sessions_started = sessions_started,
-          median_startup_duration_ms = median_ms,
-          p95_startup_duration_ms = p95_ms,
-          date = date,
-          stringsAsFactors = FALSE
-        )
-      }
-    }
-  }
-
-  do.call(rbind, rows)
 }
 
 #' @noRd
 sample_wb_session_starts_user_internal <- function() {
+  derive_wb_session_starts_internal(
+    sample_wb_sessions_master_internal(),
+    by_user = TRUE
+  )
+}
+
+#' Session-level master table for the Workbench session sample datasets.
+#' session_duration, session_start_totals, and session_start_totals_by_user
+#' are all derived from these rows. The start totals count every session that
+#' STARTED; session_duration includes only the subset that has ENDED, so the
+#' started counts are >= the ended counts (some sessions are still running).
+#'
+#' Everything is drawn per session in one pass per user per day: each user
+#' habitually uses one or two session types and works mostly in a primary
+#' environment, with occasional sessions in the other environments.
+#' @noRd
+sample_wb_sessions_master_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   session_types <- c("RStudio Pro", "JupyterLab", "VS Code", "Positron")
+  environments <- c("Production", "Development", "Staging")
+  env_hosts <- c(
+    "Production" = "wb-prod-01",
+    "Development" = "wb-dev-01",
+    "Staging" = "wb-staging-01"
+  )
 
-  set.seed(321)
+  set.seed(456)
 
-  # Use the same pool as sample_workbench_user_list_internal() so names
-  # in Sessions → By User match the Users → User List.
+  # Same user pool as the Workbench user list so identities line up.
   wb_pool <- generate_workbench_user_pool()
   n_users <- 12
   users <- wb_pool[seq_len(n_users), ]
-  user_envs <- c(
-    rep("Production", 5),
-    rep("Development", 4),
-    rep("Staging", 3)
-  )
-  # Each user habitually uses one or two session types.
+
   user_types <- lapply(seq_len(n_users), function(u) {
     sample(session_types, sample(1:2, 1))
   })
+  user_primary_env <- sample(
+    environments,
+    n_users,
+    replace = TRUE,
+    prob = c(0.5, 0.3, 0.2)
+  )
 
-  type_median_ms <- c(
+  # Typical session length (seconds) per type; durations drawn log-normally
+  # around these so most sessions are short with a long right tail.
+  type_typical_secs <- c(
+    "RStudio Pro" = 3600,
+    "JupyterLab" = 5400,
+    "VS Code" = 2700,
+    "Positron" = 3000
+  )
+  # Typical startup duration (ms) per type; tighter spread than run length.
+  type_startup_ms <- c(
     "RStudio Pro" = 3200,
     "JupyterLab" = 4500,
     "VS Code" = 2100,
@@ -1047,36 +1065,144 @@ sample_wb_session_starts_user_internal <- function() {
     date <- dates[di]
     weekday_factor <- calculate_weekday_factor(date)
     for (u in seq_len(n_users)) {
-      for (st in user_types[[u]]) {
-        sessions_started <- max(
-          1L,
-          as.integer(round(runif(1, 1, 6) * weekday_factor))
-        )
-        median_ms <- as.integer(round(
-          type_median_ms[[st]] * runif(1, 0.8, 1.2)
-        ))
-        p95_ms <- if (sessions_started <= 1L) {
-          median_ms
-        } else {
-          as.integer(round(median_ms * runif(1, 1.5, 2.5)))
-        }
-
-        rows[[length(rows) + 1]] <- data.frame(
-          environment = user_envs[u],
-          user_guid = users$id[u],
-          username = users$username[u],
-          session_type = st,
-          sessions_started = sessions_started,
-          median_startup_duration_ms = median_ms,
-          p95_startup_duration_ms = p95_ms,
-          date = date,
-          stringsAsFactors = FALSE
-        )
+      n_sessions <- as.integer(round(runif(1, 0, 6) * weekday_factor))
+      if (n_sessions == 0L) {
+        next
       }
+
+      # Per-session draws: a habitual session type, and the user's primary
+      # environment three times out of four.
+      st <- sample(user_types[[u]], n_sessions, replace = TRUE)
+      env <- ifelse(
+        runif(n_sessions) < 0.75,
+        user_primary_env[u],
+        sample(environments, n_sessions, replace = TRUE)
+      )
+
+      duration_secs <- pmax(
+        30L,
+        as.integer(round(
+          stats::rlnorm(
+            n_sessions,
+            meanlog = log(type_typical_secs[st]),
+            sdlog = 0.9
+          )
+        ))
+      )
+      startup_ms <- pmax(
+        200L,
+        as.integer(round(
+          stats::rlnorm(
+            n_sessions,
+            meanlog = log(type_startup_ms[st]),
+            sdlog = 0.35
+          )
+        ))
+      )
+      started_at <- as.POSIXct(date, tz = "UTC") +
+        sample(3600 * 8:17, n_sessions, replace = TRUE) +
+        sample(0:3599, n_sessions, replace = TRUE)
+
+      rows[[length(rows) + 1]] <- data.frame(
+        host_name = unname(env_hosts[env]),
+        environment = env,
+        user_guid = users$id[u],
+        username = users$username[u],
+        session_type = st,
+        session_id = sprintf(
+          "%08x",
+          sample.int(.Machine$integer.max, n_sessions)
+        ),
+        duration_seconds = duration_secs,
+        startup_duration_ms = startup_ms,
+        session_started_at = started_at,
+        session_ended_at = started_at + duration_secs,
+        date = date,
+        stringsAsFactors = FALSE
+      )
     }
   }
 
-  do.call(rbind, rows)
+  combined <- do.call(rbind, rows)
+
+  # Not every started session has ended by the time data is captured. Real
+  # Workbench deployments always have sessions still running, so the number of
+  # sessions STARTED exceeds the number that have ENDED. Recent sessions are
+  # far more likely to still be active, with a small baseline of long-lived
+  # sessions left open on earlier days. Still-running sessions count toward
+  # session_start_totals (they did start) but are excluded from
+  # session_duration (they have no end time, duration, or exit outcome yet).
+  days_from_end <- as.integer(max(dates) - as.Date(combined$date))
+  still_running_prob <- 0.03 + 0.25 * exp(-days_from_end / 2.5)
+  running <- stats::runif(nrow(combined)) < still_running_prob
+
+  # Guarantee at least a handful of still-running sessions (forcing the most
+  # recent ones) so the started > ended gap is always present, even if the
+  # random draw happens to produce none.
+  min_running <- 10L
+  if (sum(running) < min_running) {
+    recent <- order(combined$session_started_at, decreasing = TRUE)
+    running[recent[seq_len(min_running)]] <- TRUE
+  }
+  combined$ended <- !running
+
+  # Running sessions have no recorded end time or final duration yet.
+  combined$session_ended_at[running] <- NA
+  combined$duration_seconds[running] <- NA_integer_
+
+  # Assign exit outcomes to the sessions that have ENDED, across that subset
+  # rather than per session so every reason is guaranteed to appear. Reasons
+  # match the set Workbench reports for session exits; counts stay roughly
+  # proportional to the weights below, with a floor so even the rare reasons
+  # show up.
+  exit_reasons <- c(
+    "NormalExit",
+    "Killed",
+    "Crashed",
+    "MemoryLimitExceeded",
+    "TooManyOpenFiles",
+    "NotEnoughMemory",
+    "Unknown"
+  )
+  exit_codes <- c(0L, 137L, 139L, 137L, 24L, 12L, NA_integer_)
+  exit_weights <- c(0.80, 0.05, 0.04, 0.04, 0.03, 0.02, 0.02)
+
+  ended_idx <- which(combined$ended)
+  n_ended <- length(ended_idx)
+  min_each <- 5L
+  counts <- pmax(as.integer(round(exit_weights * n_ended)), min_each)
+  # NormalExit absorbs the rounding/floor difference so counts sum to n_ended.
+  counts[1] <- counts[1] + (n_ended - sum(counts))
+
+  exit_idx <- sample(rep(seq_along(exit_reasons), times = counts))
+  combined$exit_code <- NA_integer_
+  combined$exit_reason <- NA_character_
+  combined$exit_code[ended_idx] <- exit_codes[exit_idx]
+  combined$exit_reason[ended_idx] <- exit_reasons[exit_idx]
+
+  combined
+}
+
+#' @noRd
+sample_wb_session_duration_internal <- function() {
+  master <- sample_wb_sessions_master_internal()
+  # Only sessions that have ended appear in the duration dataset; still-running
+  # sessions have no end time, duration, or exit outcome yet.
+  master <- master[master$ended, , drop = FALSE]
+  rownames(master) <- NULL
+  master[, c(
+    "host_name",
+    "environment",
+    "user_guid",
+    "session_type",
+    "session_id",
+    "duration_seconds",
+    "session_started_at",
+    "session_ended_at",
+    "exit_code",
+    "exit_reason",
+    "date"
+  )]
 }
 
 #' @noRd
@@ -1189,6 +1315,12 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_wb_session_starts_user_internal(),
     base_path,
     "workbench/session_start_totals_by_user"
+  )
+
+  write_sample_parquet_internal(
+    sample_wb_session_duration_internal(),
+    base_path,
+    "workbench/session_duration"
   )
 
   base_path

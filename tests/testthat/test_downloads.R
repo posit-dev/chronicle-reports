@@ -507,13 +507,24 @@ test_that("Workbench: user list download works", {
   on.exit(unlink(base_path, recursive = TRUE))
   env <- source_app_env("workbench", base_path)
 
-  should_load <- shiny::reactive(TRUE)
+  # user_list_server takes the shared user-list snapshot reactive (loaded by
+  # the main server in the app); recreate it here from the sample data.
+  user_list_data <- shiny::reactive({
+    ds <- chronicle_data("workbench/user_list", base_path)
+    max_date <- ds |>
+      dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
+      dplyr::collect() |>
+      dplyr::pull(max_date)
+    ds |>
+      dplyr::filter(date == max_date) |>
+      dplyr::collect()
+  })
   wb_list_server <- function(input, output, session) {
     env$user_list_server(
       input,
       output,
       session,
-      should_load
+      user_list_data
     )
   }
 
