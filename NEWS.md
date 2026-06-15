@@ -5,7 +5,7 @@
 * Added Workbench session reporting. These new reports require additional curated datasets: `workbench/session_start_totals`, `workbench/session_start_totals_by_user` and `workbench/session_duration` available in Workbench 2026.06.0 and later.
 * Added CSV download buttons to the Connect and Workbench dashboards so users can export the data behind tables and charts.
 * Published the `connect` and `workbench` apps as Posit Connect Gallery extensions for direct installation from the Connect Gallery.
-* Adds support for Posit Connect's AWS service-account OAuth integration
+* Added support for Posit Connect's AWS service-account OAuth integration.
 
 ## Breaking Changes
 
