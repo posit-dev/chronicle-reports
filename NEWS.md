@@ -9,8 +9,7 @@
 
 ## Breaking Changes
 
-* The Connect Usage report now reads the new `connect/content_hits_totals` and `connect/content_hits_totals_by_user` datasets, and the previous visits-based content usage view has been removed.
-* As a result, this version requires data from Chronicle running in Connect and Workbench versions 2026.06.0 and later. Pointing the dashboards at older Chronicle data will cause the affected reports to fail to load.
+* The Connect Usage report now reads the new `connect/content_hits_totals` and `connect/content_hits_totals_by_user` datasets, and the previous visits-based content usage view has been removed. As a result, this version requires data from Chronicle running in Connect and Workbench versions 2026.06.0 and later. Pointing the dashboards at older Chronicle data will cause the affected reports to fail to load.
 
 # chronicle.reports 0.2.2
 * Added `CHRONICLE_DATA_WINDOW` environment variable to control the amount of data loaded on startup, significantly reducing startup time for large datasets in S3. When not set, all available data is loaded. Date range input changes automatically load additional data so all historical data remains accessible.
