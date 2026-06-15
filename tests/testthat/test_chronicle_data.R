@@ -189,24 +189,27 @@ test_that("chronicle_data loads workbench session duration", {
     dplyr::collect()
   expect_true(all(collected$user_guid %in% user_list$id))
 
-  # All three session datasets are derived from the same master sessions, so
-  # the startup totals must count exactly the sessions in session_duration.
+  # All three session datasets are derived from the same master sessions. Every
+  # STARTED session is counted in the startup totals, while session_duration
+  # holds only the sessions that have ENDED, so the started totals must be at
+  # least the session_duration row count -- and strictly greater, because some
+  # sessions are always still running (not all started sessions have ended).
   totals <- chronicle_data("workbench/session_start_totals", base_path) |>
     dplyr::collect()
-  expect_equal(sum(totals$sessions_started), nrow(collected))
+  expect_gt(sum(totals$sessions_started), nrow(collected))
 
   by_user <- chronicle_data(
     "workbench/session_start_totals_by_user",
     base_path
   ) |>
     dplyr::collect()
-  expect_equal(sum(by_user$sessions_started), nrow(collected))
+  expect_gt(sum(by_user$sessions_started), nrow(collected))
 
-  # Per-user, per-type session counts agree between the two datasets.
+  # Per-user, per-type started counts are always >= the ended (duration) counts.
   duration_counts <- table(collected$user_guid, collected$session_type)
   for (u in rownames(duration_counts)) {
     for (st in colnames(duration_counts)) {
-      expect_equal(
+      expect_gte(
         sum(by_user$sessions_started[
           by_user$user_guid == u & by_user$session_type == st
         ]),

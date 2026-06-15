@@ -771,15 +771,15 @@ sessions_overview_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     bslib::value_box(
-      title = "Sessions Started (latest day)",
+      title = "Total Sessions Started",
       max_height = "120px",
-      value = shiny::textOutput("sessions_latest_value"),
+      value = shiny::textOutput("sessions_started_total_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
     ),
     bslib::value_box(
-      title = "Total Sessions",
+      title = "Total Sessions Ended",
       max_height = "120px",
-      value = shiny::textOutput("sessions_total_value"),
+      value = shiny::textOutput("sessions_ended_total_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
     ),
     bslib::value_box(
@@ -1095,16 +1095,6 @@ sessions_overview_server <- function(
     }
   }
 
-  # Latest-day rows (one per environment/session_type), environment-scoped.
-  latest_sessions_data <- shiny::reactive({
-    data <- sessions_data()
-    if (is.null(data) || nrow(data) == 0) {
-      return(NULL)
-    }
-    max_date <- max(data$date, na.rm = TRUE)
-    data |> dplyr::filter(date == max_date) |> apply_env_filter()
-  })
-
   # Date-range- and environment-scoped rows for the charts and range metrics.
   filtered_sessions_data <- shiny::reactive({
     data <- sessions_data()
@@ -1120,21 +1110,25 @@ sessions_overview_server <- function(
       apply_env_filter()
   })
 
-  # Value boxes (counts only — additive and therefore exact across groups).
-  output$sessions_latest_value <- shiny::renderText({
-    data <- latest_sessions_data()
+  # Total sessions started over the selected range/environment (sums are
+  # additive across groups, so this stays exact).
+  output$sessions_started_total_value <- shiny::renderText({
+    data <- filtered_sessions_data()
     if (is.null(data) || nrow(data) == 0) {
       return("-")
     }
     prettyNum(sum(data$sessions_started, na.rm = TRUE), big.mark = ",")
   })
 
-  output$sessions_total_value <- shiny::renderText({
-    data <- filtered_sessions_data()
-    if (is.null(data) || nrow(data) == 0) {
+  # Total sessions ended over the selected range/environment. Each
+  # session_duration row is one ended session (any exit_reason), so the count
+  # from overview_duration_summary() is the ended-session total.
+  output$sessions_ended_total_value <- shiny::renderText({
+    summary <- overview_duration_summary()
+    if (is.null(summary) || nrow(summary) == 0 || summary$sessions == 0) {
       return("-")
     }
-    prettyNum(sum(data$sessions_started, na.rm = TRUE), big.mark = ",")
+    prettyNum(summary$sessions, big.mark = ",")
   })
 
   # Total session time over the selected range and environment, aggregated in

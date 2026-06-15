@@ -950,8 +950,10 @@ sample_workbench_user_list_internal <- function() {
 }
 
 #' Aggregate the master session table into daily startup totals, optionally
-#' per user. Counts and percentiles are computed from the same session-level
-#' rows that back workbench/session_duration, so the datasets agree exactly.
+#' per user. Every STARTED session is counted here (including sessions that are
+#' still running), and startup percentiles are computed from the same rows.
+#' workbench/session_duration covers only the sessions that have ENDED, so the
+#' startup totals are always >= the session_duration row counts.
 #' @noRd
 derive_wb_session_starts_internal <- function(master, by_user = FALSE) {
   keys <- c(
@@ -1007,8 +1009,9 @@ sample_wb_session_starts_user_internal <- function() {
 
 #' Session-level master table for the Workbench session sample datasets.
 #' session_duration, session_start_totals, and session_start_totals_by_user
-#' are all derived from these rows, so every dataset describes the SAME
-#' sessions — counts and startup percentiles line up exactly across them.
+#' are all derived from these rows. The start totals count every session that
+#' STARTED; session_duration includes only the subset that has ENDED, so the
+#' started counts are >= the ended counts (some sessions are still running).
 #'
 #' Everything is drawn per session in one pass per user per day: each user
 #' habitually uses one or two session types and works mostly in a primary
@@ -1122,10 +1125,36 @@ sample_wb_sessions_master_internal <- function() {
 
   combined <- do.call(rbind, rows)
 
-  # Assign exit outcomes across the whole dataset rather than per session so
-  # every reason is guaranteed to appear. Reasons match the set Workbench
-  # reports for session exits; counts stay roughly proportional to the
-  # weights below, with a floor so even the rare reasons show up.
+  # Not every started session has ended by the time data is captured. Real
+  # Workbench deployments always have sessions still running, so the number of
+  # sessions STARTED exceeds the number that have ENDED. Recent sessions are
+  # far more likely to still be active, with a small baseline of long-lived
+  # sessions left open on earlier days. Still-running sessions count toward
+  # session_start_totals (they did start) but are excluded from
+  # session_duration (they have no end time, duration, or exit outcome yet).
+  days_from_end <- as.integer(max(dates) - as.Date(combined$date))
+  still_running_prob <- 0.03 + 0.25 * exp(-days_from_end / 2.5)
+  running <- stats::runif(nrow(combined)) < still_running_prob
+
+  # Guarantee at least a handful of still-running sessions (forcing the most
+  # recent ones) so the started > ended gap is always present, even if the
+  # random draw happens to produce none.
+  min_running <- 10L
+  if (sum(running) < min_running) {
+    recent <- order(combined$session_started_at, decreasing = TRUE)
+    running[recent[seq_len(min_running)]] <- TRUE
+  }
+  combined$ended <- !running
+
+  # Running sessions have no recorded end time or final duration yet.
+  combined$session_ended_at[running] <- NA
+  combined$duration_seconds[running] <- NA_integer_
+
+  # Assign exit outcomes to the sessions that have ENDED, across that subset
+  # rather than per session so every reason is guaranteed to appear. Reasons
+  # match the set Workbench reports for session exits; counts stay roughly
+  # proportional to the weights below, with a floor so even the rare reasons
+  # show up.
   exit_reasons <- c(
     "NormalExit",
     "Killed",
@@ -1138,15 +1167,18 @@ sample_wb_sessions_master_internal <- function() {
   exit_codes <- c(0L, 137L, 139L, 137L, 24L, 12L, NA_integer_)
   exit_weights <- c(0.80, 0.05, 0.04, 0.04, 0.03, 0.02, 0.02)
 
-  n_sessions <- nrow(combined)
+  ended_idx <- which(combined$ended)
+  n_ended <- length(ended_idx)
   min_each <- 5L
-  counts <- pmax(as.integer(round(exit_weights * n_sessions)), min_each)
-  # NormalExit absorbs the rounding/floor difference so counts sum to n.
-  counts[1] <- counts[1] + (n_sessions - sum(counts))
+  counts <- pmax(as.integer(round(exit_weights * n_ended)), min_each)
+  # NormalExit absorbs the rounding/floor difference so counts sum to n_ended.
+  counts[1] <- counts[1] + (n_ended - sum(counts))
 
   exit_idx <- sample(rep(seq_along(exit_reasons), times = counts))
-  combined$exit_code <- exit_codes[exit_idx]
-  combined$exit_reason <- exit_reasons[exit_idx]
+  combined$exit_code <- NA_integer_
+  combined$exit_reason <- NA_character_
+  combined$exit_code[ended_idx] <- exit_codes[exit_idx]
+  combined$exit_reason[ended_idx] <- exit_reasons[exit_idx]
 
   combined
 }
@@ -1154,6 +1186,10 @@ sample_wb_sessions_master_internal <- function() {
 #' @noRd
 sample_wb_session_duration_internal <- function() {
   master <- sample_wb_sessions_master_internal()
+  # Only sessions that have ended appear in the duration dataset; still-running
+  # sessions have no end time, duration, or exit outcome yet.
+  master <- master[master$ended, , drop = FALSE]
+  rownames(master) <- NULL
   master[, c(
     "host_name",
     "environment",
