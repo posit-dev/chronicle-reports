@@ -1,3 +1,52 @@
+#' Resolve a Chronicle data path to an Arrow-compatible source
+#'
+#' Local paths are returned unchanged. For S3 paths, returns an Arrow
+#' filesystem rooted at the path. On Posit Connect, attempts to exchange the
+#' content session token for temporary AWS credentials via a configured AWS
+#' integration; if that fails (e.g., no AWS integration is assigned to the
+#' content), falls back to Arrow's default AWS credential chain.
+#'
+#' @param path Directory path (local or s3://)
+#'
+#' @return The path unchanged (local), or an Arrow SubTreeFileSystem (S3)
+#'
+#' @keywords internal
+#' @noRd
+chronicle_fs <- function(path) {
+  if (!startsWith(path, "s3://")) {
+    return(path)
+  }
+
+  if (Sys.getenv("POSIT_PRODUCT") == "CONNECT") {
+    fs <- tryCatch(
+      {
+        credentials <- connectapi::get_aws_content_credentials(
+          connectapi::connect()
+        )
+        arrow::s3_bucket(
+          sub("^s3://", "", path),
+          access_key = credentials$access_key_id,
+          secret_key = credentials$secret_access_key,
+          session_token = credentials$session_token
+        )
+      },
+      error = function(e) {
+        message(
+          "Could not fetch AWS credentials from Posit Connect, ",
+          "falling back to default AWS credentials: ",
+          conditionMessage(e)
+        )
+        NULL
+      }
+    )
+    if (!is.null(fs)) {
+      return(fs)
+    }
+  }
+
+  arrow::SubTreeFileSystem$create(path)
+}
+
 #' Build path to Chronicle metric data
 #'
 #' @keywords internal
@@ -30,7 +79,7 @@ chronicle_path <- function(
 #' @noRd
 chronicle_list_dirs <- function(path) {
   if (startsWith(path, "s3://")) {
-    fs <- arrow::SubTreeFileSystem$create(path)
+    fs <- chronicle_fs(path)
     selector <- arrow::FileSelector$create("", recursive = FALSE)
     info <- fs$GetFileInfo(selector)
     dirs <- Filter(function(fi) fi$type == arrow::FileType$Directory, info)
@@ -109,7 +158,7 @@ chronicle_raw_data <- function(
   }
 
   arrow::open_dataset(
-    path,
+    chronicle_fs(path),
     hive_style = FALSE,
     schema = schema,
     format = "parquet",
@@ -155,7 +204,7 @@ chronicle_data <- function(
   path <- chronicle_path(base_path, metric, "curated")
 
   arrow::open_dataset(
-    path,
+    chronicle_fs(path),
     hive_style = TRUE,
     partitioning = arrow::schema(date = arrow::date32()),
     format = "parquet"
