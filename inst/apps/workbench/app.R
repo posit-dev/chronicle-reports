@@ -777,7 +777,7 @@ sessions_overview_ui <- bslib::card(
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
     ),
     bslib::value_box(
-      title = "Total Sessions (range)",
+      title = "Total Sessions",
       max_height = "120px",
       value = shiny::textOutput("sessions_total_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
