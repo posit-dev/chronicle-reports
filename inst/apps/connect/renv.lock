@@ -576,7 +576,7 @@
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
       "RemoteRef": "dev",
-      "RemoteSha": "39c8c23f3c0a2c8aff553d2e1f2eb60078e67fcd",
+      "RemoteSha": "b76b0b6ebdc55e554aab1f3f2ecf0103a979aaef",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Posit Software, PBC [cph, fnd] (03wc8by49)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
@@ -1838,7 +1838,7 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "2.4.1",
+      "Version": "2.4.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Toolkit for Encryption, Signatures and Certificates Based on OpenSSL",
@@ -1862,8 +1862,8 @@
         "jose",
         "sodium"
       ],
-      "RoxygenNote": "7.3.2",
       "Encoding": "UTF-8",
+      "Config/roxygen2/version": "8.0.0",
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Oliver Keyes [ctb]",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
