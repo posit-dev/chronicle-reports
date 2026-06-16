@@ -3,6 +3,8 @@ aut
 bsicons
 bslib
 BugReports
+Connect's
+connectapi
 cph
 cre
 dev
@@ -24,6 +26,7 @@ markrtucker
 matt
 MERCHANTABILITY
 NONINFRINGEMENT
+OAuth
 PBC
 plotly
 pre
@@ -38,6 +41,7 @@ testthat
 tibble
 tidyr
 tidyverse
+tim
 UI
 urbina
 Urbina
