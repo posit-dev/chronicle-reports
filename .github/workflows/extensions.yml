@@ -1,10 +1,9 @@
 name: Extensions
 
+# Reusable workflow — invoked by ci.yml on a push to main. Builds the gallery
+# extensions, releases them, and updates the feed. Has no triggers of its own.
 on:
-  pull_request:
-  push:
-    branches:
-      - dev
+  workflow_call:
 
 permissions:
   contents: write
@@ -32,13 +31,14 @@ jobs:
 
       - uses: actions/checkout@v6
         with:
+          ref: ${{ github.ref_name }}
           token: ${{ steps.generate-token.outputs.token }}
 
       - uses: posit-dev/connect-gallery-action/build-extension@main
         with:
           extension-name: ${{ matrix.extension }}
           extensions-dir: inst/apps
-          release: ${{ github.ref == 'refs/heads/dev' && 'true' || 'false' }}
+          release: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
 
   update-gallery:
     runs-on: ubuntu-latest
@@ -46,7 +46,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     needs: [extensions]
-    if: always() && github.ref == 'refs/heads/dev'
+    if: always() && github.ref == 'refs/heads/main'
     steps:
       - name: Generate token for GitHub App
         id: generate-token
@@ -58,7 +58,7 @@ jobs:
 
       - uses: actions/checkout@v6
         with:
-          ref: dev
+          ref: ${{ github.ref_name }}
           token: ${{ steps.generate-token.outputs.token }}
 
       - uses: posit-dev/connect-gallery-action@main
