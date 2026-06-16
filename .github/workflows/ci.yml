@@ -37,9 +37,8 @@ jobs:
     uses: ./.github/workflows/update-manifests.yml
     secrets: inherit
 
-# The extensions job in extensions.yml will aslo run on pull requests, but only to validate the build.
   extensions:
     needs: [check-r-code, manifests]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     uses: ./.github/workflows/extensions.yml
     secrets: inherit
