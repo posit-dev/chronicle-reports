@@ -3,6 +3,7 @@ name: CI Workflow
 
 on:
   push:
+    branches: [dev, main]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -32,12 +33,13 @@ jobs:
 
   manifests:
     needs: [check-r-code]
-    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    if: github.event_name == 'push'
     uses: ./.github/workflows/update-manifests.yml
     secrets: inherit
 
+# The extensions job in extensions.yml will aslo run on pull requests, but only to validate the build.
   extensions:
     needs: [check-r-code, manifests]
-    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    if: github.event_name == 'push'
     uses: ./.github/workflows/extensions.yml
     secrets: inherit
