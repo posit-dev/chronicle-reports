@@ -1,7 +1,5 @@
 name: Update Manifests
 
-# Reusable workflow — invoked by pipeline.yml. Regenerates the app manifests for
-# the calling branch and commits them back. Has no triggers of its own.
 on:
   workflow_call:
 
