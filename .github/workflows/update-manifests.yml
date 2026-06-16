@@ -33,7 +33,7 @@ jobs:
         id: app-user
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: echo "id=$(gh api "/users/${{ steps.generate-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        run: echo "id=$(gh api '/users/${{ steps.generate-token.outputs.app-slug }}[bot]' --jq .id)" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push updated manifests
         run: |
