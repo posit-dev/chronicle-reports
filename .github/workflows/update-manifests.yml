@@ -1,0 +1,47 @@
+name: Update Manifests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  update-manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate token for GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.POSIT_CHRONICLE_APP_ID }}
+          private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
+          permission-contents: write
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - uses: extractions/setup-just@v3
+
+      - name: Regenerate manifests
+        run: just update-manifests ${{ github.ref_name }}
+
+      - name: Get GitHub App user id
+        id: app-user
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: echo "id=$(gh api '/users/${{ steps.generate-token.outputs.app-slug }}[bot]' --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push updated manifests
+        run: |
+          git config user.name '${{ steps.generate-token.outputs.app-slug }}[bot]'
+          git config user.email '${{ steps.app-user.outputs.id }}+${{ steps.generate-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          if [[ -n "$(git status --porcelain inst/apps)" ]]; then
+            git add inst/apps/*/manifest.json inst/apps/*/renv.lock
+            git commit -m "chore: update app manifests [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "No manifest changes to commit."
+          fi
