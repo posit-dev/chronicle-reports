@@ -23,11 +23,10 @@ jobs:
           ref: ${{ github.ref_name }}
           token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Build manifest generator image
-        run: docker build -f Dockerfile.manifests --build-arg GIT_BRANCH=${{ github.ref_name }} -t chronicle-manifests .
+      - uses: extractions/setup-just@v3
 
       - name: Regenerate manifests
-        run: docker run --rm -v "${{ github.workspace }}/inst/apps:/workspace/inst/apps" chronicle-manifests
+        run: just update-manifests ${{ github.ref_name }}
 
       - name: Get GitHub App user id
         id: app-user
