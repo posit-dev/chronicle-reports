@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.1.3",
+    "Version": "4.5.3",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -163,6 +163,74 @@
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "RSPM"
     },
+    "arrow": {
+      "Package": "arrow",
+      "Version": "24.0.0",
+      "Source": "Repository",
+      "Title": "Integration to 'Apache' 'Arrow'",
+      "Authors@R": "c( person(\"Neal\", \"Richardson\", email = \"neal.p.richardson@gmail.com\", role = c(\"aut\")), person(\"Ian\", \"Cook\", email = \"ianmcook@gmail.com\", role = c(\"aut\")), person(\"Nic\", \"Crane\", email = \"thisisnic@gmail.com\", role = c(\"aut\")), person(\"Dewey\", \"Dunnington\", role = c(\"aut\"), email = \"dewey@fishandwhistle.net\", comment = c(ORCID = \"0000-0002-9415-4582\")), person(\"Romain\", \"Fran\\u00e7ois\", role = c(\"aut\"), comment = c(ORCID = \"0000-0002-2444-4226\")), person(\"Jonathan\", \"Keane\", email = \"jkeane@gmail.com\", role = c(\"aut\", \"cre\")), person(\"Bryce\", \"Mecum\", email = \"brycemecum@gmail.com\", role = c(\"aut\")), person(\"Drago\\u0219\", \"Moldovan-Gr\\u00fcnfeld\", email = \"dragos.mold@gmail.com\", role = c(\"aut\")), person(\"Jeroen\", \"Ooms\", email = \"jeroen@berkeley.edu\", role = c(\"aut\")), person(\"Jacob\", \"Wujciak-Jens\", email = \"jacob@wujciak.de\", role = c(\"aut\")), person(\"Javier\", \"Luraschi\", email = \"javier@rstudio.com\", role = c(\"ctb\")), person(\"Karl\", \"Dunkle Werner\", email = \"karldw@users.noreply.github.com\", role = c(\"ctb\"), comment = c(ORCID = \"0000-0003-0523-7309\")), person(\"Jeffrey\", \"Wong\", email = \"jeffreyw@netflix.com\", role = c(\"ctb\")), person(\"Apache Arrow\", email = \"dev@arrow.apache.org\", role = c(\"aut\", \"cph\")) )",
+      "Description": "'Apache' 'Arrow' <https://arrow.apache.org/> is a cross-language development platform for in-memory data. It specifies a standardized language-independent columnar memory format for flat and hierarchical data, organized for efficient analytic operations on modern hardware. This package provides an interface to the 'Arrow C++' library.",
+      "Depends": [
+        "R (>= 4.1)"
+      ],
+      "License": "Apache License (>= 2.0)",
+      "URL": "https://github.com/apache/arrow/, https://arrow.apache.org/docs/r/",
+      "BugReports": "https://github.com/apache/arrow/issues",
+      "Encoding": "UTF-8",
+      "Language": "en-US",
+      "SystemRequirements": "C++20; for AWS S3 support on Linux, libcurl and openssl (optional); cmake >= 3.26 (build-time only, and only for full source build)",
+      "Biarch": "true",
+      "Imports": [
+        "assertthat",
+        "bit64 (>= 0.9-7)",
+        "glue",
+        "methods",
+        "purrr",
+        "R6",
+        "rlang (>= 1.0.0)",
+        "stats",
+        "tidyselect (>= 1.0.0)",
+        "utils",
+        "vctrs"
+      ],
+      "RoxygenNote": "7.3.3",
+      "Config/testthat/edition": "3",
+      "Config/build/bootstrap": "TRUE",
+      "Suggests": [
+        "blob",
+        "curl",
+        "cli",
+        "DBI",
+        "dbplyr",
+        "decor",
+        "distro",
+        "dplyr",
+        "duckdb (>= 0.2.8)",
+        "hms",
+        "jsonlite",
+        "knitr",
+        "lubridate",
+        "pillar",
+        "pkgload",
+        "reticulate",
+        "rmarkdown",
+        "stringi",
+        "stringr",
+        "sys",
+        "testthat (>= 3.3.0)",
+        "tibble",
+        "tzdb",
+        "withr"
+      ],
+      "LinkingTo": [
+        "cpp11 (>= 0.4.2)"
+      ],
+      "Collate": "'arrowExports.R' 'enums.R' 'arrow-object.R' 'type.R' 'array-data.R' 'arrow-datum.R' 'array.R' 'arrow-info.R' 'arrow-package.R' 'arrow-tabular.R' 'buffer.R' 'chunked-array.R' 'io.R' 'compression.R' 'scalar.R' 'compute.R' 'config.R' 'csv.R' 'dataset.R' 'dataset-factory.R' 'dataset-format.R' 'dataset-partition.R' 'dataset-scan.R' 'dataset-write.R' 'dictionary.R' 'dplyr-across.R' 'dplyr-arrange.R' 'dplyr-by.R' 'dplyr-collect.R' 'dplyr-count.R' 'dplyr-datetime-helpers.R' 'dplyr-distinct.R' 'dplyr-eval.R' 'dplyr-filter.R' 'dplyr-funcs-agg.R' 'dplyr-funcs-augmented.R' 'dplyr-funcs-conditional.R' 'dplyr-funcs-datetime.R' 'dplyr-funcs-doc.R' 'dplyr-funcs-math.R' 'dplyr-funcs-simple.R' 'dplyr-funcs-string.R' 'dplyr-funcs-type.R' 'expression.R' 'dplyr-funcs.R' 'dplyr-glimpse.R' 'dplyr-group-by.R' 'dplyr-join.R' 'dplyr-mutate.R' 'dplyr-select.R' 'dplyr-slice.R' 'dplyr-summarize.R' 'dplyr-union.R' 'record-batch.R' 'table.R' 'dplyr.R' 'duckdb.R' 'extension.R' 'feather.R' 'field.R' 'filesystem.R' 'flight.R' 'install-arrow.R' 'ipc-stream.R' 'json.R' 'memory-pool.R' 'message.R' 'metadata.R' 'parquet.R' 'python.R' 'query-engine.R' 'record-batch-reader.R' 'record-batch-writer.R' 'reexports-bit64.R' 'reexports-tidyselect.R' 'schema.R' 'udf.R' 'util.R'",
+      "NeedsCompilation": "yes",
+      "Author": "Neal Richardson [aut], Ian Cook [aut], Nic Crane [aut], Dewey Dunnington [aut] (ORCID: <https://orcid.org/0000-0002-9415-4582>), Romain François [aut] (ORCID: <https://orcid.org/0000-0002-2444-4226>), Jonathan Keane [aut, cre], Bryce Mecum [aut], Dragoș Moldovan-Grünfeld [aut], Jeroen Ooms [aut], Jacob Wujciak-Jens [aut], Javier Luraschi [ctb], Karl Dunkle Werner [ctb] (ORCID: <https://orcid.org/0000-0003-0523-7309>), Jeffrey Wong [ctb], Apache Arrow [aut, cph]",
+      "Maintainer": "Jonathan Keane <jkeane@gmail.com>",
+      "Repository": "RSPM"
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.2.1",
@@ -188,6 +256,29 @@
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
       "Repository": "RSPM"
     },
+    "assertthat": {
+      "Package": "assertthat",
+      "Version": "0.2.1",
+      "Source": "Repository",
+      "Title": "Easy Pre and Post Assertions",
+      "Authors@R": "person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", c(\"aut\", \"cre\"))",
+      "Description": "An extension to stopifnot() that makes it easy to declare  the pre and post conditions that you code should satisfy, while also  producing friendly error messages so that your users know what's gone wrong.",
+      "License": "GPL-3",
+      "Imports": [
+        "tools"
+      ],
+      "Suggests": [
+        "testthat",
+        "covr"
+      ],
+      "RoxygenNote": "6.0.1",
+      "Collate": "'assert-that.r' 'on-failure.r' 'assertions-file.r' 'assertions-scalar.R' 'assertions.r' 'base.r' 'base-comparison.r' 'base-is.r' 'base-logical.r' 'base-misc.r' 'utils.r' 'validate-that.R'",
+      "NeedsCompilation": "no",
+      "Author": "Hadley Wickham [aut, cre]",
+      "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
+    },
     "base64enc": {
       "Package": "base64enc",
       "Version": "0.1-6",
@@ -209,6 +300,75 @@
       "NeedsCompilation": "yes",
       "Repository": "RSPM",
       "Encoding": "UTF-8"
+    },
+    "bit": {
+      "Package": "bit",
+      "Version": "4.6.0",
+      "Source": "Repository",
+      "Title": "Classes and Methods for Fast Memory-Efficient Boolean Selections",
+      "Authors@R": "c( person(\"Michael\", \"Chirico\", email = \"MichaelChirico4@gmail.com\", role = c(\"aut\", \"cre\")), person(\"Jens\", \"Oehlschlägel\", role = \"aut\"), person(\"Brian\", \"Ripley\", role = \"ctb\") )",
+      "Depends": [
+        "R (>= 3.4.0)"
+      ],
+      "Suggests": [
+        "testthat (>= 3.0.0)",
+        "roxygen2",
+        "knitr",
+        "markdown",
+        "rmarkdown",
+        "microbenchmark",
+        "bit64 (>= 4.0.0)",
+        "ff (>= 4.0.0)"
+      ],
+      "Description": "Provided are classes for boolean and skewed boolean vectors, fast boolean methods, fast unique and non-unique integer sorting, fast set operations on sorted and unsorted sets of integers, and foundations for ff (range index, compression, chunked processing).",
+      "License": "GPL-2 | GPL-3",
+      "LazyLoad": "yes",
+      "ByteCompile": "yes",
+      "Encoding": "UTF-8",
+      "URL": "https://github.com/r-lib/bit",
+      "VignetteBuilder": "knitr, rmarkdown",
+      "RoxygenNote": "7.3.2",
+      "Config/testthat/edition": "3",
+      "NeedsCompilation": "yes",
+      "Author": "Michael Chirico [aut, cre], Jens Oehlschlägel [aut], Brian Ripley [ctb]",
+      "Maintainer": "Michael Chirico <MichaelChirico4@gmail.com>",
+      "Repository": "RSPM"
+    },
+    "bit64": {
+      "Package": "bit64",
+      "Version": "4.8.2",
+      "Source": "Repository",
+      "Title": "A S3 Class for Vectors of 64bit Integers",
+      "Authors@R": "c( person(\"Michael\", \"Chirico\", email=\"michaelchirico4@gmail.com\", role=c(\"aut\", \"cre\")), person(\"Jens\", \"Oehlschlägel\", role=\"aut\"), person(\"Leonardo\", \"Silvestri\", role=\"ctb\"), person(\"Ofek\", \"Shilon\", role=\"ctb\"), person(\"Christian\", \"Ullerich\", role=\"ctb\") )",
+      "Depends": [
+        "R (>= 3.5.0)"
+      ],
+      "Description": "Package 'bit64' provides serializable S3 atomic 64bit (signed) integers. These are useful for handling database keys and exact counting in +-2^63. WARNING: do not use them as replacement for 32bit integers, integer64 are not supported for subscripting by R-core and they have different semantics when combined with double, e.g. integer64 + double => integer64. Class integer64 can be used in vectors, matrices, arrays and data.frames. Methods are available for coercion from and to logicals, integers, doubles, characters and factors as well as many elementwise and summary functions. Many fast algorithmic operations such as 'match' and 'order' support inter- active data exploration and manipulation and optionally leverage caching.",
+      "License": "GPL-2 | GPL-3",
+      "LazyLoad": "yes",
+      "ByteCompile": "yes",
+      "URL": "https://github.com/r-lib/bit64, https://bit64.r-lib.org",
+      "Encoding": "UTF-8",
+      "Imports": [
+        "bit (>= 4.0.0)",
+        "graphics",
+        "methods",
+        "stats",
+        "utils"
+      ],
+      "Suggests": [
+        "patrick (>= 0.3.0)",
+        "testthat (>= 3.3.0)",
+        "withr"
+      ],
+      "Config/testthat/edition": "3",
+      "Config/Needs/development": "patrick, testthat",
+      "Config/Needs/website": "tidyverse/tidytemplate",
+      "RoxygenNote": "7.3.3",
+      "NeedsCompilation": "yes",
+      "Author": "Michael Chirico [aut, cre], Jens Oehlschlägel [aut], Leonardo Silvestri [ctb], Ofek Shilon [ctb], Christian Ullerich [ctb]",
+      "Maintainer": "Michael Chirico <michaelchirico4@gmail.com>",
+      "Repository": "RSPM"
     },
     "bsicons": {
       "Package": "bsicons",
@@ -331,6 +491,97 @@
       "Maintainer": "Winston Chang <winston@posit.co>",
       "Repository": "RSPM"
     },
+    "charlatan": {
+      "Package": "charlatan",
+      "Version": "0.6.2",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Make Fake Data",
+      "Description": "Make fake data that looks realistic, supporting addresses,  person names, dates, times, colors, coordinates, currencies, digital object identifiers ('DOIs'), jobs, phone numbers, 'DNA' sequences, doubles and integers from distributions and within a range.",
+      "Authors@R": "c( person(\"Roel M.\", \"Hogervorst\",  email =\"hogervorst.rm@gmail.com\",  role = c(\"cre\", \"aut\"),  comment = c(ORCID = \"0000-0001-7509-0328\")), person(\"Scott\", \"Chamberlain\", role = c(\"aut\"), comment = c(ORCID = \"0000-0003-1444-9135\")), person(\"Kyle\", \"Voytovich\", role = \"aut\"), person(\"Martin\", \"Pedersen\", role = \"ctb\"), person(\"Brooke\", \"Anderson\", role = \"rev\", comment = \"Brooke Anderson reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94\"), person(\"Tristan\", \"Mahr\", role = \"rev\", comment = \"Tristan Mahr reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94\"), person(\"rOpenSci\", role = \"fnd\", comment = c(ROR = \"019jywm96\")) )",
+      "License": "MIT + file LICENSE",
+      "URL": "https://docs.ropensci.org/charlatan/, https://github.com/ropensci/charlatan",
+      "BugReports": "https://github.com/ropensci/charlatan/issues",
+      "LazyData": "true",
+      "Encoding": "UTF-8",
+      "Language": "en-US",
+      "VignetteBuilder": "knitr",
+      "Imports": [
+        "R6 (>= 2.2.0)",
+        "tibble (>= 1.2)",
+        "whisker"
+      ],
+      "Suggests": [
+        "testthat",
+        "knitr",
+        "rmarkdown",
+        "ipaddress",
+        "stringi",
+        "spelling"
+      ],
+      "RoxygenNote": "7.3.3",
+      "Config/testthat/edition": "3",
+      "Depends": [
+        "R (>= 2.10)"
+      ],
+      "Collate": "'address-provider-en_GB.R' 'address-provider-en_NZ.R' 'address-provider-en_US.R' 'address-provider-nl_NL.R' 'datetime-provider.R' 'address-provider.R' 'available_locales.R' 'available_providers.R' 'base-provider.R' 'charlatan-package.R' 'charlatan_settings.R' 'color-provider-en_US.R' 'color-provider-uk_UA.R' 'color-provider.R' 'color.R' 'company-provider-bg_BG.R' 'company-provider-cs_CZ.R' 'company-provider-de_DE.R' 'company-provider-en_US.R' 'company-provider-es_MX.R' 'company-provider-fa_IR.R' 'company-provider-fr_FR.R' 'company-provider-hr_HR.R' 'company-provider-it_IT.R' 'company-provider.R' 'company.R' 'coordinate-provider.R' 'coordinates.R' 'credit_card-provider.R' 'credit_card.R' 'currency-provider.R' 'currency.R' 'date_time.R' 'doi-provider.R' 'doi.R' 'element-provider.R' 'elements.R' 'file-provider.R' 'fraudster.R' 'generate.R' 'globals.R' 'internet-provider-bg_BG.R' 'internet-provider-cs_CZ.R' 'internet-provider-de_DE.R' 'internet-provider-en_AU.R' 'internet-provider-en_NZ.R' 'internet-provider-en_US.R' 'internet-provider-fa_IR.R' 'internet-provider-fr_FR.R' 'internet-provider-hr_HR.R' 'internet-provider.R' 'isbn-provider.R' 'job.R' 'jobs-provider-da_DK.R' 'jobs-provider-en_US.R' 'jobs-provider-fa_IR.R' 'jobs-provider-fi_FI.R' 'jobs-provider-fr_CH.R' 'jobs-provider-fr_FR.R' 'jobs-provider-hr_HR.R' 'jobs-provider-nl_NL.R' 'jobs-provider-pl_PL.R' 'jobs-provider-ru_RU.R' 'jobs-provider-uk_UA.R' 'jobs-provider-zh_TW.R' 'jobs-provider.R' 'languages.R' 'lorem-provider-ar_AA.R' 'lorem-provider-el_GR.R' 'lorem-provider-en_US.R' 'lorem-provider-he_IL.R' 'lorem-provider-ja_JP.R' 'lorem-provider-la.R' 'lorem-provider-ru_RU.R' 'lorem-provider-zh_CN.R' 'lorem-provider-zh_TW.R' 'lorem-provider.R' 'misc-provider.R' 'missing-data-provider.R' 'missing.R' 'name.R' 'numerics-provider.R' 'numerics.R' 'onload.R' 'person-provider-bg_BG.R' 'person-provider-cs_CZ.R' 'person-provider-da_DK.R' 'person-provider-de_AT.R' 'person-provider-de_DE.R' 'person-provider-en_GB.R' 'person-provider-en_NZ.R' 'person-provider-en_US.R' 'person-provider-es_ES.R' 'person-provider-es_MX.R' 'person-provider-fa_IR.R' 'person-provider-fi_FI.R' 'person-provider-fr_CH.R' 'person-provider-fr_FR.R' 'person-provider-hr_HR.R' 'person-provider-it_IT.R' 'person-provider-ja_JP.R' 'person-provider-ko_KR.R' 'person-provider-lt_LT.R' 'person-provider-lv_LV.R' 'person-provider-ne_NP.R' 'person-provider-nl_NL.R' 'person-provider-no_NO.R' 'person-provider-pl_PL.R' 'person-provider.R' 'phone_number.R' 'phonenumber-provider-en.R' 'phonenumber-provider-es.R' 'phonenumber-provider-fr.R' 'phonenumber-provider-nl.R' 'phonenumber-provider-rest.R' 'phonenumber-provider.R' 'sequence-provider.R' 'sequences.R' 'ssn-provider-all.R' 'ssn-provider.R' 'ssn.R' 'taxonomy-provider-all.R' 'taxonomy-provider.R' 'taxonomy.R' 'useragent-provider-all.R' 'useragent-provider.R' 'zzz.R'",
+      "NeedsCompilation": "no",
+      "Author": "Roel M. Hogervorst [cre, aut] (ORCID: <https://orcid.org/0000-0001-7509-0328>), Scott Chamberlain [aut] (ORCID: <https://orcid.org/0000-0003-1444-9135>), Kyle Voytovich [aut], Martin Pedersen [ctb], Brooke Anderson [rev] (Brooke Anderson reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94), Tristan Mahr [rev] (Tristan Mahr reviewed the package for rOpenSci, see https://github.com/ropensci/onboarding/issues/94), rOpenSci [fnd] (ROR: <https://ror.org/019jywm96>)",
+      "Maintainer": "Roel M. Hogervorst <hogervorst.rm@gmail.com>",
+      "Repository": "RSPM"
+    },
+    "chronicle.reports": {
+      "Package": "chronicle.reports",
+      "Version": "1.0.0",
+      "Source": "GitHub",
+      "Title": "Posit Chronicle Reports",
+      "Authors@R": "c( person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")), person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")), person(\"Tim\", \"Margheim\", , \"tim.margheim@posit.co\", role = c(\"aut\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
+      "Description": "Run reports for Posit Chronicle. You provide the location of your Chronicle data and this package will generate reports to help you analyze and visualize your data.",
+      "License": "MIT + file LICENSE",
+      "URL": "https://github.com/posit-dev/chronicle-reports",
+      "BugReports": "https://github.com/posit-dev/chronicle-reports/issues",
+      "Depends": [
+        "R (>= 4.1.0)"
+      ],
+      "Imports": [
+        "arrow",
+        "bsicons",
+        "bslib",
+        "charlatan",
+        "connectapi",
+        "dplyr",
+        "DT",
+        "ggplot2",
+        "glue",
+        "lubridate",
+        "plotly",
+        "rlang",
+        "shiny",
+        "shinycssloaders",
+        "tidyr",
+        "withr (>= 3.0.2)"
+      ],
+      "Suggests": [
+        "devtools (>= 2.4.6)",
+        "shinytest2",
+        "testthat (>= 3.0.0)",
+        "tibble (>= 3.3.0)"
+      ],
+      "Encoding": "UTF-8",
+      "Roxygen": "list(markdown = TRUE)",
+      "RoxygenNote": "7.3.3",
+      "Config/testthat/edition": "3",
+      "Remotes": "r-lib/devtools, tidyverse/tibble, r-lib/withr",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "chronicle-reports",
+      "RemoteUsername": "posit-dev",
+      "RemoteRef": "dev",
+      "RemoteSha": "f3b4ce08fdcbc1f51ed94325d40357972c4510a9",
+      "NeedsCompilation": "no",
+      "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Tim Margheim [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
+      "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
+    },
     "cli": {
       "Package": "cli",
       "Version": "3.6.6",
@@ -401,6 +652,64 @@
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>), John MacFarlane [cph] (Author of cmark)",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
+      "Repository": "RSPM"
+    },
+    "connectapi": {
+      "Package": "connectapi",
+      "Version": "0.12.1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Utilities for Interacting with the 'Posit Connect' Server API",
+      "Authors@R": "c( person(given = \"Kara\", family = \"Woo\", role = c(\"aut\", \"cre\"), email = \"kara.woo@posit.co\"), person(given = \"Toph\", family = \"Allen\", role = c(\"aut\"), email = \"toph@posit.co\"), person(given = \"Neal\", family = \"Richardson\", role = c(\"aut\")), person(given = \"Sean\", family = \"Lopp\", role = c(\"aut\")), person(given = \"Cole\", family = \"Arendt\", role = c(\"aut\")), person(given = \"Posit, PBC\", role = c(\"cph\", \"fnd\")))",
+      "Description": "Provides a helpful 'R6' class and methods for interacting with the 'Posit Connect' Server API along with some meaningful utility functions for regular tasks. API documentation varies by 'Posit Connect' installation and version, but the latest documentation is also hosted publicly at <https://docs.posit.co/connect/api/>.",
+      "License": "MIT + file LICENSE",
+      "URL": "https://posit-dev.github.io/connectapi/, https://github.com/posit-dev/connectapi",
+      "BugReports": "https://github.com/posit-dev/connectapi/issues",
+      "Imports": [
+        "bit64",
+        "fs",
+        "glue",
+        "httr",
+        "mime",
+        "jsonlite",
+        "lifecycle",
+        "magrittr",
+        "purrr",
+        "R6",
+        "rlang (>= 0.4.2)",
+        "tibble",
+        "uuid",
+        "vctrs (>= 0.3.0)",
+        "base64enc"
+      ],
+      "Suggests": [
+        "covr",
+        "dbplyr",
+        "dplyr",
+        "ggplot2",
+        "gridExtra",
+        "httptest",
+        "knitr",
+        "lubridate",
+        "progress",
+        "rmarkdown",
+        "rprojroot",
+        "rsconnect",
+        "spelling",
+        "testthat",
+        "tidyr",
+        "webshot2",
+        "withr"
+      ],
+      "VignetteBuilder": "knitr",
+      "Encoding": "UTF-8",
+      "Language": "en-US",
+      "RoxygenNote": "7.3.3",
+      "Config/testthat/edition": "3",
+      "Collate": "'audits.R' 'browse.R' 'connect.R' 'connectapi-package.R' 'connectapi.R' 'content.R' 'deploy.R' 'get.R' 'git.R' 'groups.R' 'integrations.R' 'lazy.R' 'page.R' 'parse.R' 'promote.R' 'ptype.R' 'remote.R' 'runtime-caches.R' 'schedule.R' 'tags.R' 'utils.R' 'thumbnail.R' 'user.R' 'utils-pipe.R' 'variant.R'",
+      "NeedsCompilation": "no",
+      "Author": "Kara Woo [aut, cre], Toph Allen [aut], Neal Richardson [aut], Sean Lopp [aut], Cole Arendt [aut], Posit, PBC [cph, fnd]",
+      "Maintainer": "Kara Woo <kara.woo@posit.co>",
       "Repository": "RSPM"
     },
     "cpp11": {
@@ -2476,7 +2785,7 @@
       "RemoteRef": "HEAD",
       "RemoteSha": "c51fe5d0f7fda6dc142fc7212f1727de4d10e664",
       "NeedsCompilation": "yes",
-      "Author": "Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], Romain Francois [ctb], Jennifer Bryan [ctb], Posit Software, PBC [cph, fnd] (03wc8by49)",
+      "Author": "Kirill Müller [aut, cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], Romain Francois [ctb], Jennifer Bryan [ctb], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>"
     },
     "tidyr": {
@@ -2603,7 +2912,7 @@
     },
     "tinytex": {
       "Package": "tinytex",
-      "Version": "0.59",
+      "Version": "0.60",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Helper Functions to Install and Maintain TeX Live, and Compile LaTeX Documents",
@@ -2656,6 +2965,25 @@
       "Author": "Patrick O. Perry [aut, cph], Kirill Müller [cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Unicode, Inc. [cph, dtc] (Unicode Character Database)",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>",
       "Repository": "RSPM"
+    },
+    "uuid": {
+      "Package": "uuid",
+      "Version": "1.2-2",
+      "Source": "Repository",
+      "Title": "Tools for Generating and Handling of UUIDs",
+      "Author": "Simon Urbanek [aut, cre, cph] (https://urbanek.org, ORCID: <https://orcid.org/0000-0003-2297-1732>), Theodore Ts'o [aut, cph] (libuuid)",
+      "Maintainer": "Simon Urbanek <Simon.Urbanek@r-project.org>",
+      "Authors@R": "c(person(\"Simon\", \"Urbanek\", role=c(\"aut\",\"cre\",\"cph\"), email=\"Simon.Urbanek@r-project.org\", comment=c(\"https://urbanek.org\", ORCID=\"0000-0003-2297-1732\")), person(\"Theodore\",\"Ts'o\", email=\"tytso@thunk.org\", role=c(\"aut\",\"cph\"), comment=\"libuuid\"))",
+      "Depends": [
+        "R (>= 2.9.0)"
+      ],
+      "Description": "Tools for generating and handling of UUIDs (Universally Unique Identifiers).",
+      "License": "MIT + file LICENSE",
+      "URL": "https://www.rforge.net/uuid",
+      "BugReports": "https://github.com/s-u/uuid/issues",
+      "NeedsCompilation": "yes",
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "vctrs": {
       "Package": "vctrs",
@@ -2734,6 +3062,26 @@
       "NeedsCompilation": "no",
       "Author": "Simon Garnier [aut, cre], Noam Ross [ctb, cph], Bob Rudis [ctb, cph], Marco Sciaini [ctb, cph], Antônio Pedro Camargo [ctb, cph], Cédric Scherer [ctb, cph]",
       "Repository": "RSPM"
+    },
+    "whisker": {
+      "Package": "whisker",
+      "Version": "0.4.1",
+      "Source": "Repository",
+      "Maintainer": "Edwin de Jonge <edwindjonge@gmail.com>",
+      "License": "GPL-3",
+      "Title": "{{mustache}} for R, Logicless Templating",
+      "Type": "Package",
+      "LazyLoad": "yes",
+      "Author": "Edwin de Jonge",
+      "Description": "Implements 'Mustache' logicless templating.",
+      "URL": "https://github.com/edwindj/whisker",
+      "Suggests": [
+        "markdown"
+      ],
+      "RoxygenNote": "6.1.1",
+      "NeedsCompilation": "no",
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "withr": {
       "Package": "withr",
