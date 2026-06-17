@@ -3,10 +3,11 @@
 # (avoids CRAN<->RSPM changes).
 options(repos = c(CRAN = Sys.getenv("CRAN")))
 
-# Derive R version requirement from the running R version (set by the
-# Dockerfile FROM image), so changing the base image is the only edit needed.
-r_minor <- strsplit(R.version$minor, "\\.")[[1]][1]
-r_requires <- paste0(">=", R.version$major, ".", r_minor, ".0")
+# Read R version requirement from DESCRIPTION so it stays in sync
+# without hard-coding.
+deps <- read.dcf("DESCRIPTION", fields = "Depends")[[1]]
+r_dep <- trimws(grep("^R\\b", strsplit(deps, ",")[[1]], value = TRUE))
+r_requires <- gsub("R\\s*\\((.*)\\)", "\\1", r_dep) |> trimws()
 
 app_dirs <- c("inst/apps/connect", "inst/apps/workbench")
 
