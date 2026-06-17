@@ -37,7 +37,7 @@ jobs:
         with:
           extension-name: ${{ matrix.extension }}
           extensions-dir: inst/apps
-          release: ${{ github.ref == 'refs/heads/dev' && 'true' || 'false' }}
+          release: ${{ github.ref_name == 'main' }}
 
   update-gallery:
     runs-on: ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     needs: [extensions]
-    if: always() && github.ref == 'refs/heads/dev'
+    if: always() && github.ref_name == 'main'
     steps:
       - name: Generate token for GitHub App
         id: generate-token
