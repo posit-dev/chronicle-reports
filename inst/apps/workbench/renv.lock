@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.1.3",
+    "Version": "4.5.3",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -532,10 +532,10 @@
     },
     "chronicle.reports": {
       "Package": "chronicle.reports",
-      "Version": "0.2.2",
+      "Version": "1.0.0",
       "Source": "GitHub",
       "Title": "Posit Chronicle Reports",
-      "Authors@R": "c( person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")), person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
+      "Authors@R": "c( person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")), person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")), person(\"Tim\", \"Margheim\", , \"tim.margheim@posit.co\", role = c(\"aut\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
       "Description": "Run reports for Posit Chronicle. You provide the location of your Chronicle data and this package will generate reports to help you analyze and visualize your data.",
       "License": "MIT + file LICENSE",
       "URL": "https://github.com/posit-dev/chronicle-reports",
@@ -548,6 +548,7 @@
         "bsicons",
         "bslib",
         "charlatan",
+        "connectapi",
         "dplyr",
         "DT",
         "ggplot2",
@@ -576,9 +577,9 @@
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
       "RemoteRef": "dev",
-      "RemoteSha": "39c8c23f3c0a2c8aff553d2e1f2eb60078e67fcd",
+      "RemoteSha": "f3b4ce08fdcbc1f51ed94325d40357972c4510a9",
       "NeedsCompilation": "no",
-      "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Posit Software, PBC [cph, fnd] (03wc8by49)",
+      "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Tim Margheim [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
     },
     "cli": {
@@ -651,6 +652,64 @@
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>), John MacFarlane [cph] (Author of cmark)",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
+      "Repository": "RSPM"
+    },
+    "connectapi": {
+      "Package": "connectapi",
+      "Version": "0.12.1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Utilities for Interacting with the 'Posit Connect' Server API",
+      "Authors@R": "c( person(given = \"Kara\", family = \"Woo\", role = c(\"aut\", \"cre\"), email = \"kara.woo@posit.co\"), person(given = \"Toph\", family = \"Allen\", role = c(\"aut\"), email = \"toph@posit.co\"), person(given = \"Neal\", family = \"Richardson\", role = c(\"aut\")), person(given = \"Sean\", family = \"Lopp\", role = c(\"aut\")), person(given = \"Cole\", family = \"Arendt\", role = c(\"aut\")), person(given = \"Posit, PBC\", role = c(\"cph\", \"fnd\")))",
+      "Description": "Provides a helpful 'R6' class and methods for interacting with the 'Posit Connect' Server API along with some meaningful utility functions for regular tasks. API documentation varies by 'Posit Connect' installation and version, but the latest documentation is also hosted publicly at <https://docs.posit.co/connect/api/>.",
+      "License": "MIT + file LICENSE",
+      "URL": "https://posit-dev.github.io/connectapi/, https://github.com/posit-dev/connectapi",
+      "BugReports": "https://github.com/posit-dev/connectapi/issues",
+      "Imports": [
+        "bit64",
+        "fs",
+        "glue",
+        "httr",
+        "mime",
+        "jsonlite",
+        "lifecycle",
+        "magrittr",
+        "purrr",
+        "R6",
+        "rlang (>= 0.4.2)",
+        "tibble",
+        "uuid",
+        "vctrs (>= 0.3.0)",
+        "base64enc"
+      ],
+      "Suggests": [
+        "covr",
+        "dbplyr",
+        "dplyr",
+        "ggplot2",
+        "gridExtra",
+        "httptest",
+        "knitr",
+        "lubridate",
+        "progress",
+        "rmarkdown",
+        "rprojroot",
+        "rsconnect",
+        "spelling",
+        "testthat",
+        "tidyr",
+        "webshot2",
+        "withr"
+      ],
+      "VignetteBuilder": "knitr",
+      "Encoding": "UTF-8",
+      "Language": "en-US",
+      "RoxygenNote": "7.3.3",
+      "Config/testthat/edition": "3",
+      "Collate": "'audits.R' 'browse.R' 'connect.R' 'connectapi-package.R' 'connectapi.R' 'content.R' 'deploy.R' 'get.R' 'git.R' 'groups.R' 'integrations.R' 'lazy.R' 'page.R' 'parse.R' 'promote.R' 'ptype.R' 'remote.R' 'runtime-caches.R' 'schedule.R' 'tags.R' 'utils.R' 'thumbnail.R' 'user.R' 'utils-pipe.R' 'variant.R'",
+      "NeedsCompilation": "no",
+      "Author": "Kara Woo [aut, cre], Toph Allen [aut], Neal Richardson [aut], Sean Lopp [aut], Cole Arendt [aut], Posit, PBC [cph, fnd]",
+      "Maintainer": "Kara Woo <kara.woo@posit.co>",
       "Repository": "RSPM"
     },
     "cpp11": {
@@ -1838,7 +1897,7 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "2.4.1",
+      "Version": "2.4.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Toolkit for Encryption, Signatures and Certificates Based on OpenSSL",
@@ -1862,8 +1921,8 @@
         "jose",
         "sodium"
       ],
-      "RoxygenNote": "7.3.2",
       "Encoding": "UTF-8",
+      "Config/roxygen2/version": "8.0.0",
       "NeedsCompilation": "yes",
       "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Oliver Keyes [ctb]",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
@@ -2726,7 +2785,7 @@
       "RemoteRef": "HEAD",
       "RemoteSha": "c51fe5d0f7fda6dc142fc7212f1727de4d10e664",
       "NeedsCompilation": "yes",
-      "Author": "Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], Romain Francois [ctb], Jennifer Bryan [ctb], Posit Software, PBC [cph, fnd] (03wc8by49)",
+      "Author": "Kirill Müller [aut, cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Hadley Wickham [aut], Romain Francois [ctb], Jennifer Bryan [ctb], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>"
     },
     "tidyr": {
@@ -2853,7 +2912,7 @@
     },
     "tinytex": {
       "Package": "tinytex",
-      "Version": "0.59",
+      "Version": "0.60",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Helper Functions to Install and Maintain TeX Live, and Compile LaTeX Documents",
@@ -2906,6 +2965,25 @@
       "Author": "Patrick O. Perry [aut, cph], Kirill Müller [cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Unicode, Inc. [cph, dtc] (Unicode Character Database)",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>",
       "Repository": "RSPM"
+    },
+    "uuid": {
+      "Package": "uuid",
+      "Version": "1.2-2",
+      "Source": "Repository",
+      "Title": "Tools for Generating and Handling of UUIDs",
+      "Author": "Simon Urbanek [aut, cre, cph] (https://urbanek.org, ORCID: <https://orcid.org/0000-0003-2297-1732>), Theodore Ts'o [aut, cph] (libuuid)",
+      "Maintainer": "Simon Urbanek <Simon.Urbanek@r-project.org>",
+      "Authors@R": "c(person(\"Simon\", \"Urbanek\", role=c(\"aut\",\"cre\",\"cph\"), email=\"Simon.Urbanek@r-project.org\", comment=c(\"https://urbanek.org\", ORCID=\"0000-0003-2297-1732\")), person(\"Theodore\",\"Ts'o\", email=\"tytso@thunk.org\", role=c(\"aut\",\"cph\"), comment=\"libuuid\"))",
+      "Depends": [
+        "R (>= 2.9.0)"
+      ],
+      "Description": "Tools for generating and handling of UUIDs (Universally Unique Identifiers).",
+      "License": "MIT + file LICENSE",
+      "URL": "https://www.rforge.net/uuid",
+      "BugReports": "https://github.com/s-u/uuid/issues",
+      "NeedsCompilation": "yes",
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "vctrs": {
       "Package": "vctrs",
