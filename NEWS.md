@@ -1,4 +1,4 @@
-# chronicle.reports (development version)
+# chronicle.reports
 
 # chronicle.reports 1.0.0
 
