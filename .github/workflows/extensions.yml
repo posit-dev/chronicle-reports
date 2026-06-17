@@ -37,7 +37,7 @@ jobs:
         with:
           extension-name: ${{ matrix.extension }}
           extensions-dir: inst/apps
-          release: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
+          release: ${{ github.ref_name == 'main' }}
 
   update-gallery:
     runs-on: ubuntu-latest
