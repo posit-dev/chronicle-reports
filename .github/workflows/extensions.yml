@@ -45,7 +45,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     needs: [extensions]
-    if: always() && github.ref == 'refs/heads/main'
+    if: always() && github.ref_name == 'main'
     steps:
       - name: Generate token for GitHub App
         id: generate-token
