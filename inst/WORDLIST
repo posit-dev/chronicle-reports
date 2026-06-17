@@ -18,7 +18,6 @@ Gantt
 ggplot
 github
 GUID
-gz
 https
 latestVersion
 lintr
@@ -27,14 +26,11 @@ margheim
 markrtucker
 matt
 MERCHANTABILITY
-minimumConnectVersion
 NONINFRINGEMENT
 OAuth
 PBC
 plotly
 pre
-requiredEnvironment
-requiredFeatures
 rlang
 ROR
 Roxygen
