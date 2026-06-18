@@ -6,21 +6,21 @@
 \usage{
 chronicle_list_raw_data(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
-  frequency = c("daily", "hourly")
+  frequency = c("daily")
 )
 }
 \arguments{
 \item{base_path}{Base path to Chronicle data directory}
 
-\item{frequency}{Frequency of data collection: "daily" (default) or "hourly"}
+\item{frequency}{Frequency of data collection: "daily" (default)}
 }
 \value{
 Character vector of available raw metric names
 (e.g., "connect_users", "workbench_sessions")
 }
 \description{
-Lists all available raw metrics available in the Chronicle data
-directory at a specified frequency. This is useful for discovering what
+Lists all available raw daily metrics available in the Chronicle data
+directory. This is useful for discovering what
 raw data is available before loading it with \code{\link[=chronicle_raw_data]{chronicle_raw_data()}}.
 }
 \details{
@@ -41,14 +41,5 @@ dplyr::collect(data)
 # List metrics from production Chronicle data
 metrics <- chronicle_list_raw_data("/var/lib/posit-chronicle/data", "daily")
 print(metrics)
-
-# List available hourly raw metrics
-hourly_metrics <- chronicle_list_raw_data(
-  "/var/lib/posit-chronicle/data",
-  "hourly"
-)
-
-# Load one of the available metrics
-data <- chronicle_raw_data(hourly_metrics[1], "/var/lib/posit-chronicle/data", frequency = "hourly")
 }
 }

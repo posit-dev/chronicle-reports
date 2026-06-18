@@ -7,7 +7,7 @@
 chronicle_raw_data(
   metric,
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
-  frequency = c("daily", "hourly"),
+  frequency = c("daily"),
   ymd = NULL,
   schema = NULL
 )
@@ -17,7 +17,7 @@ chronicle_raw_data(
 
 \item{base_path}{Base path to Chronicle data directory}
 
-\item{frequency}{Frequency of data collection: "daily" (default) or "hourly"}
+\item{frequency}{Frequency of data collection: "daily" (default)}
 
 \item{ymd}{Optional list with year, month, day for specific date filtering}
 
@@ -35,7 +35,6 @@ to work with.
 Use raw data only when you need:
 \itemize{
 \item Custom aggregations not available in curated data
-\item Hourly granularity
 \item Specific timestamp filtering
 }
 }
@@ -58,11 +57,10 @@ head(filtered)
 # Load from production Chronicle data
 data <- chronicle_raw_data("connect_users", "/var/lib/posit-chronicle/data")
 
-# Load hourly data for a specific date
+# Load daily data for a specific date
 data <- chronicle_raw_data(
   "connect_users",
   "/var/lib/posit-chronicle/data",
-  frequency = "hourly",
   ymd = list(year = 2024, month = 12, day = 10)
 )
 }

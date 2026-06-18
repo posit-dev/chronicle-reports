@@ -8,3 +8,5 @@
 
 R/.posit/
 .claude-notes/
+# roborev snapshots
+/.roborev/

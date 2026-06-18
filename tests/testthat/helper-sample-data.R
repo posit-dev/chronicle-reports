@@ -25,7 +25,7 @@ create_sample_chronicle_data <- function(base_path = NULL) {
 #' @param data Data frame with a date column
 #' @param base_path Base path for Chronicle data
 #' @param metric Metric name (e.g., "connect_users")
-#' @param frequency Frequency of data ("daily" or "hourly")
+#' @param frequency Frequency of data ("daily")
 write_raw_parquet_internal <- function(
   data,
   base_path,
