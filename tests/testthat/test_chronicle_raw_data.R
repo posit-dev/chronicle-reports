@@ -211,7 +211,13 @@ test_that("chronicle_raw_data validates frequency parameter", {
   # Invalid frequency should error
   expect_error(
     chronicle_raw_data("connect_users", base_path, frequency = "invalid"),
-    regexp = "should be one of"
+    regexp = "should be"
+  )
+
+  # Hourly data is no longer retrievable
+  expect_error(
+    chronicle_raw_data("connect_users", base_path, frequency = "hourly"),
+    regexp = "should be"
   )
 })
 

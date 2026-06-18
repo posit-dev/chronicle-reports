@@ -6,6 +6,7 @@
 * Added CSV download buttons to the Connect and Workbench dashboards so users can export the data behind tables and charts.
 * Published the `connect` and `workbench` apps as Posit Connect Gallery extensions for direct installation from the Connect Gallery.
 * Added support for Posit Connect's AWS service-account OAuth integration.
+* Removed support for retrieving `"hourly"` raw metrics. `chronicle_raw_data()` and `chronicle_list_raw_data()` now only accept `frequency = "daily"`.
 
 ## Breaking Changes
 
