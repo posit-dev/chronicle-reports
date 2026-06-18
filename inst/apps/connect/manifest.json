@@ -475,16 +475,16 @@
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
         "RemoteRef": "dev",
-        "RemoteSha": "47ae3bb7899d81c805a253ab373f3889c9cea728",
+        "RemoteSha": "0aea78491bb7f18296f2a67a84d96eba3ba85e03",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
         "GithubRef": "dev",
-        "GithubSHA1": "47ae3bb7899d81c805a253ab373f3889c9cea728",
+        "GithubSHA1": "0aea78491bb7f18296f2a67a84d96eba3ba85e03",
         "NeedsCompilation": "no",
-        "Packaged": "2026-06-17 16:04:56 UTC; root",
+        "Packaged": "2026-06-18 17:45:35 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-06-17 16:04:56 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-06-18 17:45:36 UTC; unix"
       }
     },
     "cli": {
@@ -2083,10 +2083,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "c51fe5d0f7fda6dc142fc7212f1727de4d10e664",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-06-17 16:04:09 UTC; root",
+        "Packaged": "2026-06-18 17:44:46 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-06-17 16:04:09 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-06-18 17:44:46 UTC; unix"
       }
     },
     "tidyr": {
@@ -2456,7 +2456,7 @@
       "checksum": "bec27550afd2213f1c4410c4ff9a2400"
     },
     "renv.lock": {
-      "checksum": "7884097c3b16442c3bfacf9a57187589"
+      "checksum": "2c6719ccd13180b13bbc97ddba657ea4"
     }
   },
   "users": null
