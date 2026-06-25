@@ -813,7 +813,9 @@ sample_connect_content_hits_totals_internal <- function() {
       environment = g$environment[1],
       content_guid = g$content_guid[1],
       hits = as.integer(sum(g$hits)),
-      unique_users = as.integer(sum(!is.na(g$user_guid))),
+      unique_users = as.integer(length(unique(g$user_guid[
+        !is.na(g$user_guid)
+      ]))),
       date = g$date[1],
       stringsAsFactors = FALSE
     )

@@ -10,6 +10,7 @@ repos:
         - bsicons
         - bslib
         - charlatan
+        - connectapi
         - dplyr
         - DT
         - ggplot2

@@ -1605,7 +1605,7 @@ content_hits_overview_server <- function(
     df |>
       dplyr::group_by(date) |>
       dplyr::summarise(
-        unique_users = dplyr::n_distinct(.data$user_guid),
+        unique_users = dplyr::n_distinct(.data$user_guid, na.rm = TRUE),
         .groups = "drop"
       )
   })
@@ -1628,7 +1628,7 @@ content_hits_overview_server <- function(
       return("0")
     }
 
-    unique_users <- dplyr::n_distinct(df$user_guid)
+    unique_users <- dplyr::n_distinct(df$user_guid, na.rm = TRUE)
     prettyNum(unique_users, big.mark = ",")
   })
 
