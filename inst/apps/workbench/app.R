@@ -1078,8 +1078,8 @@ sessions_overview_server <- function(
   })
 
   # Apply the environment filter. "All" keeps every environment; counts summed
-  # across environments stay exact (they are additive). Percentiles are never
-  # combined across environments — they are plotted per environment instead.
+  # across environments stay exact (they are additive). When "All" is selected,
+  # startup-duration percentiles are approximated via a sessions-weighted average.
   apply_env_filter <- function(data) {
     env <- input$sessions_overview_environment
     if (is.null(env) || env == "All") {
