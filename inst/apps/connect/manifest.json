@@ -475,16 +475,16 @@
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
         "RemoteRef": "dev",
-        "RemoteSha": "0aea78491bb7f18296f2a67a84d96eba3ba85e03",
+        "RemoteSha": "340b92ca2cecefa981116df98123065c98828692",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
         "GithubRef": "dev",
-        "GithubSHA1": "0aea78491bb7f18296f2a67a84d96eba3ba85e03",
+        "GithubSHA1": "340b92ca2cecefa981116df98123065c98828692",
         "NeedsCompilation": "no",
-        "Packaged": "2026-06-18 17:45:35 UTC; root",
+        "Packaged": "2026-06-25 18:06:52 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-06-18 17:45:36 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-06-25 18:06:53 UTC; unix"
       }
     },
     "cli": {
@@ -1884,7 +1884,7 @@
         "Type": "Package",
         "Package": "shiny",
         "Title": "Web Application Framework for R",
-        "Version": "1.13.0",
+        "Version": "1.14.0",
         "Authors@R": "c(\n    person(\"Winston\", \"Chang\", , \"winston@posit.co\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-1576-2126\")),\n    person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = \"aut\"),\n    person(\"JJ\", \"Allaire\", , \"jj@posit.co\", role = \"aut\"),\n    person(\"Carson\", \"Sievert\", , \"carson@posit.co\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Barret\", \"Schloerke\", , \"barret@posit.co\", role = \"aut\",\n           comment = c(ORCID = \"0000-0001-9986-114X\")),\n    person(\"Garrick\", \"Aden-Buie\", , \"garrick@adenbuie.com\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-7111-0077\")),\n    person(\"Yihui\", \"Xie\", , \"yihui@posit.co\", role = \"aut\"),\n    person(\"Jeff\", \"Allen\", role = \"aut\"),\n    person(\"Jonathan\", \"McPherson\", , \"jonathan@posit.co\", role = \"aut\"),\n    person(\"Alan\", \"Dipert\", role = \"aut\"),\n    person(\"Barbara\", \"Borges\", role = \"aut\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\")),\n    person(, \"jQuery Foundation\", role = \"cph\",\n           comment = \"jQuery library and jQuery UI library\"),\n    person(, \"jQuery contributors\", role = c(\"ctb\", \"cph\"),\n           comment = \"jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt\"),\n    person(, \"jQuery UI contributors\", role = c(\"ctb\", \"cph\"),\n           comment = \"jQuery UI library; authors listed in inst/www/shared/jqueryui/AUTHORS.txt\"),\n    person(\"Mark\", \"Otto\", role = \"ctb\",\n           comment = \"Bootstrap library\"),\n    person(\"Jacob\", \"Thornton\", role = \"ctb\",\n           comment = \"Bootstrap library\"),\n    person(, \"Bootstrap contributors\", role = \"ctb\",\n           comment = \"Bootstrap library\"),\n    person(, \"Twitter, Inc\", role = \"cph\",\n           comment = \"Bootstrap library\"),\n    person(\"Prem Nawaz\", \"Khan\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Victor\", \"Tsaran\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Dennis\", \"Lembree\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Srinivasu\", \"Chakravarthula\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Cathy\", \"O'Connor\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(, \"PayPal, Inc\", role = \"cph\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Stefan\", \"Petre\", role = c(\"ctb\", \"cph\"),\n           comment = \"Bootstrap-datepicker library\"),\n    person(\"Andrew\", \"Rowls\", role = c(\"ctb\", \"cph\"),\n           comment = \"Bootstrap-datepicker library\"),\n    person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"),\n           comment = \"selectize.js library\"),\n    person(\"Salmen\", \"Bejaoui\", role = c(\"ctb\", \"cph\"),\n           comment = \"selectize-plugin-a11y library\"),\n    person(\"Denis\", \"Ineshin\", role = c(\"ctb\", \"cph\"),\n           comment = \"ion.rangeSlider library\"),\n    person(\"Sami\", \"Samhuri\", role = c(\"ctb\", \"cph\"),\n           comment = \"Javascript strftime library\"),\n    person(, \"SpryMedia Limited\", role = c(\"ctb\", \"cph\"),\n           comment = \"DataTables library\"),\n    person(\"Ivan\", \"Sagalaev\", role = c(\"ctb\", \"cph\"),\n           comment = \"highlight.js library\"),\n    person(\"R Core Team\", role = c(\"ctb\", \"cph\"),\n           comment = \"tar implementation from R\")\n  )",
         "Description": "Makes it incredibly easy to build interactive web\n    applications with R. Automatic \"reactive\" binding between inputs and\n    outputs and extensive prebuilt widgets make it possible to build\n    beautiful, responsive, and powerful applications with minimal effort.",
         "License": "MIT + file LICENSE",
@@ -1892,19 +1892,19 @@
         "BugReports": "https://github.com/rstudio/shiny/issues",
         "Depends": "methods, R (>= 3.1.2)",
         "Imports": "bslib (>= 0.6.0), cachem (>= 1.1.0), cli, commonmark (>=\n2.0.0), fastmap (>= 1.1.1), fontawesome (>= 0.4.0), glue (>=\n1.3.2), grDevices, htmltools (>= 0.5.4), httpuv (>= 1.5.2),\njsonlite (>= 0.9.16), later (>= 1.0.0), lifecycle (>= 0.2.0),\nmime (>= 0.3), otel, promises (>= 1.5.0), R6 (>= 2.0), rlang\n(>= 0.4.10), sourcetools, tools, utils, withr, xtable",
-        "Suggests": "Cairo (>= 1.5-5), coro (>= 1.1.0), datasets, DT, dygraphs,\nfuture, ggplot2, knitr (>= 1.6), magrittr, markdown, mirai,\notelsdk (>= 0.2.0), ragg, reactlog (>= 1.0.0), rmarkdown, sass,\nshowtext, testthat (>= 3.2.1), watcher, yaml",
-        "Config/Needs/check": "shinytest2",
+        "Suggests": "Cairo (>= 1.5-5), coro (>= 1.1.0), datasets, DT, dygraphs,\nfuture, ggplot2, knitr (>= 1.6), magrittr, markdown, mirai,\notelsdk (>= 0.2.0), ragg, reactlog (>= 1.0.0), rmarkdown, sass,\nshinytest2, showtext, testthat (>= 3.2.1), watcher, yaml",
+        "Config/Needs/check": "shinyjs",
+        "Config/roxygen2/version": "8.0.0",
         "Config/testthat/edition": "3",
         "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.3",
-        "Collate": "'globals.R' 'app-state.R' 'app_template.R' 'bind-cache.R'\n'bind-event.R' 'bookmark-state-local.R' 'bookmark-state.R'\n'bootstrap-deprecated.R' 'bootstrap-layout.R' 'conditions.R'\n'map.R' 'utils.R' 'bootstrap.R' 'busy-indicators-spinners.R'\n'busy-indicators.R' 'cache-utils.R' 'deprecated.R' 'devmode.R'\n'diagnose.R' 'extended-task.R' 'fileupload.R' 'graph.R'\n'reactives.R' 'reactive-domains.R' 'history.R' 'hooks.R'\n'html-deps.R' 'image-interact-opts.R' 'image-interact.R'\n'imageutils.R' 'input-action.R' 'input-checkbox.R'\n'input-checkboxgroup.R' 'input-date.R' 'input-daterange.R'\n'input-file.R' 'input-numeric.R' 'input-password.R'\n'input-radiobuttons.R' 'input-select.R' 'input-slider.R'\n'input-submit.R' 'input-text.R' 'input-textarea.R'\n'input-utils.R' 'insert-tab.R' 'insert-ui.R' 'jqueryui.R'\n'knitr.R' 'middleware-shiny.R' 'middleware.R' 'timer.R'\n'shiny.R' 'mock-session.R' 'modal.R' 'modules.R'\n'notifications.R' 'otel-attr-srcref.R' 'otel-collect.R'\n'otel-enable.R' 'otel-error.R' 'otel-label.R'\n'otel-reactive-update.R' 'otel-session.R' 'otel-shiny.R'\n'otel-with.R' 'priorityqueue.R' 'progress.R' 'react.R'\n'reexports.R' 'render-cached-plot.R' 'render-plot.R'\n'render-table.R' 'run-url.R' 'runapp.R' 'serializers.R'\n'server-input-handlers.R' 'server-resource-paths.R' 'server.R'\n'shiny-options.R' 'shiny-package.R' 'shinyapp.R' 'shinyui.R'\n'shinywrappers.R' 'showcase.R' 'snapshot.R' 'staticimports.R'\n'tar.R' 'test-export.R' 'test-server.R' 'test.R'\n'update-input.R' 'utils-lang.R' 'utils-tags.R'\n'version_bs_date_picker.R' 'version_ion_range_slider.R'\n'version_jquery.R' 'version_jqueryui.R' 'version_selectize.R'\n'version_strftime.R' 'viewer.R'",
+        "Collate": "'app-handle.R' 'globals.R' 'app-state.R' 'app_template.R'\n'bind-cache.R' 'bind-event.R' 'bookmark-state-local.R'\n'bookmark-state.R' 'bootstrap-deprecated.R'\n'bootstrap-layout.R' 'conditions.R' 'map.R' 'utils.R'\n'bootstrap.R' 'busy-indicators-spinners.R' 'busy-indicators.R'\n'cache-utils.R' 'deprecated.R' 'devmode.R' 'diagnose.R'\n'extended-task.R' 'fileupload.R' 'graph.R' 'reactives.R'\n'reactive-domains.R' 'history.R' 'hooks.R' 'html-deps.R'\n'image-interact-opts.R' 'image-interact.R' 'imageutils.R'\n'input-action.R' 'input-checkbox.R' 'input-checkboxgroup.R'\n'input-date.R' 'input-daterange.R' 'input-file.R'\n'input-numeric.R' 'input-password.R' 'input-radiobuttons.R'\n'input-select.R' 'input-slider.R' 'input-submit.R'\n'input-text.R' 'input-textarea.R' 'input-utils.R'\n'insert-tab.R' 'insert-ui.R' 'jqueryui.R' 'knitr.R'\n'middleware-shiny.R' 'middleware.R' 'timer.R' 'shiny.R'\n'mock-session.R' 'modal.R' 'modules.R' 'notifications.R'\n'otel-attr-srcref.R' 'otel-collect.R' 'otel-enable.R'\n'otel-error.R' 'otel-label.R' 'otel-reactive-update.R'\n'otel-session.R' 'otel-shiny.R' 'otel-with.R' 'priorityqueue.R'\n'progress.R' 'react.R' 'reexports.R' 'render-cached-plot.R'\n'render-plot.R' 'render-table.R' 'run-url.R' 'runapp.R'\n'serializers.R' 'server-input-handlers.R'\n'server-resource-paths.R' 'server.R' 'shiny-options.R'\n'shiny-package.R' 'shinyapp.R' 'shinyui.R' 'shinywrappers.R'\n'showcase.R' 'snapshot.R' 'staticimports.R' 'tar.R'\n'test-export.R' 'test-server.R' 'test.R' 'update-input.R'\n'utils-lang.R' 'utils-tags.R' 'version_bs_date_picker.R'\n'version_ion_range_slider.R' 'version_jquery.R'\n'version_jqueryui.R' 'version_selectize.R' 'version_strftime.R'\n'viewer.R'",
         "NeedsCompilation": "no",
-        "Packaged": "2026-02-19 20:25:10 UTC; cpsievert",
+        "Packaged": "2026-06-18 18:59:37 UTC; cpsievert",
         "Author": "Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Joe Cheng [aut],\n  JJ Allaire [aut],\n  Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>),\n  Garrick Aden-Buie [aut] (ORCID:\n    <https://orcid.org/0000-0002-7111-0077>),\n  Yihui Xie [aut],\n  Jeff Allen [aut],\n  Jonathan McPherson [aut],\n  Alan Dipert [aut],\n  Barbara Borges [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>),\n  jQuery Foundation [cph] (jQuery library and jQuery UI library),\n  jQuery contributors [ctb, cph] (jQuery library; authors listed in\n    inst/www/shared/jquery-AUTHORS.txt),\n  jQuery UI contributors [ctb, cph] (jQuery UI library; authors listed in\n    inst/www/shared/jqueryui/AUTHORS.txt),\n  Mark Otto [ctb] (Bootstrap library),\n  Jacob Thornton [ctb] (Bootstrap library),\n  Bootstrap contributors [ctb] (Bootstrap library),\n  Twitter, Inc [cph] (Bootstrap library),\n  Prem Nawaz Khan [ctb] (Bootstrap accessibility plugin),\n  Victor Tsaran [ctb] (Bootstrap accessibility plugin),\n  Dennis Lembree [ctb] (Bootstrap accessibility plugin),\n  Srinivasu Chakravarthula [ctb] (Bootstrap accessibility plugin),\n  Cathy O'Connor [ctb] (Bootstrap accessibility plugin),\n  PayPal, Inc [cph] (Bootstrap accessibility plugin),\n  Stefan Petre [ctb, cph] (Bootstrap-datepicker library),\n  Andrew Rowls [ctb, cph] (Bootstrap-datepicker library),\n  Brian Reavis [ctb, cph] (selectize.js library),\n  Salmen Bejaoui [ctb, cph] (selectize-plugin-a11y library),\n  Denis Ineshin [ctb, cph] (ion.rangeSlider library),\n  Sami Samhuri [ctb, cph] (Javascript strftime library),\n  SpryMedia Limited [ctb, cph] (DataTables library),\n  Ivan Sagalaev [ctb, cph] (highlight.js library),\n  R Core Team [ctb, cph] (tar implementation from R)",
         "Maintainer": "Carson Sievert <carson@posit.co>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-02-20 09:00:03 UTC",
-        "Built": "R 4.5.0; ; 2026-02-21 04:31:48 UTC; unix"
+        "Date/Publication": "2026-06-21 14:10:08 UTC",
+        "Built": "R 4.5.0; ; 2026-06-22 05:19:08 UTC; unix"
       }
     },
     "shinycssloaders": {
@@ -2051,7 +2051,7 @@
       "description": {
         "Package": "tibble",
         "Title": "Simple Data Frames",
-        "Version": "3.3.1.9016",
+        "Version": "3.3.1.9017",
         "Authors@R": "c(\n    person(\"Kirill\", \"Müller\", , \"kirill@cynkra.com\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-1416-3412\")),\n    person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", role = \"aut\"),\n    person(\"Romain\", \"Francois\", , \"romain@r-enthusiasts.com\", role = \"ctb\"),\n    person(\"Jennifer\", \"Bryan\", , \"jenny@rstudio.com\", role = \"ctb\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "Provides a 'tbl_df' class (the 'tibble') with stricter\n    checking and better formatting than the traditional data frame.",
         "License": "MIT + file LICENSE",
@@ -2077,16 +2077,16 @@
         "RemoteRepo": "tibble",
         "RemoteUsername": "tidyverse",
         "RemoteRef": "HEAD",
-        "RemoteSha": "c51fe5d0f7fda6dc142fc7212f1727de4d10e664",
+        "RemoteSha": "50c178c49fb4a7d1b7bb67bd675ac30b3af33a03",
         "GithubRepo": "tibble",
         "GithubUsername": "tidyverse",
         "GithubRef": "HEAD",
-        "GithubSHA1": "c51fe5d0f7fda6dc142fc7212f1727de4d10e664",
+        "GithubSHA1": "50c178c49fb4a7d1b7bb67bd675ac30b3af33a03",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-06-18 17:44:46 UTC; root",
+        "Packaged": "2026-06-25 18:06:04 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-06-18 17:44:46 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-06-25 18:06:05 UTC; unix"
       }
     },
     "tidyr": {
@@ -2344,7 +2344,7 @@
       "description": {
         "Package": "withr",
         "Title": "Run Code 'With' Temporarily Modified Global State",
-        "Version": "3.0.2",
+        "Version": "3.0.3",
         "Authors@R": "c(\n    person(\"Jim\", \"Hester\", role = \"aut\"),\n    person(\"Lionel\", \"Henry\", , \"lionel@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Kirill\", \"Müller\", , \"krlmlr+r@mailbox.org\", role = \"aut\"),\n    person(\"Kevin\", \"Ushey\", , \"kevinushey@gmail.com\", role = \"aut\"),\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\"),\n    person(\"Winston\", \"Chang\", role = \"aut\"),\n    person(\"Jennifer\", \"Bryan\", role = \"ctb\"),\n    person(\"Richard\", \"Cotton\", role = \"ctb\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n  )",
         "Description": "A set of functions to run code 'with' safely and temporarily\n    modified global state. Many of these functions were originally a part\n    of the 'devtools' package, this provides a simple package with limited\n    dependencies to provide access to these functions.",
         "License": "MIT + file LICENSE",
@@ -2360,12 +2360,12 @@
         "RoxygenNote": "7.3.2",
         "Collate": "'aaa.R' 'collate.R' 'connection.R' 'db.R' 'defer-exit.R'\n'standalone-defer.R' 'defer.R' 'devices.R' 'local_.R' 'with_.R'\n'dir.R' 'env.R' 'file.R' 'language.R' 'libpaths.R' 'locale.R'\n'makevars.R' 'namespace.R' 'options.R' 'par.R' 'path.R' 'rng.R'\n'seed.R' 'wrap.R' 'sink.R' 'tempfile.R' 'timezone.R'\n'torture.R' 'utils.R' 'with.R'",
         "NeedsCompilation": "no",
-        "Packaged": "2024-10-28 10:58:18 UTC; lionel",
+        "Packaged": "2026-06-17 11:51:00 UTC; lionel",
         "Author": "Jim Hester [aut],\n  Lionel Henry [aut, cre],\n  Kirill Müller [aut],\n  Kevin Ushey [aut],\n  Hadley Wickham [aut],\n  Winston Chang [aut],\n  Jennifer Bryan [ctb],\n  Richard Cotton [ctb],\n  Posit Software, PBC [cph, fnd]",
         "Maintainer": "Lionel Henry <lionel@posit.co>",
         "Repository": "RSPM",
-        "Date/Publication": "2024-10-28 13:30:02 UTC",
-        "Built": "R 4.5.0; ; 2025-04-05 03:16:46 UTC; unix"
+        "Date/Publication": "2026-06-19 05:30:02 UTC",
+        "Built": "R 4.5.0; ; 2026-06-20 14:22:24 UTC; unix"
       }
     },
     "xfun": {
@@ -2375,7 +2375,7 @@
         "Package": "xfun",
         "Type": "Package",
         "Title": "Supporting Functions for Packages Maintained by 'Yihui Xie'",
-        "Version": "0.58",
+        "Version": "0.59",
         "Authors@R": "c(\n  person(\"Yihui\", \"Xie\", role = c(\"aut\", \"cre\", \"cph\"), email = \"xie@yihui.name\", comment = c(ORCID = \"0000-0003-0645-5666\", URL = \"https://yihui.org\")),\n  person(\"Wush\", \"Wu\", role = \"ctb\"),\n  person(\"Daijiang\", \"Li\", role = \"ctb\"),\n  person(\"Xianying\", \"Tan\", role = \"ctb\"),\n  person(\"Salim\", \"Brüggemann\", role = \"ctb\", email = \"salim-b@pm.me\", comment = c(ORCID = \"0000-0002-5329-5987\")),\n  person(\"Christophe\", \"Dervieux\", role = \"ctb\"),\n  person()\n  )",
         "Description": "Miscellaneous functions commonly used in other packages maintained by 'Yihui Xie'.",
         "Depends": "R (>= 3.2.0)",
@@ -2388,12 +2388,12 @@
         "VignetteBuilder": "litedown",
         "Config/roxygen2/version": "8.0.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-05-31 16:49:17 UTC; yihui",
+        "Packaged": "2026-06-18 20:33:05 UTC; yihui",
         "Author": "Yihui Xie [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0003-0645-5666>, URL: https://yihui.org),\n  Wush Wu [ctb],\n  Daijiang Li [ctb],\n  Xianying Tan [ctb],\n  Salim Brüggemann [ctb] (ORCID: <https://orcid.org/0000-0002-5329-5987>),\n  Christophe Dervieux [ctb]",
         "Maintainer": "Yihui Xie <xie@yihui.name>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-06-01 05:10:03 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-06-02 05:28:56 UTC; unix"
+        "Date/Publication": "2026-06-19 05:10:02 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-06-20 14:22:40 UTC; unix"
       }
     },
     "xtable": {
@@ -2456,7 +2456,7 @@
       "checksum": "bec27550afd2213f1c4410c4ff9a2400"
     },
     "renv.lock": {
-      "checksum": "2c6719ccd13180b13bbc97ddba657ea4"
+      "checksum": "989dc552803bc1d8eeaaf495e71e9c3c"
     }
   },
   "users": null
