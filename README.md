@@ -6,8 +6,9 @@ This package serves two primary use cases:
 - **For IT admins**: Deploy pre-built dashboards to Posit Connect with minimal configuration
 - **For power users**: Access Chronicle data programmatically to build custom analyses and reports
 
->[!NOTE]
->If running Chronicle `2026.01.0` or earlier, reports must be installed using `v0.2.2`. ex. `pak::pak("posit-dev/chronicle-reports@v0.2.2")`.
+> [!NOTE]
+> If running Chronicle `2026.01.0` or earlier, reports must use `v0.2.2`. 
+> To install using pak: `pak::pak("posit-dev/chronicle-reports@v0.2.2")`.
 
 ## Quick Start
 
