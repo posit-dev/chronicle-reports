@@ -7,7 +7,7 @@ This package serves two primary use cases:
 - **For power users**: Access Chronicle data programmatically to build custom analyses and reports
 
 > [!NOTE]
-> If running Chronicle `2026.01.0` or earlier, reports must use `v0.2.2`. 
+> For data collected by Chronicle `v2026.1.0` or earlier, use `v0.2.2` of these reports. 
 > To install using pak: `pak::pak("posit-dev/chronicle-reports@v0.2.2")`.
 
 ## Quick Start
