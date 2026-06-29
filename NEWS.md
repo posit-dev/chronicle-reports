@@ -9,7 +9,8 @@
 
 ## Breaking Changes
 
-* The Connect Usage report now reads the new `connect/content_hits_totals` and `connect/content_hits_totals_by_user` datasets, and the previous visits-based content usage view has been removed. As a result, this version requires data from Chronicle running in Connect and Workbench versions 2026.06.0 and later. Pointing the dashboards at older Chronicle data will cause the affected reports to fail to load.
+* The Connect Usage report now reads the new `connect/content_hits_totals` and `connect/content_hits_totals_by_user` datasets, and the previous visits-based content usage view has been removed. As a result, this version requires data from Chronicle running in Connect and Workbench versions 2026.06.0 and later. Pointing the dashboards at older Chronicle data will cause the affected reports to fail to load. If you wish to run
+the reports with older versions of chronicle, install version `0.2.2` using `pak::pak("posit-dev/chronicle-reports@v0.2.2")`
 * Removed support for retrieving `"hourly"` raw metrics. `chronicle_raw_data()` and `chronicle_list_raw_data()` now only accept `frequency = "daily"`.
 
 # chronicle.reports 0.2.2
