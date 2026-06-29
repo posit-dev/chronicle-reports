@@ -10,6 +10,10 @@ This package serves two primary use cases:
 
 Install the package and explore using sample data:
 
+>[!NOTE]
+>
+>If running Chronicle `2026.01.0` or earlier, reports must be run using `pak::pak("posit-dev/chronicle-reports@v0.2.2")`.
+
 ```r
 # Install from GitHub
 pak::pak("posit-dev/chronicle-reports")
