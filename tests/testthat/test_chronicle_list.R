@@ -13,6 +13,9 @@ test_that("chronicle_list_data returns available curated metrics", {
   expect_true("connect/user_list" %in% metrics)
   expect_true("workbench/user_totals" %in% metrics)
   expect_true("workbench/user_list" %in% metrics)
+  expect_true("workbench/session_start_totals" %in% metrics)
+  expect_true("workbench/session_start_totals_by_user" %in% metrics)
+  expect_true("workbench/session_duration" %in% metrics)
 
   # Check that we have at least 4 metrics
   expect_gte(length(metrics), 4)
@@ -112,17 +115,6 @@ test_that("chronicle_list_raw_data defaults to daily frequency", {
   expect_gte(length(metrics), 1)
 })
 
-test_that("chronicle_list_raw_data handles hourly frequency", {
-  base_path <- create_sample_chronicle_data()
-  on.exit(unlink(base_path, recursive = TRUE))
-
-  # Our sample data doesn't include hourly, but should handle gracefully
-  metrics <- chronicle_list_raw_data(base_path, frequency = "hourly")
-
-  expect_type(metrics, "character")
-  # May be empty since we don't create hourly sample data
-})
-
 test_that("chronicle_list_raw_data validates frequency parameter", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
@@ -130,7 +122,13 @@ test_that("chronicle_list_raw_data validates frequency parameter", {
   # Invalid frequency should error
   expect_error(
     chronicle_list_raw_data(base_path, frequency = "invalid"),
-    regexp = "should be one of"
+    regexp = "should be"
+  )
+
+  # Hourly data is no longer retrievable
+  expect_error(
+    chronicle_list_raw_data(base_path, frequency = "hourly"),
+    regexp = "should be"
   )
 })
 

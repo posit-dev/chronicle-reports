@@ -59,6 +59,83 @@ BRAND_COLORS <- list(
 )
 
 # ==============================================
+# Download UI Helper Functions
+# ==============================================
+
+download_icon <- bsicons::bs_icon("download")
+
+# Card header with a single download button (for tables)
+card_header_with_download <- function(
+  title,
+  download_id,
+  subtitle_output = NULL
+) {
+  title_el <- if (is.null(subtitle_output)) {
+    shiny::span(title)
+  } else {
+    shiny::div(
+      shiny::span(title),
+      shiny::span(
+        style = "font-weight: normal; font-size: 0.9em; color: #555;",
+        subtitle_output
+      )
+    )
+  }
+
+  bslib::card_header(
+    shiny::div(
+      style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
+      title_el,
+      shiny::downloadLink(
+        download_id,
+        label = shiny::tagList(
+          download_icon,
+          shiny::span("Download CSV", class = "visually-hidden")
+        ),
+        style = "text-decoration: none; color: #555; font-size: 1.1em;"
+      )
+    )
+  )
+}
+
+# Card header with a popover dropdown offering chart data + raw data downloads
+card_header_with_chart_downloads <- function(
+  title,
+  chart_download_id,
+  raw_download_id
+) {
+  bslib::card_header(
+    shiny::div(
+      style = "display: flex; justify-content: space-between; align-items: center; gap: 16px;", # nolint: line_length
+      shiny::span(title),
+      bslib::popover(
+        shiny::actionLink(
+          paste0(chart_download_id, "_trigger"),
+          label = shiny::tagList(
+            download_icon,
+            shiny::span("Download CSV", class = "visually-hidden")
+          ),
+          style = "text-decoration: none; color: #555; font-size: 1.1em;"
+        ),
+        title = "Download CSV",
+        shiny::div(
+          shiny::downloadLink(
+            chart_download_id,
+            "Chart data (aggregated)",
+            style = "display: block; margin-bottom: 8px;"
+          ),
+          shiny::downloadLink(
+            raw_download_id,
+            "Raw data (filtered)",
+            style = "display: block;"
+          )
+        )
+      )
+    )
+  )
+}
+
+# ==============================================
 # Users - Overview UI/Server
 # ==============================================
 
@@ -95,11 +172,19 @@ users_overview_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(6, 6),
     bslib::card(
-      bslib::card_header("User Trends Over Time"),
+      card_header_with_chart_downloads(
+        "User Trends Over Time",
+        "download_user_trends_chart",
+        "download_user_trends_raw"
+      ),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_trend_plot"))
     ),
     bslib::card(
-      bslib::card_header("Average Users by Day of Week"),
+      card_header_with_chart_downloads(
+        "Average Users by Day of Week",
+        "download_user_dow_chart",
+        "download_user_dow_raw"
+      ),
       shinycssloaders::withSpinner(plotly::plotlyOutput("users_dow_plot"))
     )
   )
@@ -170,6 +255,46 @@ users_overview_server <- function(input, output, session, user_totals) {
       )
   })
 
+  # Aggregated data for User Trends chart
+  user_trends_chart_data <- shiny::reactive({
+    data <- filtered_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::select("date", "named_users", "active_users_1day", "publishers") |>
+      dplyr::filter(!is.na(date)) |>
+      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
+      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
+      dplyr::arrange(date) |>
+      dplyr::mutate(
+        metric = factor(
+          .data$metric,
+          levels = c("named_users", "active_users_1day", "publishers"),
+          labels = c("Licensed Users", "Daily Users", "Publishers")
+        )
+      )
+  })
+
+  # Aggregated data for Day of Week chart
+  user_dow_chart_data <- shiny::reactive({
+    data <- filtered_users_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::mutate(
+        day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
+      ) |>
+      dplyr::group_by(.data$day_of_week) |>
+      dplyr::summarise(
+        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
   # Value boxes (always latest data)
   output$users_licensed_value <- shiny::renderText({
     data <- latest_users_data()
@@ -197,53 +322,9 @@ users_overview_server <- function(input, output, session, user_totals) {
 
   # Trend chart (filtered data)
   output$users_trend_plot <- plotly::renderPlotly({
-    data <- filtered_users_data()
+    plot_data <- user_trends_chart_data()
 
-    if (is.null(data) || nrow(data) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>Data not available</b>",
-                x = 0.5,
-                y = 0.55,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              ),
-              list(
-                text = "Check that Chronicle data exists at the configured path",
-                x = 0.5,
-                y = 0.45,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 14, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    plot_data <- data |>
-      dplyr::select("date", "named_users", "active_users_1day", "publishers") |>
-      dplyr::filter(!is.na(date)) |>
-      tidyr::pivot_longer(-date, names_to = "metric", values_to = "value") |>
-      dplyr::filter(!is.na(.data$value), is.finite(.data$value)) |>
-      dplyr::arrange(date) |>
-      dplyr::mutate(
-        metric = factor(
-          .data$metric,
-          levels = c("named_users", "active_users_1day", "publishers"),
-          labels = c("Licensed Users", "Daily Users", "Publishers")
-        )
-      )
-
-    if (nrow(plot_data) == 0) {
+    if (is.null(plot_data) || nrow(plot_data) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -304,49 +385,9 @@ users_overview_server <- function(input, output, session, user_totals) {
 
   # Day of week chart (filtered data)
   output$users_dow_plot <- plotly::renderPlotly({
-    data <- filtered_users_data()
+    day_summary <- user_dow_chart_data()
 
-    if (is.null(data) || nrow(data) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>Data not available</b>",
-                x = 0.5,
-                y = 0.55,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              ),
-              list(
-                text = "Check that Chronicle data exists at the configured path",
-                x = 0.5,
-                y = 0.45,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 14, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    day_summary <- data |>
-      dplyr::mutate(
-        day_of_week = lubridate::wday(date, label = TRUE, abbr = FALSE)
-      ) |>
-      dplyr::group_by(.data$day_of_week) |>
-      dplyr::summarise(
-        avg_active_users = mean(.data$active_users_1day, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-    if (nrow(day_summary) == 0) {
+    if (is.null(day_summary) || nrow(day_summary) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -382,6 +423,60 @@ users_overview_server <- function(input, output, session, user_totals) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handlers for User Trends chart
+  output$download_user_trends_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_trends_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_trends_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_user_trends_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_trends_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handlers for Day of Week chart
+  output$download_user_dow_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_dow_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- user_dow_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_user_dow_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_user_dow_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -389,15 +484,10 @@ users_overview_server <- function(input, output, session, user_totals) {
 # ==============================================
 
 users_list_ui <- bslib::card(
-  bslib::card_header(
-    shiny::div(
-      style = "display: flex; justify-content: space-between; align-items: baseline;",
-      shiny::span("Filters"),
-      shiny::span(
-        style = "font-weight: normal; font-size: 0.9em; color: #555;",
-        shiny::textOutput("users_list_as_of", inline = TRUE)
-      )
-    )
+  card_header_with_download(
+    "Filters",
+    "download_users_list",
+    shiny::textOutput("users_list_as_of", inline = TRUE)
   ),
   bslib::layout_columns(
     col_widths = c(6, 6),
@@ -554,6 +644,40 @@ users_list_server <- function(input, output, session, user_list) {
         rownames = FALSE
       )
   })
+
+  # Download handler for users list
+  output$download_users_list <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_users_list_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_users_list()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      export_data <- data |>
+        dplyr::mutate(
+          environment = ifelse(
+            is.na(environment) |
+              environment == "" |
+              environment == " ",
+            "(Not Set)",
+            environment
+          )
+        ) |>
+        dplyr::select(
+          "username",
+          "email",
+          "first_name",
+          "last_name",
+          "environment",
+          "user_role",
+          "last_active_at"
+        )
+      utils::write.csv(export_data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -583,11 +707,19 @@ content_overview_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Content Trends Over Time"),
+    card_header_with_chart_downloads(
+      "Content Trends Over Time",
+      "download_content_trends_chart",
+      "download_content_trends_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput("content_trend_plot"))
   ),
   bslib::card(
-    bslib::card_header("Content by Type"),
+    card_header_with_chart_downloads(
+      "Content by Type",
+      "download_content_type_chart",
+      "download_content_type_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput("content_type_bar_plot"))
   )
 )
@@ -733,11 +865,46 @@ content_overview_server <- function(input, output, session, content_totals) {
       )
   })
 
+  # Aggregated data for Content Trends chart
+  content_trends_chart_data <- shiny::reactive({
+    df <- filtered_contents_in_range()
+    if (is.null(df) || nrow(df) == 0) {
+      return(NULL)
+    }
+    df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
+        total_content = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
+  # Aggregated data for Content by Type chart
+  content_type_chart_data <- shiny::reactive({
+    df <- filtered_contents_in_range()
+    if (is.null(df) || nrow(df) == 0) {
+      return(NULL)
+    }
+    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
+    df |>
+      dplyr::filter(date == latest_date) |>
+      dplyr::group_by(.data$type) |>
+      dplyr::summarise(
+        total = sum(.data$count, na.rm = TRUE),
+        .groups = "drop"
+      ) |>
+      dplyr::rename(content_type = "type") |>
+      dplyr::arrange(.data$total) |>
+      dplyr::mutate(
+        content_type = factor(.data$content_type, levels = .data$content_type)
+      )
+  })
+
   # Trend chart (filtered by date range)
   output$content_trend_plot <- plotly::renderPlotly({
-    data <- contents_data()
+    total_by_date <- content_trends_chart_data()
 
-    if (is.null(data)) {
+    if (is.null(total_by_date) || nrow(total_by_date) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -767,38 +934,7 @@ content_overview_server <- function(input, output, session, content_totals) {
       )
     }
 
-    df <- filtered_contents_in_range()
-
-    if (is.null(df) || nrow(df) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>No data available for selected date range</b>",
-                x = 0.5,
-                y = 0.5,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    # Aggregate by date using canonical `count` column
-    total_by_date <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        total_content = sum(.data$count, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-    # Only plot Total Content over time (remove unique content types)
+    # Only plot Total Content over time
     plot_data <- total_by_date |>
       dplyr::mutate(
         metric = factor("Total Content", levels = "Total Content")
@@ -862,9 +998,9 @@ content_overview_server <- function(input, output, session, content_totals) {
 
   # Bar chart: content counts by type over selected date range
   output$content_type_bar_plot <- plotly::renderPlotly({
-    data <- contents_data()
+    type_summary <- content_type_chart_data()
 
-    if (is.null(data)) {
+    if (is.null(type_summary) || nrow(type_summary) == 0) {
       return(
         plotly::plotly_empty(type = "scatter", mode = "markers") |>
           plotly::layout(
@@ -894,57 +1030,6 @@ content_overview_server <- function(input, output, session, content_totals) {
       )
     }
 
-    df <- filtered_contents_in_range()
-
-    if (is.null(df)) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    if (nrow(df) == 0) {
-      return(
-        plotly::plotly_empty(type = "scatter", mode = "markers") |>
-          plotly::layout(
-            xaxis = list(showgrid = FALSE, zeroline = FALSE),
-            yaxis = list(showgrid = FALSE, zeroline = FALSE),
-            annotations = list(
-              list(
-                text = "<b>No data available for selected date range</b>",
-                x = 0.5,
-                y = 0.5,
-                xref = "paper",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 18, color = "#666666")
-              )
-            )
-          )
-      )
-    }
-
-    latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
-    df <- df |>
-      dplyr::filter(date == latest_date)
-
-    # Latest-day totals are not cumulative; just use that day's counts
-    type_summary <- df |>
-      dplyr::group_by(.data$type) |>
-      dplyr::summarise(
-        total = sum(.data$count, na.rm = TRUE),
-        .groups = "drop"
-      )
-    names(type_summary)[1] <- "content_type"
-
-    if (nrow(type_summary) == 0) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    # Order by total asc so after coord_flip highest are at top
-    type_summary <- type_summary |>
-      dplyr::arrange(.data$total) |>
-      dplyr::mutate(
-        content_type = factor(.data$content_type, levels = .data$content_type)
-      )
-
     p <- ggplot2::ggplot(
       type_summary,
       ggplot2::aes(
@@ -964,6 +1049,60 @@ content_overview_server <- function(input, output, session, content_totals) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handlers for Content Trends chart
+  output$download_content_trends_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_trends_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- content_trends_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_content_trends_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_trends_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_contents_in_range()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handlers for Content by Type chart
+  output$download_content_type_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_type_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- content_type_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_content_type_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_type_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_contents_in_range()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -971,7 +1110,7 @@ content_overview_server <- function(input, output, session, content_totals) {
 # ==============================================
 
 content_list_ui <- bslib::card(
-  bslib::card_header("Content List"),
+  card_header_with_download("Content List", "download_content_list"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
@@ -1221,23 +1360,48 @@ content_list_server <- function(
       rownames = FALSE
     )
   })
+
+  # Download handler for content list
+  output$download_content_list <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_list_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- filtered_content_list()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      cols <- c(
+        "title",
+        "owner",
+        "type",
+        "environment",
+        "py_version",
+        "r_version",
+        "quarto_version",
+        "last_deployed_time"
+      )
+      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
-# Usage - Overview UI/Server
+# Usage - Content Hits Overview UI/Server
 # ==============================================
 
-usage_overview_ui <- bslib::card(
-  bslib::card_header("Usage Overview"),
+content_hits_overview_ui <- bslib::card(
+  bslib::card_header("Content Hits"),
   bslib::layout_columns(
     col_widths = c(4, 8),
     shiny::selectInput(
-      "usage_overview_environment",
+      "content_hits_overview_environment",
       "Environment:",
       choices = c("All")
     ),
     shiny::dateRangeInput(
-      "usage_overview_date_range",
+      "content_hits_overview_date_range",
       "Date Range:",
       start = Sys.Date() - 90,
       end = Sys.Date(),
@@ -1247,53 +1411,65 @@ usage_overview_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     bslib::value_box(
-      title = "Total Visits",
+      title = "Total Hits",
       max_height = "120px",
-      value = shiny::textOutput("usage_visits_value"),
+      value = shiny::textOutput("content_hits_total_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
     ),
     bslib::value_box(
-      title = "Unique Visitors",
+      title = "Unique Users",
       max_height = "120px",
-      value = shiny::textOutput("usage_unique_value"),
+      value = shiny::textOutput("content_hits_unique_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BLUE)
     ),
     bslib::value_box(
-      title = "Avg Daily Visits",
+      title = "Avg Daily Hits",
       max_height = "120px",
-      value = shiny::textOutput("usage_avg_daily_value"),
+      value = shiny::textOutput("content_hits_avg_daily_value"),
       theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
     )
   ),
   bslib::card(
-    bslib::card_header("Total Visits by Day"),
+    card_header_with_chart_downloads(
+      "Total Hits by Day",
+      "download_content_hits_chart",
+      "download_content_hits_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput(
-      "usage_total_visits_plot"
+      "content_hits_total_plot"
     ))
   ),
   bslib::card(
-    bslib::card_header("Unique Visitors by Day"),
+    card_header_with_chart_downloads(
+      "Unique Users by Day",
+      "download_content_hits_unique_chart",
+      "download_content_hits_unique_raw"
+    ),
     shinycssloaders::withSpinner(plotly::plotlyOutput(
-      "usage_unique_visitors_plot"
+      "content_hits_unique_plot"
     ))
   )
 )
 
-usage_overview_server <- function(input, output, session, content_visits) {
-  # Error handling in main server
-  usage_data <- content_visits
+content_hits_overview_server <- function(
+  input,
+  output,
+  session,
+  content_hits_by_user
+) {
+  hits_data <- content_hits_by_user
 
   date_range <- shiny::reactive({
-    input$usage_overview_date_range
+    input$content_hits_overview_date_range
   })
 
   # Populate environment filter dynamically
   shiny::observe({
-    data <- usage_data()
+    data <- hits_data()
     if (is.null(data)) {
       shiny::updateSelectInput(
         session,
-        "usage_overview_environment",
+        "content_hits_overview_environment",
         choices = c("All"),
         selected = "All"
       )
@@ -1304,7 +1480,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
     if (!"environment" %in% names(df) || nrow(df) == 0) {
       shiny::updateSelectInput(
         session,
-        "usage_overview_environment",
+        "content_hits_overview_environment",
         choices = c("All"),
         selected = "All"
       )
@@ -1326,7 +1502,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
 
     shiny::updateSelectInput(
       session,
-      "usage_overview_environment",
+      "content_hits_overview_environment",
       choices = c("All", env_values),
       selected = "All"
     )
@@ -1336,7 +1512,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
   # reloads to preserve the user's current selection).
   date_init_done <- shiny::reactiveVal(FALSE)
   shiny::observe({
-    data <- usage_data()
+    data <- hits_data()
     if (is.null(data)) {
       return()
     }
@@ -1359,7 +1535,7 @@ usage_overview_server <- function(input, output, session, content_visits) {
 
     shiny::updateDateRangeInput(
       session,
-      "usage_overview_date_range",
+      "content_hits_overview_date_range",
       start = initial_start,
       end = date_summary$max_date,
       max = date_summary$max_date
@@ -1367,8 +1543,8 @@ usage_overview_server <- function(input, output, session, content_visits) {
     date_init_done(TRUE)
   })
 
-  usage_filtered <- shiny::reactive({
-    data <- usage_data()
+  hits_filtered <- shiny::reactive({
+    data <- hits_data()
     if (is.null(data)) {
       return(NULL)
     }
@@ -1377,9 +1553,11 @@ usage_overview_server <- function(input, output, session, content_visits) {
 
     # Environment filter
     if (
-      "environment" %in% names(df) && input$usage_overview_environment != "All"
+      "environment" %in%
+        names(df) &&
+        input$content_hits_overview_environment != "All"
     ) {
-      if (input$usage_overview_environment == "(Not Set)") {
+      if (input$content_hits_overview_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
             is.na(environment) |
@@ -1388,7 +1566,9 @@ usage_overview_server <- function(input, output, session, content_visits) {
           )
       } else {
         df <- df |>
-          dplyr::filter(environment == input$usage_overview_environment)
+          dplyr::filter(
+            environment == input$content_hits_overview_environment
+          )
       }
     }
 
@@ -1402,38 +1582,66 @@ usage_overview_server <- function(input, output, session, content_visits) {
       dplyr::collect()
   })
 
-  output$usage_visits_value <- shiny::renderText({
-    df <- usage_filtered()
+  # Aggregated data for Total Hits chart
+  hits_chart_data <- shiny::reactive({
+    df <- hits_filtered()
+    if (is.null(df) || nrow(df) == 0 || !"hits" %in% names(df)) {
+      return(NULL)
+    }
+    df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
+        total_hits = sum(.data$hits, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
 
-    if (is.null(df) || nrow(df) == 0 || !"visits" %in% names(df)) {
+  # Aggregated data for Unique Users chart
+  unique_users_chart_data <- shiny::reactive({
+    df <- hits_filtered()
+    if (is.null(df) || nrow(df) == 0 || !"user_guid" %in% names(df)) {
+      return(NULL)
+    }
+    df |>
+      dplyr::group_by(date) |>
+      dplyr::summarise(
+        unique_users = dplyr::n_distinct(.data$user_guid, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
+  output$content_hits_total_value <- shiny::renderText({
+    df <- hits_filtered()
+
+    if (is.null(df) || nrow(df) == 0 || !"hits" %in% names(df)) {
       return("0")
     }
 
-    total_visits <- sum(df$visits, na.rm = TRUE)
-    prettyNum(total_visits, big.mark = ",")
+    total_hits <- sum(df$hits, na.rm = TRUE)
+    prettyNum(total_hits, big.mark = ",")
   })
 
-  output$usage_unique_value <- shiny::renderText({
-    df <- usage_filtered()
+  output$content_hits_unique_value <- shiny::renderText({
+    df <- hits_filtered()
 
     if (is.null(df) || nrow(df) == 0 || !"user_guid" %in% names(df)) {
       return("0")
     }
 
-    unique_visitors <- dplyr::n_distinct(df$user_guid)
-    prettyNum(unique_visitors, big.mark = ",")
+    unique_users <- dplyr::n_distinct(df$user_guid, na.rm = TRUE)
+    prettyNum(unique_users, big.mark = ",")
   })
 
-  output$usage_avg_daily_value <- shiny::renderText({
-    df <- usage_filtered()
+  output$content_hits_avg_daily_value <- shiny::renderText({
+    df <- hits_filtered()
 
-    if (is.null(df) || nrow(df) == 0 || !"visits" %in% names(df)) {
+    if (is.null(df) || nrow(df) == 0 || !"hits" %in% names(df)) {
       return("0")
     }
 
     shiny::req(date_range())
 
-    total_visits <- sum(df$visits, na.rm = TRUE)
+    total_hits <- sum(df$hits, na.rm = TRUE)
     num_days <- as.numeric(
       date_range()[2] - date_range()[1]
     ) +
@@ -1443,40 +1651,25 @@ usage_overview_server <- function(input, output, session, content_visits) {
       return("0")
     }
 
-    avg_daily <- total_visits / num_days
+    avg_daily <- total_hits / num_days
     prettyNum(round(avg_daily), big.mark = ",")
   })
 
-  output$usage_total_visits_plot <- plotly::renderPlotly({
-    df <- usage_filtered()
+  output$content_hits_total_plot <- plotly::renderPlotly({
+    daily <- hits_chart_data()
 
-    if (
-      is.null(df) ||
-        nrow(df) == 0 ||
-        !"visits" %in% names(df)
-    ) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    daily <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        total_visits = sum(.data$visits, na.rm = TRUE),
-        .groups = "drop"
-      )
-
-    if (nrow(daily) == 0) {
+    if (is.null(daily) || nrow(daily) == 0) {
       return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     p <- ggplot2::ggplot(
       daily,
-      ggplot2::aes(x = date, y = total_visits)
+      ggplot2::aes(x = date, y = total_hits)
     ) +
       ggplot2::geom_line(linewidth = 0.5, color = BRAND_COLORS$GREEN) +
       ggplot2::geom_point(size = 0.5, color = BRAND_COLORS$GREEN) +
       ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Total Visits")
+      ggplot2::labs(x = "", y = "Total Hits")
 
     plotly::ggplotly(p) |>
       plotly::layout(
@@ -1486,36 +1679,21 @@ usage_overview_server <- function(input, output, session, content_visits) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  output$usage_unique_visitors_plot <- plotly::renderPlotly({
-    df <- usage_filtered()
+  output$content_hits_unique_plot <- plotly::renderPlotly({
+    daily <- unique_users_chart_data()
 
-    if (
-      is.null(df) ||
-        nrow(df) == 0 ||
-        !"user_guid" %in% names(df)
-    ) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    daily <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        unique_visitors = dplyr::n_distinct(.data$user_guid),
-        .groups = "drop"
-      )
-
-    if (nrow(daily) == 0) {
+    if (is.null(daily) || nrow(daily) == 0) {
       return(plotly::plotly_empty(type = "scatter", mode = "markers"))
     }
 
     p <- ggplot2::ggplot(
       daily,
-      ggplot2::aes(x = date, y = unique_visitors)
+      ggplot2::aes(x = date, y = unique_users)
     ) +
       ggplot2::geom_line(linewidth = 0.5, color = BRAND_COLORS$BLUE) +
       ggplot2::geom_point(size = 0.5, color = BRAND_COLORS$BLUE) +
       ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Unique Visitors")
+      ggplot2::labs(x = "", y = "Unique Users")
 
     plotly::ggplotly(p) |>
       plotly::layout(
@@ -1524,420 +1702,111 @@ usage_overview_server <- function(input, output, session, content_visits) {
       ) |>
       plotly::config(displayModeBar = FALSE)
   })
+
+  # Download handlers for Total Hits chart
+  output$download_content_hits_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_hits_chart_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- hits_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_content_hits_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_hits_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- hits_filtered()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  # Download handlers for Unique Users chart
+  output$download_content_hits_unique_chart <- shiny::downloadHandler(
+    filename = function() {
+      paste0(
+        "chronicle_connect_content_hits_unique_chart_",
+        Sys.Date(),
+        ".csv"
+      )
+    },
+    content = function(file) {
+      data <- unique_users_chart_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+
+  output$download_content_hits_unique_raw <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_hits_unique_raw_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- hits_filtered()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
-# Usage - Shiny Apps UI/Server
+# Usage - Content Hits by User UI/Server
 # ==============================================
 
-shiny_apps_ui <- bslib::card(
-  bslib::card_header("Shiny App Usage"),
+content_hits_by_user_ui <- bslib::card(
+  card_header_with_download(
+    "Content Hits by User",
+    "download_content_hits_by_user"
+  ),
   bslib::layout_columns(
     col_widths = c(4, 8),
     shiny::selectInput(
-      "shiny_apps_environment",
+      "content_hits_by_user_environment",
       "Environment:",
       choices = c("All")
     ),
     shiny::dateRangeInput(
-      "shiny_apps_date_range",
+      "content_hits_by_user_date_range",
       "Date Range:",
       start = Sys.Date() - 90,
       end = Sys.Date(),
       format = "yyyy-mm-dd"
     )
   ),
-  bslib::layout_columns(
-    col_widths = c(6, 6),
-    bslib::value_box(
-      title = "Total Sessions",
-      max_height = "120px",
-      value = shiny::textOutput("shiny_sessions_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$BURGUNDY)
-    ),
-    bslib::value_box(
-      title = "Avg Duration (min)",
-      max_height = "120px",
-      value = shiny::textOutput("shiny_duration_value"),
-      theme = bslib::value_box_theme(bg = BRAND_COLORS$GREEN)
-    )
-  ),
-  bslib::card(
-    bslib::card_header("Shiny Sessions by Day"),
-    shinycssloaders::withSpinner(plotly::plotlyOutput("shiny_trend_plot"))
-  ),
-  bslib::card(
-    bslib::card_header("Per-App Breakdown"),
-    shinycssloaders::withSpinner(DT::dataTableOutput("shiny_apps_table"))
+  shinycssloaders::withSpinner(
+    DT::dataTableOutput("content_hits_by_user_table")
   )
 )
 
-shiny_apps_server <- function(
+content_hits_by_user_server <- function(
   input,
   output,
   session,
-  shiny_usage,
-  content_list
-) {
-  # Error handling in main server
-  shiny_usage_data <- shiny_usage
-
-  date_range <- shiny::reactive({
-    input$shiny_apps_date_range
-  })
-
-  # Use shared content_list (already latest snapshot from main server)
-  shiny_content_list_latest <- shiny::reactive({
-    df <- content_list()
-    if (is.null(df) || nrow(df) == 0) {
-      return(NULL)
-    }
-    df
-  })
-
-  # Set default date range on first data load only (skip on range expansion
-  # reloads to preserve the user's current selection).
-  date_init_done <- shiny::reactiveVal(FALSE)
-  shiny::observe({
-    data <- shiny_usage_data()
-    if (is.null(data)) {
-      shiny::updateSelectInput(
-        session,
-        "shiny_apps_environment",
-        choices = c("All"),
-        selected = "All"
-      )
-      return()
-    }
-
-    df <- data |> dplyr::collect()
-
-    if (!"environment" %in% names(df) || nrow(df) == 0) {
-      shiny::updateSelectInput(
-        session,
-        "shiny_apps_environment",
-        choices = c("All"),
-        selected = "All"
-      )
-    } else {
-      env_values <- df |>
-        dplyr::pull(environment) |>
-        unique()
-
-      has_env_na <- any(
-        is.na(env_values) | env_values == "" | env_values == " "
-      )
-      env_values <- env_values[
-        !is.na(env_values) & env_values != "" & env_values != " "
-      ] |>
-        sort()
-      if (has_env_na) {
-        env_values <- c(env_values, "(Not Set)")
-      }
-
-      shiny::updateSelectInput(
-        session,
-        "shiny_apps_environment",
-        choices = c("All", env_values),
-        selected = "All"
-      )
-    }
-
-    if (!date_init_done()) {
-      date_summary <- data |>
-        dplyr::filter(!is.na(date)) |>
-        dplyr::summarise(
-          min_date = min(date, na.rm = TRUE),
-          max_date = max(date, na.rm = TRUE)
-        ) |>
-        dplyr::collect()
-
-      if (nrow(date_summary) > 0) {
-        initial_start <- initial_date_start(date_summary$min_date)
-
-        shiny::updateDateRangeInput(
-          session,
-          "shiny_apps_date_range",
-          start = initial_start,
-          end = date_summary$max_date,
-          max = date_summary$max_date
-        )
-        date_init_done(TRUE)
-      }
-    }
-  })
-
-  shiny_usage_filtered <- shiny::reactive({
-    data <- shiny_usage_data()
-    if (is.null(data)) {
-      return(NULL)
-    }
-
-    df <- data |> dplyr::collect()
-
-    # Environment filter
-    if ("environment" %in% names(df) && input$shiny_apps_environment != "All") {
-      if (input$shiny_apps_environment == "(Not Set)") {
-        df <- df |>
-          dplyr::filter(
-            is.na(environment) |
-              environment == "" |
-              environment == " "
-          )
-      } else {
-        df <- df |>
-          dplyr::filter(environment == input$shiny_apps_environment)
-      }
-    }
-
-    shiny::req(date_range())
-
-    df |>
-      dplyr::filter(
-        date >= date_range()[1],
-        date <= date_range()[2]
-      ) |>
-      dplyr::collect()
-  })
-
-  output$shiny_sessions_value <- shiny::renderText({
-    df <- shiny_usage_filtered()
-
-    if (is.null(df) || nrow(df) == 0 || !"num_sessions" %in% names(df)) {
-      return("0")
-    }
-
-    total_sessions <- sum(df$num_sessions, na.rm = TRUE)
-    prettyNum(total_sessions, big.mark = ",")
-  })
-
-  output$shiny_duration_value <- shiny::renderText({
-    df <- shiny_usage_filtered()
-
-    if (is.null(df) || nrow(df) == 0) {
-      return("")
-    }
-
-    if ("duration" %in% names(df) && "num_sessions" %in% names(df)) {
-      total_sessions <- sum(df$num_sessions, na.rm = TRUE)
-      if (total_sessions == 0) {
-        return("0")
-      }
-
-      total_duration <- sum(df$duration, na.rm = TRUE)
-      avg_duration_minutes <- total_duration / total_sessions / 60
-      return(round(avg_duration_minutes, 2))
-    }
-
-    ""
-  })
-
-  output$shiny_trend_plot <- plotly::renderPlotly({
-    df <- shiny_usage_filtered()
-
-    if (is.null(df) || nrow(df) == 0 || !"num_sessions" %in% names(df)) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    daily <- df |>
-      dplyr::group_by(date) |>
-      dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-        peak_concurrent_daily = if ("peak_concurrent" %in% names(df)) {
-          suppressWarnings(max(.data$peak_concurrent, na.rm = TRUE))
-        } else {
-          NA_real_
-        },
-        .groups = "drop"
-      )
-
-    if (nrow(daily) == 0) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    metrics <- c("total_sessions")
-    if ("peak_concurrent" %in% names(df)) {
-      metrics <- c(metrics, "peak_concurrent_daily")
-    }
-
-    plot_data <- daily |>
-      tidyr::pivot_longer(
-        dplyr::all_of(metrics),
-        names_to = "metric",
-        values_to = "value"
-      ) |>
-      dplyr::mutate(
-        metric = factor(
-          .data$metric,
-          levels = c("total_sessions", "peak_concurrent_daily"),
-          labels = c("Total Sessions", "Peak Concurrent Users")
-        )
-      )
-
-    plot_data <- plot_data[
-      stats::complete.cases(plot_data$value),
-      ,
-      drop = FALSE
-    ]
-
-    if (nrow(plot_data) == 0) {
-      return(plotly::plotly_empty(type = "scatter", mode = "markers"))
-    }
-
-    p <- ggplot2::ggplot(
-      plot_data,
-      ggplot2::aes(x = .data$date, y = .data$value, color = .data$metric)
-    ) +
-      ggplot2::geom_line(linewidth = 0.5) +
-      ggplot2::geom_point(size = 0.5) +
-      ggplot2::theme_minimal() +
-      ggplot2::labs(x = "", y = "Sessions", color = "") +
-      ggplot2::scale_color_manual(
-        values = c(
-          "Total Sessions" = BRAND_COLORS$BURGUNDY,
-          "Peak Concurrent Users" = BRAND_COLORS$BLUE
-        )
-      )
-
-    plotly::ggplotly(p) |>
-      plotly::layout(
-        xaxis = list(fixedrange = TRUE),
-        yaxis = list(fixedrange = TRUE),
-        legend = list(orientation = "h", x = 0.5, xanchor = "center")
-      ) |>
-      plotly::config(displayModeBar = FALSE)
-  })
-
-  output$shiny_apps_table <- DT::renderDataTable({
-    df <- shiny_usage_filtered()
-
-    if (
-      is.null(df) ||
-        nrow(df) == 0 ||
-        !"content_guid" %in% names(df) ||
-        !"num_sessions" %in% names(df) ||
-        !"user_guid" %in% names(df)
-    ) {
-      return(
-        DT::datatable(
-          data.frame(
-            " " = "Data not available - Check that Chronicle data exists at the configured path."
-          ),
-          options = list(
-            dom = "t",
-            ordering = FALSE,
-            columnDefs = list(list(className = "dt-center", targets = "_all"))
-          ),
-          rownames = FALSE,
-          colnames = ""
-        )
-      )
-    }
-
-    app_summary <- df |>
-      dplyr::group_by(.data$environment, .data$content_guid) |>
-      dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-        unique_users = dplyr::n_distinct(.data$user_guid),
-        avg_duration_minutes = if ("duration" %in% names(df)) {
-          total_duration <- sum(.data$duration, na.rm = TRUE)
-          total_sessions_inner <- sum(.data$num_sessions, na.rm = TRUE)
-          if (total_sessions_inner > 0) {
-            round((total_duration / total_sessions_inner) / 60, 2)
-          } else {
-            NA_real_
-          }
-        } else {
-          NA_real_
-        },
-        .groups = "drop"
-      )
-
-    # Join app names from latest content list snapshot
-    content_df <- shiny_content_list_latest()
-    if (!is.null(content_df)) {
-      content_join <- content_df |>
-        dplyr::select("id", "environment", "title")
-
-      app_summary <- app_summary |>
-        dplyr::left_join(
-          content_join,
-          by = c("content_guid" = "id", "environment" = "environment")
-        )
-    }
-
-    display_df <- app_summary |>
-      dplyr::mutate(
-        environment = ifelse(
-          is.na(environment) |
-            environment == "" |
-            environment == " ",
-          "(Not Set)",
-          environment
-        )
-      )
-
-    cols <- c(
-      "title",
-      "environment",
-      "total_sessions",
-      "unique_users",
-      "avg_duration_minutes"
-    )
-
-    DT::datatable(
-      display_df[, cols, drop = FALSE],
-      options = list(
-        pageLength = 25,
-        autoWidth = TRUE,
-        scrollX = TRUE
-      ),
-      rownames = FALSE
-    )
-  })
-}
-
-# ==============================================
-# Usage - Content Visits by User UI/Server
-# ==============================================
-
-content_by_user_ui <- bslib::card(
-  bslib::card_header("Content Visits by User (Includes Shiny Apps)"),
-  bslib::layout_columns(
-    col_widths = c(4, 8),
-    shiny::selectInput(
-      "content_by_user_environment",
-      "Environment:",
-      choices = c("All")
-    ),
-    shiny::dateRangeInput(
-      "content_by_user_date_range",
-      "Date Range:",
-      start = Sys.Date() - 90,
-      end = Sys.Date(),
-      format = "yyyy-mm-dd"
-    )
-  ),
-  shinycssloaders::withSpinner(DT::dataTableOutput("content_by_user_table"))
-)
-
-content_by_user_server <- function(
-  input,
-  output,
-  session,
-  content_visits,
+  content_hits_by_user,
   content_list,
   user_list
 ) {
-  # Error handling in main server
-  visits_data <- content_visits
+  hits_data <- content_hits_by_user
 
   date_range <- shiny::reactive({
-    input$content_by_user_date_range
+    input$content_hits_by_user_date_range
   })
 
   # Use shared content_list (already latest snapshot from main server)
-  content_list_latest_usage <- shiny::reactive({
+  content_list_latest <- shiny::reactive({
     df <- content_list()
     if (is.null(df) || nrow(df) == 0) {
       return(NULL)
@@ -1946,7 +1815,7 @@ content_by_user_server <- function(
   })
 
   # Use shared user_list (already latest snapshot from main server)
-  user_list_latest_usage <- shiny::reactive({
+  user_list_latest <- shiny::reactive({
     df <- user_list()
     if (is.null(df) || nrow(df) == 0) {
       return(NULL)
@@ -1958,11 +1827,11 @@ content_by_user_server <- function(
   # reloads to preserve the user's current selection).
   date_init_done <- shiny::reactiveVal(FALSE)
   shiny::observe({
-    data <- visits_data()
+    data <- hits_data()
     if (is.null(data)) {
       shiny::updateSelectInput(
         session,
-        "content_by_user_environment",
+        "content_hits_by_user_environment",
         choices = c("All"),
         selected = "All"
       )
@@ -1973,7 +1842,7 @@ content_by_user_server <- function(
     if (!"date" %in% names(df) || nrow(df) == 0) {
       shiny::updateSelectInput(
         session,
-        "content_by_user_environment",
+        "content_hits_by_user_environment",
         choices = c("All"),
         selected = "All"
       )
@@ -1996,7 +1865,7 @@ content_by_user_server <- function(
 
     shiny::updateSelectInput(
       session,
-      "content_by_user_environment",
+      "content_hits_by_user_environment",
       choices = c("All", env_values),
       selected = "All"
     )
@@ -2015,7 +1884,7 @@ content_by_user_server <- function(
 
         shiny::updateDateRangeInput(
           session,
-          "content_by_user_date_range",
+          "content_hits_by_user_date_range",
           start = initial_start,
           end = date_summary$max_date,
           max = date_summary$max_date
@@ -2025,8 +1894,8 @@ content_by_user_server <- function(
     }
   })
 
-  visits_filtered <- shiny::reactive({
-    data <- visits_data()
+  hits_filtered <- shiny::reactive({
+    data <- hits_data()
     if (is.null(data)) {
       return(NULL)
     }
@@ -2035,9 +1904,11 @@ content_by_user_server <- function(
 
     # Environment filter
     if (
-      "environment" %in% names(df) && input$content_by_user_environment != "All"
+      "environment" %in%
+        names(df) &&
+        input$content_hits_by_user_environment != "All"
     ) {
-      if (input$content_by_user_environment == "(Not Set)") {
+      if (input$content_hits_by_user_environment == "(Not Set)") {
         df <- df |>
           dplyr::filter(
             is.na(environment) |
@@ -2046,7 +1917,9 @@ content_by_user_server <- function(
           )
       } else {
         df <- df |>
-          dplyr::filter(environment == input$content_by_user_environment)
+          dplyr::filter(
+            environment == input$content_hits_by_user_environment
+          )
       }
     }
 
@@ -2059,57 +1932,41 @@ content_by_user_server <- function(
       )
   })
 
-  output$content_by_user_table <- DT::renderDataTable({
-    df <- visits_filtered()
-
+  # Aggregated data for Content Hits by User table
+  content_hits_by_user_table_data <- shiny::reactive({
+    df <- hits_filtered()
     if (
       is.null(df) ||
         nrow(df) == 0 ||
         !"content_guid" %in% names(df) ||
         !"user_guid" %in% names(df) ||
-        !"visits" %in% names(df)
+        !"hits" %in% names(df)
     ) {
-      return(
-        DT::datatable(
-          data.frame(
-            " " = "Data not available - Check that Chronicle data exists at the configured path."
-          ),
-          options = list(
-            dom = "t",
-            ordering = FALSE,
-            columnDefs = list(list(className = "dt-center", targets = "_all"))
-          ),
-          rownames = FALSE,
-          colnames = ""
-        )
-      )
+      return(NULL)
     }
 
     summary_df <- df |>
       dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
       dplyr::summarise(
-        total_visits = sum(.data$visits, na.rm = TRUE),
+        total_hits = sum(.data$hits, na.rm = TRUE),
         .groups = "drop"
       )
 
     # Join usernames
-    u_df <- user_list_latest_usage()
+    u_df <- user_list_latest()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
-      user_join <- u_df |>
-        dplyr::select("id", "username")
-
+      user_join <- u_df |> dplyr::select("id", "username")
       summary_df <- summary_df |>
         dplyr::left_join(user_join, by = c("user_guid" = "id"))
     }
 
     # Join content titles
-    c_df <- content_list_latest_usage()
+    c_df <- content_list_latest()
     if (
       !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
     ) {
       content_join <- c_df |>
         dplyr::select("id", "environment", "title")
-
       summary_df <- summary_df |>
         dplyr::left_join(
           content_join,
@@ -2117,7 +1974,7 @@ content_by_user_server <- function(
         )
     }
 
-    display_df <- summary_df |>
+    summary_df |>
       dplyr::mutate(
         username = ifelse(
           is.na(.data$user_guid) | is.na(.data$username),
@@ -2132,203 +1989,16 @@ content_by_user_server <- function(
           environment
         )
       )
-
-    cols <- c(
-      "username",
-      "title",
-      "environment",
-      "total_visits"
-    )
-
-    DT::datatable(
-      display_df[, cols, drop = FALSE],
-      options = list(
-        pageLength = 25,
-        autoWidth = TRUE,
-        scrollX = TRUE
-      ),
-      rownames = FALSE
-    )
-  })
-}
-
-# ==============================================
-# Usage - Shiny Sessions by User UI/Server
-# ==============================================
-
-shiny_sessions_by_user_ui <- bslib::card(
-  bslib::card_header("Shiny App Sessions by User"),
-  bslib::layout_columns(
-    col_widths = c(4, 8),
-    shiny::selectInput(
-      "shiny_sessions_user_environment",
-      "Environment:",
-      choices = c("All")
-    ),
-    shiny::dateRangeInput(
-      "shiny_sessions_user_date_range",
-      "Date Range:",
-      start = Sys.Date() - 90,
-      end = Sys.Date(),
-      format = "yyyy-mm-dd"
-    )
-  ),
-  shinycssloaders::withSpinner(DT::dataTableOutput("shiny_sessions_user_table"))
-)
-
-shiny_sessions_by_user_server <- function(
-  input,
-  output,
-  session,
-  shiny_usage,
-  content_list,
-  user_list
-) {
-  # Error handling in main server
-  usage_data <- shiny_usage
-
-  date_range <- shiny::reactive({
-    input$shiny_sessions_user_date_range
   })
 
-  # Use shared content_list (already latest snapshot from main server)
-  content_list_latest_usage <- shiny::reactive({
-    df <- content_list()
-    if (is.null(df) || nrow(df) == 0) {
-      return(NULL)
-    }
-    df
-  })
+  output$content_hits_by_user_table <- DT::renderDataTable({
+    display_df <- content_hits_by_user_table_data()
 
-  # Use shared user_list (already latest snapshot from main server)
-  user_list_latest_usage <- shiny::reactive({
-    df <- user_list()
-    if (is.null(df) || nrow(df) == 0) {
-      return(NULL)
-    }
-    df
-  })
-
-  # Set default date range on first data load only (skip on range expansion
-  # reloads to preserve the user's current selection).
-  date_init_done <- shiny::reactiveVal(FALSE)
-  shiny::observe({
-    data <- usage_data()
-    if (is.null(data)) {
-      shiny::updateSelectInput(
-        session,
-        "shiny_sessions_user_environment",
-        choices = c("All"),
-        selected = "All"
-      )
-      return()
-    }
-
-    df <- data |> dplyr::collect()
-    if (!"date" %in% names(df) || nrow(df) == 0) {
-      shiny::updateSelectInput(
-        session,
-        "shiny_sessions_user_environment",
-        choices = c("All"),
-        selected = "All"
-      )
-      return()
-    }
-
-    env_values <- df |>
-      dplyr::pull(environment) |>
-      unique()
-
-    has_env_na <- any(is.na(env_values) | env_values == "" | env_values == " ")
-    env_values <- env_values[
-      !is.na(env_values) & env_values != "" & env_values != " "
-    ] |>
-      sort()
-    if (has_env_na) {
-      env_values <- c(env_values, "(Not Set)")
-    }
-
-    shiny::updateSelectInput(
-      session,
-      "shiny_sessions_user_environment",
-      choices = c("All", env_values),
-      selected = "All"
-    )
-
-    if (!date_init_done()) {
-      date_summary <- df |>
-        dplyr::filter(!is.na(date)) |>
-        dplyr::summarise(
-          min_date = min(date, na.rm = TRUE),
-          max_date = max(date, na.rm = TRUE)
-        )
-
-      if (nrow(date_summary) > 0) {
-        initial_start <- initial_date_start(date_summary$min_date)
-
-        shiny::updateDateRangeInput(
-          session,
-          "shiny_sessions_user_date_range",
-          start = initial_start,
-          end = date_summary$max_date,
-          max = date_summary$max_date
-        )
-        date_init_done(TRUE)
-      }
-    }
-  })
-
-  usage_filtered <- shiny::reactive({
-    data <- usage_data()
-    if (is.null(data)) {
-      return(NULL)
-    }
-
-    df <- data |> dplyr::collect()
-
-    if (
-      "environment" %in%
-        names(df) &&
-        input$shiny_sessions_user_environment != "All"
-    ) {
-      if (input$shiny_sessions_user_environment == "(Not Set)") {
-        df <- df |>
-          dplyr::filter(
-            is.na(environment) |
-              environment == "" |
-              environment == " "
-          )
-      } else {
-        df <- df |>
-          dplyr::filter(
-            environment == input$shiny_sessions_user_environment
-          )
-      }
-    }
-
-    shiny::req(date_range())
-
-    df |>
-      dplyr::filter(
-        date >= date_range()[1],
-        date <= date_range()[2]
-      )
-  })
-
-  output$shiny_sessions_user_table <- DT::renderDataTable({
-    df <- usage_filtered()
-
-    if (
-      is.null(df) ||
-        nrow(df) == 0 ||
-        !"content_guid" %in% names(df) ||
-        !"user_guid" %in% names(df) ||
-        !"num_sessions" %in% names(df)
-    ) {
+    if (is.null(display_df) || nrow(display_df) == 0) {
       return(
         DT::datatable(
           data.frame(
-            " " = "Data not available - Check that Chronicle data exists at the configured path."
+            " " = "Data not available - Check that Chronicle data exists at the configured path." # nolint: line_length
           ),
           options = list(
             dom = "t",
@@ -2341,78 +2011,7 @@ shiny_sessions_by_user_server <- function(
       )
     }
 
-    summary_df <- df |>
-      dplyr::group_by(.data$environment, .data$user_guid, .data$content_guid) |>
-      dplyr::summarise(
-        total_sessions = sum(.data$num_sessions, na.rm = TRUE),
-        total_duration = if ("duration" %in% names(df)) {
-          sum(.data$duration, na.rm = TRUE)
-        } else {
-          NA_real_
-        },
-        .groups = "drop"
-      )
-
-    summary_df <- summary_df |>
-      dplyr::mutate(
-        avg_duration_minutes = round(
-          ifelse(
-            is.na(.data$total_duration) | .data$total_sessions == 0,
-            NA_real_,
-            (.data$total_duration / .data$total_sessions) / 60
-          ),
-          2
-        )
-      )
-
-    # Join usernames
-    u_df <- user_list_latest_usage()
-    if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
-      user_join <- u_df |>
-        dplyr::select("id", "username")
-
-      summary_df <- summary_df |>
-        dplyr::left_join(user_join, by = c("user_guid" = "id"))
-    }
-
-    # Join app titles
-    c_df <- content_list_latest_usage()
-    if (
-      !is.null(c_df) && all(c("id", "environment", "title") %in% names(c_df))
-    ) {
-      content_join <- c_df |>
-        dplyr::select("id", "environment", "title")
-
-      summary_df <- summary_df |>
-        dplyr::left_join(
-          content_join,
-          by = c("content_guid" = "id", "environment" = "environment")
-        )
-    }
-
-    display_df <- summary_df |>
-      dplyr::mutate(
-        username = ifelse(
-          is.na(.data$user_guid) | is.na(.data$username),
-          "(anonymous)",
-          .data$username
-        ),
-        environment = ifelse(
-          is.na(environment) |
-            environment == "" |
-            environment == " ",
-          "(Not Set)",
-          environment
-        )
-      )
-
-    cols <- c(
-      "username",
-      "title",
-      "environment",
-      "total_sessions",
-      "avg_duration_minutes"
-    )
+    cols <- c("username", "title", "environment", "total_hits")
 
     DT::datatable(
       display_df[, cols, drop = FALSE],
@@ -2424,6 +2023,22 @@ shiny_sessions_by_user_server <- function(
       rownames = FALSE
     )
   })
+
+  # Download handler for Content Hits by User table
+  output$download_content_hits_by_user <- shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_content_hits_by_user_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- content_hits_by_user_table_data()
+      if (is.null(data) || nrow(data) == 0) {
+        utils::write.csv(data.frame(), file, row.names = FALSE)
+        return()
+      }
+      cols <- c("username", "title", "environment", "total_hits")
+      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+    }
+  )
 }
 
 # ==============================================
@@ -2457,17 +2072,15 @@ ui <- bslib::page_navbar(
   # Usage dropdown
   bslib::nav_menu(
     "Usage",
-    bslib::nav_panel("Overview", usage_overview_ui, value = "usage_overview"),
-    bslib::nav_panel("Shiny Apps", shiny_apps_ui, value = "shiny_apps"),
     bslib::nav_panel(
-      "Content Visits by User",
-      content_by_user_ui,
-      value = "content_by_user"
+      "Content Hits",
+      content_hits_overview_ui,
+      value = "content_hits_overview"
     ),
     bslib::nav_panel(
-      "Shiny Sessions by User",
-      shiny_sessions_by_user_ui,
-      value = "shiny_sessions_by_user"
+      "Content Hits by User",
+      content_hits_by_user_ui,
+      value = "content_hits_by_user"
     )
   )
 )
@@ -2534,8 +2147,7 @@ server <- function(input, output, session) {
       !should_load_user_list() &&
         (isTRUE(visited_tabs[["users_list"]]) ||
           isTRUE(visited_tabs[["content_list"]]) ||
-          isTRUE(visited_tabs[["content_by_user"]]) ||
-          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+          isTRUE(visited_tabs[["content_hits_by_user"]]))
     ) {
       should_load_user_list(TRUE)
     }
@@ -2589,9 +2201,7 @@ server <- function(input, output, session) {
     if (
       !should_load_content_list() &&
         (isTRUE(visited_tabs[["content_list"]]) ||
-          isTRUE(visited_tabs[["shiny_apps"]]) ||
-          isTRUE(visited_tabs[["content_by_user"]]) ||
-          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
+          isTRUE(visited_tabs[["content_hits_by_user"]]))
     ) {
       should_load_content_list(TRUE)
     }
@@ -2616,25 +2226,25 @@ server <- function(input, output, session) {
     )
   })
 
-  # --- content_visits: Deferred — LARGE dataset ---
-  should_load_content_visits <- shiny::reactiveVal(FALSE)
+  # --- content_hits: Deferred — LARGE dataset ---
+  should_load_content_hits <- shiny::reactiveVal(FALSE)
   shiny::observe({
     if (
-      !should_load_content_visits() &&
-        (isTRUE(visited_tabs[["usage_overview"]]) ||
-          isTRUE(visited_tabs[["content_by_user"]]))
+      !should_load_content_hits() &&
+        (isTRUE(visited_tabs[["content_hits_overview"]]) ||
+          isTRUE(visited_tabs[["content_hits_by_user"]]))
     ) {
-      should_load_content_visits(TRUE)
+      should_load_content_hits(TRUE)
     }
   })
-  content_visits_range <- shiny::reactiveVal(initial_range)
-  all_content_visits <- shiny::reactive({
-    shiny::req(should_load_content_visits())
-    range <- content_visits_range()
+  content_hits_range <- shiny::reactiveVal(initial_range)
+  all_content_hits_by_user <- shiny::reactive({
+    shiny::req(should_load_content_hits())
+    range <- content_hits_range()
     tryCatch(
       {
         ds <- chronicle_data(
-          "connect/content_visits_totals_by_user",
+          "connect/content_hits_totals_by_user",
           base_path
         )
         if (!is.null(range)) {
@@ -2645,42 +2255,7 @@ server <- function(input, output, session) {
         ds |> dplyr::collect()
       },
       error = function(e) {
-        message("Error loading content visits: ", e$message)
-        NULL
-      }
-    )
-  })
-
-  # --- shiny_usage: Deferred — LARGE dataset ---
-  should_load_shiny_usage <- shiny::reactiveVal(FALSE)
-  shiny::observe({
-    if (
-      !should_load_shiny_usage() &&
-        (isTRUE(visited_tabs[["shiny_apps"]]) ||
-          isTRUE(visited_tabs[["shiny_sessions_by_user"]]))
-    ) {
-      should_load_shiny_usage(TRUE)
-    }
-  })
-  shiny_usage_range <- shiny::reactiveVal(initial_range)
-  all_shiny_usage <- shiny::reactive({
-    shiny::req(should_load_shiny_usage())
-    range <- shiny_usage_range()
-    tryCatch(
-      {
-        ds <- chronicle_data(
-          "connect/shiny_usage_totals_by_user",
-          base_path
-        )
-        if (!is.null(range)) {
-          range_min <- range$min
-          range_max <- range$max
-          ds <- ds |> dplyr::filter(date >= range_min, date <= range_max)
-        }
-        ds |> dplyr::collect()
-      },
-      error = function(e) {
-        message("Error loading shiny usage: ", e$message)
+        message("Error loading content hits: ", e$message)
         NULL
       }
     )
@@ -2708,10 +2283,8 @@ server <- function(input, output, session) {
   }
   load_more_observer(user_totals_range, "users_overview_date_range")
   load_more_observer(content_totals_range, "content_overview_date_range")
-  load_more_observer(content_visits_range, "usage_overview_date_range")
-  load_more_observer(content_visits_range, "content_by_user_date_range")
-  load_more_observer(shiny_usage_range, "shiny_apps_date_range")
-  load_more_observer(shiny_usage_range, "shiny_sessions_user_date_range")
+  load_more_observer(content_hits_range, "content_hits_overview_date_range")
+  load_more_observer(content_hits_range, "content_hits_by_user_date_range")
 
   # ============================================
   # Call sub-servers with data
@@ -2720,21 +2293,17 @@ server <- function(input, output, session) {
   users_list_server(input, output, session, all_user_list)
   content_overview_server(input, output, session, all_content_totals)
   content_list_server(input, output, session, all_user_list, all_content_list)
-  usage_overview_server(input, output, session, all_content_visits)
-  shiny_apps_server(input, output, session, all_shiny_usage, all_content_list)
-  content_by_user_server(
+  content_hits_overview_server(
     input,
     output,
     session,
-    all_content_visits,
-    all_content_list,
-    all_user_list
+    all_content_hits_by_user
   )
-  shiny_sessions_by_user_server(
+  content_hits_by_user_server(
     input,
     output,
     session,
-    all_shiny_usage,
+    all_content_hits_by_user,
     all_content_list,
     all_user_list
   )

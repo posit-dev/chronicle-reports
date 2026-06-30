@@ -1,5 +1,9 @@
 # Chronicle Reports
 
+> [!NOTE]
+> For data collected by Chronicle `v2026.1.0` or earlier, use `v0.2.2` of these reports. 
+> To install using pak: `pak::pak("posit-dev/chronicle-reports@v0.2.2")`.
+
 Chronicle Reports is an R package that provides pre-built Shiny dashboards and data access tools for analyzing usage data from Posit Chronicle. Chronicle helps organizations understand their use of Posit Connect and Posit Workbench through comprehensive metrics on users, content, and activity patterns. See the [Chronicle announcement](https://posit.co/blog/chronicle-product-announcement-aug-2025/) for more details.
 
 This package serves two primary use cases:
@@ -140,10 +144,8 @@ A multi-page dashboard for Posit Connect usage analysis with three main sections
   - Overview: Content metrics and trends
   - Content List: Searchable inventory of all published content
 - **Usage**:
-  - Overview: Visit trends and patterns
-  - Shiny Apps: Overall usage trends and a breakdown of usage by app
-  - Content Visits by User: Detailed view of content visits per user
-  - Shiny Sessions by User: Detailed view of Shiny app sessions per user
+  - Content Hits: Hit trends and patterns
+  - Content Hits by User: Detailed view of content hits per user
 
 Run it: `chronicle_run_app("connect")`
 
@@ -157,6 +159,11 @@ A multi-page dashboard for Posit Workbench user analytics:
 - **Users**:
   - Overview: Licensed users, daily active users, administrators, and super administrators with trend analysis
   - User List: Searchable, Filterable table showing all users with role and activity information
+- **Sessions**:
+  - Overview: Sessions started over time by session type, plus startup-duration trends (median and P95) per session type, with date and environment filters; includes total session hours for the selected range
+  - Duration: Median session-duration trend by session type and a sessions-by-exit-reason breakdown (one bar per session type, colored by exit reason), with date, environment, and session type filters
+  - User Summary: One row per user (with usernames from the latest user list) and session counts pivoted by session type, with date range and environment filters, searchable by username or GUID
+  - User Detail: Single-user drill-down with a searchable user selector (labeled by username), totals, a Gantt-style session timeline colored by session type, and a table of that user's sessions
 
 Run it: `chronicle_run_app("workbench")`
 
@@ -282,12 +289,15 @@ chronicle.reports::chronicle_list_data(base_path = "/path/to/chronicle/data")
 # Returns:
 [1] "connect/content_list"
 [2] "connect/content_totals"
-[3] "connect/content_visits_totals_by_user"
-[4] "connect/shiny_usage_totals_by_user"
+[3] "connect/content_hits_totals"
+[4] "connect/content_hits_totals_by_user"
 [5] "connect/user_list"
 [6] "connect/user_totals"
-[7] "workbench/user_list"
-[8] "workbench/user_totals"
+[7] "workbench/session_duration"
+[8] "workbench/session_start_totals"
+[9] "workbench/session_start_totals_by_user"
+[10] "workbench/user_list"
+[11] "workbench/user_totals"
 ```
 
 ### Raw Metrics (Advanced)

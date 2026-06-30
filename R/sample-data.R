@@ -15,10 +15,12 @@
 #'   \item Connect user list (26 sample users)
 #'   \item Connect content list (150 sample content items)
 #'   \item Connect content totals (30 days by type and environment)
-#'   \item Connect content visits (30 days of user visit data)
-#'   \item Connect Shiny usage (30 days of Shiny session data)
+#'   \item Connect content hits totals (30 days of hit counts per content item)
+#'   \item Connect content hits by user (30 days of per-user hit data)
 #'   \item Workbench user totals (30 days of data ending yesterday)
 #'   \item Workbench user list (21 sample users)
+#'   \item Workbench session start totals (30 days by environment and session type)
+#'   \item Workbench session start totals by user (30 days, 12 sample users)
 #'   \item Raw Connect users data (30 days, 15 users per snapshot)
 #' }
 #'
@@ -682,14 +684,14 @@ sample_connect_content_totals_internal <- function() {
 }
 
 #' @noRd
-sample_connect_visits_by_user_internal <- function() {
+sample_connect_content_hits_totals_by_user_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   user_pool <- generate_user_pool(26)
   content_pool <- generate_content_pool(150, 30, user_pool)
 
-  # Generate visits for each day
-  daily_visits <- lapply(seq_along(dates), function(i) {
-    set.seed(5000 + i)
+  # Generate hits for each day
+  daily_hits <- lapply(seq_along(dates), function(i) {
+    set.seed(8000 + i)
     date <- dates[i]
     weekday_factor <- calculate_weekday_factor(date)
 
@@ -710,40 +712,38 @@ sample_connect_visits_by_user_internal <- function() {
       return(NULL)
     }
 
-    # Create visit combinations (not all users visit all content)
-    # Each user visits 1-5 content items
-    visits_list <- lapply(active_user_guids, function(ug) {
-      n_visits <- sample(1:5, 1)
-      visited_content <- sample(
+    # Create hit combinations (each user hits 1-5 content items)
+    hits_list <- lapply(active_user_guids, function(ug) {
+      n_items <- sample(1:5, 1)
+      hit_content <- sample(
         active_content_guids,
-        min(n_visits, length(active_content_guids))
+        min(n_items, length(active_content_guids))
       )
 
       data.frame(
         date = date,
         user_guid = ug,
-        content_guid = visited_content,
-        visits = sample(1:10, length(visited_content), replace = TRUE), # 1-10 visits per content
+        content_guid = hit_content,
+        hits = as.integer(sample(1:15, length(hit_content), replace = TRUE)),
         stringsAsFactors = FALSE
       )
     })
 
-    authenticated_visits <- do.call(rbind, visits_list)
+    authenticated_hits <- do.call(rbind, hits_list)
 
-    # Generate anonymous visits for public content
-    # Filter for public content that has been created by this day
+    # Generate anonymous hits for public content
     public_content <- content_pool[
       content_pool$access_type == "all" &
         content_pool$creation_day <= i,
     ]
 
-    anonymous_visits <- NULL
+    anonymous_hits <- NULL
     if (nrow(public_content) > 0) {
-      # 30-40% of public content gets anonymous visits
-      set.seed(5500 + i)
+      # 30-40% of public content gets anonymous hits
+      set.seed(8500 + i)
       n_anon_content <- max(1, round(nrow(public_content) * runif(1, 0.3, 0.4)))
 
-      # Favor high popularity content for anonymous visits
+      # Favor high popularity content for anonymous hits
       anon_probs <- ifelse(
         public_content$popularity_tier == "high",
         0.5,
@@ -757,186 +757,71 @@ sample_connect_visits_by_user_internal <- function() {
         prob = anon_probs
       )
 
-      # Generate visits for anonymous users (lower volume than authenticated)
-      anonymous_visits <- data.frame(
+      anonymous_hits <- data.frame(
         date = date,
         user_guid = NA_character_,
         content_guid = anon_content_guids,
-        visits = sample(1:8, length(anon_content_guids), replace = TRUE),
-        stringsAsFactors = FALSE
-      )
-    }
-
-    # Combine authenticated and anonymous visits
-    if (!is.null(anonymous_visits)) {
-      rbind(authenticated_visits, anonymous_visits)
-    } else {
-      authenticated_visits
-    }
-  })
-
-  result <- do.call(rbind, Filter(Negate(is.null), daily_visits))
-
-  # Add environment and path from content_pool
-  result$environment <- content_pool$environment[match(
-    result$content_guid,
-    content_pool$content_guid
-  )]
-  set.seed(800)
-  result$path <- sample(
-    c("/", "/detail", "/api", NA_character_),
-    nrow(result),
-    replace = TRUE,
-    prob = c(0.6, 0.2, 0.15, 0.05)
-  )
-
-  result[, c(
-    "environment",
-    "content_guid",
-    "user_guid",
-    "visits",
-    "path",
-    "date"
-  )]
-}
-
-#' @noRd
-sample_connect_shiny_by_user_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
-  user_pool <- generate_user_pool(26)
-  content_pool <- generate_content_pool(150, 30, user_pool)
-
-  # Filter to only Shiny content
-  shiny_content <- content_pool[content_pool$type == "shiny", ]
-
-  # Generate usage for each day
-  daily_usage <- lapply(seq_along(dates), function(i) {
-    set.seed(6000 + i)
-    date <- dates[i]
-    weekday_factor <- calculate_weekday_factor(date)
-
-    # Get active users
-    active_user_guids <- sample_active_users(
-      user_pool,
-      i,
-      weekday_factor,
-      base_rate = 0.30
-    ) # Lower rate
-
-    # Get active Shiny content
-    available_shiny <- shiny_content[shiny_content$creation_day <= i, ]
-    if (nrow(available_shiny) == 0 || length(active_user_guids) == 0) {
-      return(NULL)
-    }
-
-    set.seed(6100 + i)
-    activity_prob <- ifelse(
-      available_shiny$popularity_tier == "high",
-      0.60,
-      ifelse(available_shiny$popularity_tier == "medium", 0.30, 0.10)
-    )
-    activity_prob <- activity_prob * weekday_factor
-    active_shiny <- available_shiny$content_guid[
-      runif(nrow(available_shiny)) < activity_prob
-    ]
-
-    if (length(active_shiny) == 0) {
-      return(NULL)
-    }
-
-    # Each user interacts with 1-3 Shiny apps
-    usage_list <- lapply(active_user_guids, function(ug) {
-      n_apps <- sample(1:3, 1)
-      used_apps <- sample(active_shiny, min(n_apps, length(active_shiny)))
-
-      # Base duration: 5-90 minutes
-      base_durations <- sample(300:5400, length(used_apps), replace = TRUE)
-
-      # Apply 50x multiplier for long_session apps
-      long_session_flags <- available_shiny$long_session[match(
-        used_apps,
-        available_shiny$content_guid
-      )]
-      durations <- ifelse(
-        long_session_flags,
-        base_durations * 50,
-        base_durations
-      )
-
-      data.frame(
-        date = date,
-        user_guid = ug,
-        content_guid = used_apps,
-        num_sessions = sample(1:5, length(used_apps), replace = TRUE),
-        duration = as.integer(durations),
-        stringsAsFactors = FALSE
-      )
-    })
-
-    authenticated_usage <- do.call(rbind, usage_list)
-
-    # Generate anonymous sessions for public Shiny apps
-    public_shiny <- available_shiny[available_shiny$access_type == "all", ]
-
-    anonymous_usage <- NULL
-    if (nrow(public_shiny) > 0) {
-      # 20-30% of public Shiny apps get anonymous sessions
-      set.seed(6500 + i)
-      n_anon_apps <- max(1, round(nrow(public_shiny) * runif(1, 0.2, 0.3)))
-
-      # Favor high popularity apps for anonymous usage
-      anon_probs <- ifelse(
-        public_shiny$popularity_tier == "high",
-        0.5,
-        ifelse(public_shiny$popularity_tier == "medium", 0.3, 0.2)
-      )
-      anon_probs <- anon_probs / sum(anon_probs)
-
-      anon_app_guids <- sample(
-        public_shiny$content_guid,
-        size = min(n_anon_apps, nrow(public_shiny)),
-        prob = anon_probs
-      )
-
-      # Anonymous sessions: shorter duration (5-30 min) and fewer sessions
-      anonymous_usage <- data.frame(
-        date = date,
-        user_guid = NA_character_,
-        content_guid = anon_app_guids,
-        num_sessions = sample(1:2, length(anon_app_guids), replace = TRUE),
-        duration = as.integer(sample(
-          300:1800,
-          length(anon_app_guids),
+        hits = as.integer(sample(
+          1:10,
+          length(anon_content_guids),
           replace = TRUE
         )),
         stringsAsFactors = FALSE
       )
     }
 
-    # Combine authenticated and anonymous usage
-    if (!is.null(anonymous_usage)) {
-      rbind(authenticated_usage, anonymous_usage)
+    # Combine authenticated and anonymous hits
+    if (!is.null(anonymous_hits)) {
+      rbind(authenticated_hits, anonymous_hits)
     } else {
-      authenticated_usage
+      authenticated_hits
     }
   })
 
-  result <- do.call(rbind, Filter(Negate(is.null), daily_usage))
+  result <- do.call(rbind, Filter(Negate(is.null), daily_hits))
 
   # Add environment from content_pool
-  result$environment <- shiny_content$environment[match(
+  result$environment <- content_pool$environment[match(
     result$content_guid,
-    shiny_content$content_guid
+    content_pool$content_guid
   )]
 
   result[, c(
     "environment",
     "content_guid",
     "user_guid",
-    "num_sessions",
-    "duration",
+    "hits",
     "date"
   )]
+}
+
+#' @noRd
+sample_connect_content_hits_totals_internal <- function() {
+  # Generate by-user data first, then aggregate
+  by_user <- sample_connect_content_hits_totals_by_user_internal()
+
+  # Aggregate by environment, content_guid, date
+  # Split into groups and aggregate
+  groups <- split(
+    by_user,
+    list(by_user$environment, by_user$content_guid, by_user$date),
+    drop = TRUE
+  )
+
+  totals_list <- lapply(groups, function(g) {
+    data.frame(
+      environment = g$environment[1],
+      content_guid = g$content_guid[1],
+      hits = as.integer(sum(g$hits)),
+      unique_users = as.integer(length(unique(g$user_guid[
+        !is.na(g$user_guid)
+      ]))),
+      date = g$date[1],
+      stringsAsFactors = FALSE
+    )
+  })
+
+  do.call(rbind, totals_list)
 }
 
 #' @noRd
@@ -990,29 +875,34 @@ sample_workbench_user_totals_internal <- function() {
 }
 
 #' @noRd
+generate_workbench_user_pool <- function() {
+  n_users <- 21
+  set.seed(50)
+  fake <- charlatan::PersonProvider_en_US$new()
+  names_list <- lapply(seq_len(n_users), function(i) {
+    list(first = fake$first_name(), last = fake$last_name())
+  })
+  usernames <- tolower(sprintf(
+    "%s.%s",
+    sapply(names_list, function(x) x$first),
+    sapply(names_list, function(x) x$last)
+  ))
+  data.frame(
+    id = sprintf("wb-user-guid-%03d", seq_len(n_users)),
+    username = usernames,
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @noRd
 sample_workbench_user_list_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   last_date <- max(dates)
   first_date <- min(dates)
   n_users <- 21
 
-  set.seed(50)
-
-  # Generate fake names using charlatan for usernames
-  fake <- charlatan::PersonProvider_en_US$new()
-  names_list <- lapply(1:n_users, function(i) {
-    list(
-      first = fake$first_name(),
-      last = fake$last_name()
-    )
-  })
-
-  # Create usernames from first.last format
-  usernames <- tolower(sprintf(
-    "%s.%s",
-    sapply(names_list, function(x) x$first),
-    sapply(names_list, function(x) x$last)
-  ))
+  wb_pool <- generate_workbench_user_pool()
+  usernames <- wb_pool$username
 
   # Create emails from username@example.com
   emails <- sprintf("%s@example.com", usernames)
@@ -1044,7 +934,7 @@ sample_workbench_user_list_internal <- function() {
 
   data.frame(
     environment = envs,
-    id = sprintf("wb-user-guid-%03d", 1:n_users),
+    id = wb_pool$id,
     username = usernames,
     email = emails,
     user_role = roles,
@@ -1059,6 +949,262 @@ sample_workbench_user_list_internal <- function() {
     date = last_date,
     stringsAsFactors = FALSE
   )
+}
+
+#' Aggregate the master session table into daily startup totals, optionally
+#' per user. Every STARTED session is counted here (including sessions that are
+#' still running), and startup percentiles are computed from the same rows.
+#' workbench/session_duration covers only the sessions that have ENDED, so the
+#' startup totals are always >= the session_duration row counts.
+#' @noRd
+derive_wb_session_starts_internal <- function(master, by_user = FALSE) {
+  keys <- c(
+    "environment",
+    if (by_user) c("user_guid", "username"),
+    "session_type",
+    "date"
+  )
+
+  groups <- split(
+    master,
+    do.call(interaction, c(master[keys], drop = TRUE))
+  )
+  rows <- lapply(groups, function(g) {
+    out <- g[1, keys, drop = FALSE]
+    out$sessions_started <- nrow(g)
+    out$median_startup_duration_ms <- as.integer(round(
+      stats::median(g$startup_duration_ms)
+    ))
+    out$p95_startup_duration_ms <- as.integer(round(
+      stats::quantile(g$startup_duration_ms, probs = 0.95, names = FALSE)
+    ))
+    out
+  })
+
+  result <- do.call(rbind, rows)
+  rownames(result) <- NULL
+  col_order <- c(
+    setdiff(keys, "date"),
+    "sessions_started",
+    "median_startup_duration_ms",
+    "p95_startup_duration_ms",
+    "date"
+  )
+  result[order(result$date), col_order]
+}
+
+#' @noRd
+sample_wb_session_starts_internal <- function() {
+  derive_wb_session_starts_internal(
+    sample_wb_sessions_master_internal(),
+    by_user = FALSE
+  )
+}
+
+#' @noRd
+sample_wb_session_starts_user_internal <- function() {
+  derive_wb_session_starts_internal(
+    sample_wb_sessions_master_internal(),
+    by_user = TRUE
+  )
+}
+
+#' Session-level master table for the Workbench session sample datasets.
+#' session_duration, session_start_totals, and session_start_totals_by_user
+#' are all derived from these rows. The start totals count every session that
+#' STARTED; session_duration includes only the subset that has ENDED, so the
+#' started counts are >= the ended counts (some sessions are still running).
+#'
+#' Everything is drawn per session in one pass per user per day: each user
+#' habitually uses one or two session types and works mostly in a primary
+#' environment, with occasional sessions in the other environments.
+#' @noRd
+sample_wb_sessions_master_internal <- function() {
+  dates <- generate_sample_date_sequence(30)
+  session_types <- c("RStudio Pro", "JupyterLab", "VS Code", "Positron")
+  environments <- c("Production", "Development", "Staging")
+  env_hosts <- c(
+    "Production" = "wb-prod-01",
+    "Development" = "wb-dev-01",
+    "Staging" = "wb-staging-01"
+  )
+
+  set.seed(456)
+
+  # Same user pool as the Workbench user list so identities line up.
+  wb_pool <- generate_workbench_user_pool()
+  n_users <- 12
+  users <- wb_pool[seq_len(n_users), ]
+
+  user_types <- lapply(seq_len(n_users), function(u) {
+    sample(session_types, sample(1:2, 1))
+  })
+  user_primary_env <- sample(
+    environments,
+    n_users,
+    replace = TRUE,
+    prob = c(0.5, 0.3, 0.2)
+  )
+
+  # Typical session length (seconds) per type; durations drawn log-normally
+  # around these so most sessions are short with a long right tail.
+  type_typical_secs <- c(
+    "RStudio Pro" = 3600,
+    "JupyterLab" = 5400,
+    "VS Code" = 2700,
+    "Positron" = 3000
+  )
+  # Typical startup duration (ms) per type; tighter spread than run length.
+  type_startup_ms <- c(
+    "RStudio Pro" = 3200,
+    "JupyterLab" = 4500,
+    "VS Code" = 2100,
+    "Positron" = 2600
+  )
+
+  rows <- list()
+  for (di in seq_along(dates)) {
+    date <- dates[di]
+    weekday_factor <- calculate_weekday_factor(date)
+    for (u in seq_len(n_users)) {
+      n_sessions <- as.integer(round(runif(1, 0, 6) * weekday_factor))
+      if (n_sessions == 0L) {
+        next
+      }
+
+      # Per-session draws: a habitual session type, and the user's primary
+      # environment three times out of four.
+      st <- sample(user_types[[u]], n_sessions, replace = TRUE)
+      env <- ifelse(
+        runif(n_sessions) < 0.75,
+        user_primary_env[u],
+        sample(environments, n_sessions, replace = TRUE)
+      )
+
+      duration_secs <- pmax(
+        30L,
+        as.integer(round(
+          stats::rlnorm(
+            n_sessions,
+            meanlog = log(type_typical_secs[st]),
+            sdlog = 0.9
+          )
+        ))
+      )
+      startup_ms <- pmax(
+        200L,
+        as.integer(round(
+          stats::rlnorm(
+            n_sessions,
+            meanlog = log(type_startup_ms[st]),
+            sdlog = 0.35
+          )
+        ))
+      )
+      started_at <- as.POSIXct(date, tz = "UTC") +
+        sample(3600 * 8:17, n_sessions, replace = TRUE) +
+        sample(0:3599, n_sessions, replace = TRUE)
+
+      rows[[length(rows) + 1]] <- data.frame(
+        host_name = unname(env_hosts[env]),
+        environment = env,
+        user_guid = users$id[u],
+        username = users$username[u],
+        session_type = st,
+        session_id = sprintf(
+          "%08x",
+          sample.int(.Machine$integer.max, n_sessions)
+        ),
+        duration_seconds = duration_secs,
+        startup_duration_ms = startup_ms,
+        session_started_at = started_at,
+        session_ended_at = started_at + duration_secs,
+        date = date,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+
+  combined <- do.call(rbind, rows)
+
+  # Not every started session has ended by the time data is captured. Real
+  # Workbench deployments always have sessions still running, so the number of
+  # sessions STARTED exceeds the number that have ENDED. Recent sessions are
+  # far more likely to still be active, with a small baseline of long-lived
+  # sessions left open on earlier days. Still-running sessions count toward
+  # session_start_totals (they did start) but are excluded from
+  # session_duration (they have no end time, duration, or exit outcome yet).
+  days_from_end <- as.integer(max(dates) - as.Date(combined$date))
+  still_running_prob <- 0.03 + 0.25 * exp(-days_from_end / 2.5)
+  running <- stats::runif(nrow(combined)) < still_running_prob
+
+  # Guarantee at least a handful of still-running sessions (forcing the most
+  # recent ones) so the started > ended gap is always present, even if the
+  # random draw happens to produce none.
+  min_running <- 10L
+  if (sum(running) < min_running) {
+    recent <- order(combined$session_started_at, decreasing = TRUE)
+    running[recent[seq_len(min_running)]] <- TRUE
+  }
+  combined$ended <- !running
+
+  # Running sessions have no recorded end time or final duration yet.
+  combined$session_ended_at[running] <- NA
+  combined$duration_seconds[running] <- NA_integer_
+
+  # Assign exit outcomes to the sessions that have ENDED, across that subset
+  # rather than per session so every reason is guaranteed to appear. Reasons
+  # match the set Workbench reports for session exits; counts stay roughly
+  # proportional to the weights below, with a floor so even the rare reasons
+  # show up.
+  exit_reasons <- c(
+    "NormalExit",
+    "Killed",
+    "Crashed",
+    "MemoryLimitExceeded",
+    "TooManyOpenFiles",
+    "NotEnoughMemory",
+    "Unknown"
+  )
+  exit_codes <- c(0L, 137L, 139L, 137L, 24L, 12L, NA_integer_)
+  exit_weights <- c(0.80, 0.05, 0.04, 0.04, 0.03, 0.02, 0.02)
+
+  ended_idx <- which(combined$ended)
+  n_ended <- length(ended_idx)
+  min_each <- 5L
+  counts <- pmax(as.integer(round(exit_weights * n_ended)), min_each)
+  # NormalExit absorbs the rounding/floor difference so counts sum to n_ended.
+  counts[1] <- counts[1] + (n_ended - sum(counts))
+
+  exit_idx <- sample(rep(seq_along(exit_reasons), times = counts))
+  combined$exit_code <- NA_integer_
+  combined$exit_reason <- NA_character_
+  combined$exit_code[ended_idx] <- exit_codes[exit_idx]
+  combined$exit_reason[ended_idx] <- exit_reasons[exit_idx]
+
+  combined
+}
+
+#' @noRd
+sample_wb_session_duration_internal <- function() {
+  master <- sample_wb_sessions_master_internal()
+  # Only sessions that have ended appear in the duration dataset; still-running
+  # sessions have no end time, duration, or exit outcome yet.
+  master <- master[master$ended, , drop = FALSE]
+  rownames(master) <- NULL
+  master[, c(
+    "host_name",
+    "environment",
+    "user_guid",
+    "session_type",
+    "session_id",
+    "duration_seconds",
+    "session_started_at",
+    "session_ended_at",
+    "exit_code",
+    "exit_reason",
+    "date"
+  )]
 }
 
 #' @noRd
@@ -1138,15 +1284,15 @@ create_sample_chronicle_data_internal <- function(base_path) {
   )
 
   write_sample_parquet_internal(
-    sample_connect_visits_by_user_internal(),
+    sample_connect_content_hits_totals_internal(),
     base_path,
-    "connect/content_visits_totals_by_user"
+    "connect/content_hits_totals"
   )
 
   write_sample_parquet_internal(
-    sample_connect_shiny_by_user_internal(),
+    sample_connect_content_hits_totals_by_user_internal(),
     base_path,
-    "connect/shiny_usage_totals_by_user"
+    "connect/content_hits_totals_by_user"
   )
 
   write_sample_parquet_internal(
@@ -1159,6 +1305,24 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_workbench_user_list_internal(),
     base_path,
     "workbench/user_list"
+  )
+
+  write_sample_parquet_internal(
+    sample_wb_session_starts_internal(),
+    base_path,
+    "workbench/session_start_totals"
+  )
+
+  write_sample_parquet_internal(
+    sample_wb_session_starts_user_internal(),
+    base_path,
+    "workbench/session_start_totals_by_user"
+  )
+
+  write_sample_parquet_internal(
+    sample_wb_session_duration_internal(),
+    base_path,
+    "workbench/session_duration"
   )
 
   base_path

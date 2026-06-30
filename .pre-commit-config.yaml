@@ -7,8 +7,10 @@ repos:
     -   id: roxygenize
         additional_dependencies:
         - arrow
+        - bsicons
         - bslib
         - charlatan
+        - connectapi
         - dplyr
         - DT
         - ggplot2
@@ -43,6 +45,11 @@ repos:
           (.*/|)\.Rprofile|
           (.*/|)\.travis\.yml|
           (.*/|)appveyor\.yml|
+          (.*/|)CLAUDE.md|
+          (.*/|)Dockerfile.manifests|
+          (.*/|)justfile|
+          (.*/|)manifest\.json|
+          (.*/|)extensions.json|
           (.*/|)NAMESPACE|
           (.*/|)renv/settings\.dcf|
           (.*/|)renv\.lock|
@@ -56,6 +63,7 @@ repos:
     -   id: no-print-statement
     -   id: no-debug-statement
     -   id: deps-in-desc
+        exclude: '(.*/|)manifests\.R$'
     -   id: pkgdown
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

@@ -1,3 +1,52 @@
+#' Resolve a Chronicle data path to an Arrow-compatible source
+#'
+#' Local paths are returned unchanged. For S3 paths, returns an Arrow
+#' filesystem rooted at the path. On Posit Connect, attempts to exchange the
+#' content session token for temporary AWS credentials via a configured AWS
+#' integration; if that fails (e.g., no AWS integration is assigned to the
+#' content), falls back to Arrow's default AWS credential chain.
+#'
+#' @param path Directory path (local or s3://)
+#'
+#' @return The path unchanged (local), or an Arrow SubTreeFileSystem (S3)
+#'
+#' @keywords internal
+#' @noRd
+chronicle_fs <- function(path) {
+  if (!startsWith(path, "s3://")) {
+    return(path)
+  }
+
+  if (Sys.getenv("POSIT_PRODUCT") == "CONNECT") {
+    fs <- tryCatch(
+      {
+        credentials <- connectapi::get_aws_content_credentials(
+          connectapi::connect()
+        )
+        arrow::s3_bucket(
+          sub("^s3://", "", path),
+          access_key = credentials$access_key_id,
+          secret_key = credentials$secret_access_key,
+          session_token = credentials$session_token
+        )
+      },
+      error = function(e) {
+        message(
+          "Could not fetch AWS credentials from Posit Connect, ",
+          "falling back to default AWS credentials: ",
+          conditionMessage(e)
+        )
+        NULL
+      }
+    )
+    if (!is.null(fs)) {
+      return(fs)
+    }
+  }
+
+  arrow::SubTreeFileSystem$create(path)
+}
+
 #' Build path to Chronicle metric data
 #'
 #' @keywords internal
@@ -5,13 +54,13 @@
 #'
 #' @param base_path Base path to Chronicle data directory
 #' @param metric Name of the metric (e.g., "connect_users")
-#' @param frequency Frequency of data collection ("daily" or "hourly" or "curated")
+#' @param frequency Frequency of data collection ("daily" or "curated")
 #'
 #' @return Character string with the full path to the metric data
 chronicle_path <- function(
   base_path,
   metric = NULL,
-  frequency = c("daily", "hourly", "curated")
+  frequency = c("daily", "curated")
 ) {
   frequency <- match.arg(frequency)
   glue::glue("{base_path}/{frequency}/v2/{metric}/", .null = "")
@@ -30,7 +79,7 @@ chronicle_path <- function(
 #' @noRd
 chronicle_list_dirs <- function(path) {
   if (startsWith(path, "s3://")) {
-    fs <- arrow::SubTreeFileSystem$create(path)
+    fs <- chronicle_fs(path)
     selector <- arrow::FileSelector$create("", recursive = FALSE)
     info <- fs$GetFileInfo(selector)
     dirs <- Filter(function(fi) fi$type == arrow::FileType$Directory, info)
@@ -48,12 +97,11 @@ chronicle_list_dirs <- function(path) {
 #'
 #' Use raw data only when you need:
 #' - Custom aggregations not available in curated data
-#' - Hourly granularity
 #' - Specific timestamp filtering
 #'
 #' @param metric Name of the metric to retrieve (e.g., "connect_users")
 #' @param base_path Base path to Chronicle data directory
-#' @param frequency Frequency of data collection: "daily" (default) or "hourly"
+#' @param frequency Frequency of data collection: "daily" (default)
 #' @param ymd Optional list with year, month, day for specific date filtering
 #' @param schema Optional Arrow schema for the dataset
 #'
@@ -79,18 +127,17 @@ chronicle_list_dirs <- function(path) {
 #' # Load from production Chronicle data
 #' data <- chronicle_raw_data("connect_users", "/var/lib/posit-chronicle/data")
 #'
-#' # Load hourly data for a specific date
+#' # Load daily data for a specific date
 #' data <- chronicle_raw_data(
 #'   "connect_users",
 #'   "/var/lib/posit-chronicle/data",
-#'   frequency = "hourly",
 #'   ymd = list(year = 2024, month = 12, day = 10)
 #' )
 #' }
 chronicle_raw_data <- function(
   metric,
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
-  frequency = c("daily", "hourly"),
+  frequency = c("daily"),
   ymd = NULL,
   schema = NULL
 ) {
@@ -109,7 +156,7 @@ chronicle_raw_data <- function(
   }
 
   arrow::open_dataset(
-    path,
+    chronicle_fs(path),
     hive_style = FALSE,
     schema = schema,
     format = "parquet",
@@ -155,7 +202,7 @@ chronicle_data <- function(
   path <- chronicle_path(base_path, metric, "curated")
 
   arrow::open_dataset(
-    path,
+    chronicle_fs(path),
     hive_style = TRUE,
     partitioning = arrow::schema(date = arrow::date32()),
     format = "parquet"
@@ -217,15 +264,15 @@ chronicle_list_data <- function(
 
 #' List available raw Chronicle metrics
 #'
-#' Lists all available raw metrics available in the Chronicle data
-#' directory at a specified frequency. This is useful for discovering what
+#' Lists all available raw daily metrics available in the Chronicle data
+#' directory. This is useful for discovering what
 #' raw data is available before loading it with [chronicle_raw_data()].
 #'
 #' **Most users should use [chronicle_list_data()] instead**, which lists
 #' curated metrics that are faster and easier to work with.
 #'
 #' @param base_path Base path to Chronicle data directory
-#' @param frequency Frequency of data collection: "daily" (default) or "hourly"
+#' @param frequency Frequency of data collection: "daily" (default)
 #'
 #' @return Character vector of available raw metric names
 #'   (e.g., "connect_users", "workbench_sessions")
@@ -245,19 +292,10 @@ chronicle_list_data <- function(
 #' # List metrics from production Chronicle data
 #' metrics <- chronicle_list_raw_data("/var/lib/posit-chronicle/data", "daily")
 #' print(metrics)
-#'
-#' # List available hourly raw metrics
-#' hourly_metrics <- chronicle_list_raw_data(
-#'   "/var/lib/posit-chronicle/data",
-#'   "hourly"
-#' )
-#'
-#' # Load one of the available metrics
-#' data <- chronicle_raw_data(hourly_metrics[1], "/var/lib/posit-chronicle/data", frequency = "hourly")
 #' }
 chronicle_list_raw_data <- function(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH),
-  frequency = c("daily", "hourly")
+  frequency = c("daily")
 ) {
   frequency <- match.arg(frequency)
   data_path <- chronicle_path(base_path, frequency = frequency)

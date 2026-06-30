@@ -1,0 +1,65 @@
+name: Extensions
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  extensions:
+    strategy:
+      fail-fast: false
+      matrix:
+        extension:
+          - connect
+          - workbench
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Generate token for GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.POSIT_CHRONICLE_APP_ID }}
+          private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
+          permission-contents: write
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - uses: posit-dev/connect-gallery-action/build-extension@main
+        with:
+          extension-name: ${{ matrix.extension }}
+          extensions-dir: inst/apps
+          release: ${{ github.ref_name == 'main' }}
+
+  update-gallery:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    needs: [extensions]
+    if: always() && github.ref_name == 'main'
+    steps:
+      - name: Generate token for GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.POSIT_CHRONICLE_APP_ID }}
+          private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
+          permission-contents: write
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - uses: posit-dev/connect-gallery-action@main
+        with:
+          extensions-dir: inst/apps
