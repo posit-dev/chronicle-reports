@@ -49,6 +49,7 @@ repos:
           (.*/|)Dockerfile.manifests|
           (.*/|)justfile|
           (.*/|)manifest\.json|
+          (.*/|)extensions.json|
           (.*/|)NAMESPACE|
           (.*/|)renv/settings\.dcf|
           (.*/|)renv\.lock|
