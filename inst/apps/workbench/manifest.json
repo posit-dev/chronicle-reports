@@ -8,9 +8,9 @@
     "tags": [
       "Chronicle reports"
     ],
-    "minimumConnectVersion": "2025.01.0",
+    "minimumConnectVersion": "2026.06.0",
     "requiredFeatures": [],
-    "version": "0.0.1"
+    "version": "1.0.0"
   },
   "version": 1,
   "locale": "en_US",
