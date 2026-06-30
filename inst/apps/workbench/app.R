@@ -1673,7 +1673,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
   )
   output$download_duration_exit_raw <- duration_download(
     duration_rows,
-    "session_duration_raw"
+    "session_exit_reason_raw"
   )
 }
 
