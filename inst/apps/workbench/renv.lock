@@ -576,8 +576,8 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
-      "RemoteRef": "main",
-      "RemoteSha": "ffef35926647ba63480b7f07449855654746482e",
+      "RemoteRef": "dev",
+      "RemoteSha": "bad506d36b866dfae4008417f2ca84d01f1e0b8b",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Tim Margheim [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
