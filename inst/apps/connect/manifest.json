@@ -474,17 +474,17 @@
         "RemoteHost": "api.github.com",
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
-        "RemoteRef": "dev",
-        "RemoteSha": "2796abf30e51de45150a664a6b7d6cebb85f5b90",
+        "RemoteRef": "main",
+        "RemoteSha": "a509e9553c2781b07fa9f42c2a65dc2560ca6201",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
-        "GithubRef": "dev",
-        "GithubSHA1": "2796abf30e51de45150a664a6b7d6cebb85f5b90",
+        "GithubRef": "main",
+        "GithubSHA1": "a509e9553c2781b07fa9f42c2a65dc2560ca6201",
         "NeedsCompilation": "no",
-        "Packaged": "2026-07-01 12:47:43 UTC; root",
+        "Packaged": "2026-07-01 14:36:54 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-07-01 12:47:43 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-07-01 14:36:54 UTC; unix"
       }
     },
     "cli": {
@@ -2083,10 +2083,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "6581b5f249894507133eeb3a990f9c85ac7b2914",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-07-01 12:46:58 UTC; root",
+        "Packaged": "2026-07-01 14:36:06 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-07-01 12:46:58 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-07-01 14:36:07 UTC; unix"
       }
     },
     "tidyr": {
@@ -2456,7 +2456,7 @@
       "checksum": "b0b3177ac72498f5af3a16666a69320c"
     },
     "renv.lock": {
-      "checksum": "3603b6f4a6b76e7daa8015b9b8e360d9"
+      "checksum": "260267d4877ff2f8a35b42baaa38e1b1"
     }
   },
   "users": null
