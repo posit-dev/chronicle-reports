@@ -8,9 +8,9 @@
     "tags": [
       "Chronicle reports"
     ],
-    "minimumConnectVersion": "2025.01.0",
+    "minimumConnectVersion": "2026.06.0",
     "requiredFeatures": [],
-    "version": "0.0.1"
+    "version": "1.0.0"
   },
   "version": 1,
   "locale": "en_US",
@@ -474,17 +474,17 @@
         "RemoteHost": "api.github.com",
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
-        "RemoteRef": "main",
-        "RemoteSha": "ffef35926647ba63480b7f07449855654746482e",
+        "RemoteRef": "dev",
+        "RemoteSha": "2796abf30e51de45150a664a6b7d6cebb85f5b90",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
-        "GithubRef": "main",
-        "GithubSHA1": "ffef35926647ba63480b7f07449855654746482e",
+        "GithubRef": "dev",
+        "GithubSHA1": "2796abf30e51de45150a664a6b7d6cebb85f5b90",
         "NeedsCompilation": "no",
-        "Packaged": "2026-06-30 14:46:01 UTC; root",
+        "Packaged": "2026-07-01 12:47:43 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-06-30 14:46:01 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-07-01 12:47:43 UTC; unix"
       }
     },
     "cli": {
@@ -2077,16 +2077,16 @@
         "RemoteRepo": "tibble",
         "RemoteUsername": "tidyverse",
         "RemoteRef": "HEAD",
-        "RemoteSha": "50c178c49fb4a7d1b7bb67bd675ac30b3af33a03",
+        "RemoteSha": "6581b5f249894507133eeb3a990f9c85ac7b2914",
         "GithubRepo": "tibble",
         "GithubUsername": "tidyverse",
         "GithubRef": "HEAD",
-        "GithubSHA1": "50c178c49fb4a7d1b7bb67bd675ac30b3af33a03",
+        "GithubSHA1": "6581b5f249894507133eeb3a990f9c85ac7b2914",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-06-30 14:45:15 UTC; root",
+        "Packaged": "2026-07-01 12:46:58 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-06-30 14:45:16 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-07-01 12:46:58 UTC; unix"
       }
     },
     "tidyr": {
@@ -2456,7 +2456,7 @@
       "checksum": "b0b3177ac72498f5af3a16666a69320c"
     },
     "renv.lock": {
-      "checksum": "55222040529e65dac7bf5805032bf43c"
+      "checksum": "3603b6f4a6b76e7daa8015b9b8e360d9"
     }
   },
   "users": null
