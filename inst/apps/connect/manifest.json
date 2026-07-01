@@ -475,16 +475,16 @@
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
         "RemoteRef": "dev",
-        "RemoteSha": "bad506d36b866dfae4008417f2ca84d01f1e0b8b",
+        "RemoteSha": "2796abf30e51de45150a664a6b7d6cebb85f5b90",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
         "GithubRef": "dev",
-        "GithubSHA1": "bad506d36b866dfae4008417f2ca84d01f1e0b8b",
+        "GithubSHA1": "2796abf30e51de45150a664a6b7d6cebb85f5b90",
         "NeedsCompilation": "no",
-        "Packaged": "2026-06-30 16:52:26 UTC; root",
+        "Packaged": "2026-07-01 12:47:43 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-06-30 16:52:27 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-07-01 12:47:43 UTC; unix"
       }
     },
     "cli": {
@@ -2077,16 +2077,16 @@
         "RemoteRepo": "tibble",
         "RemoteUsername": "tidyverse",
         "RemoteRef": "HEAD",
-        "RemoteSha": "50c178c49fb4a7d1b7bb67bd675ac30b3af33a03",
+        "RemoteSha": "6581b5f249894507133eeb3a990f9c85ac7b2914",
         "GithubRepo": "tibble",
         "GithubUsername": "tidyverse",
         "GithubRef": "HEAD",
-        "GithubSHA1": "50c178c49fb4a7d1b7bb67bd675ac30b3af33a03",
+        "GithubSHA1": "6581b5f249894507133eeb3a990f9c85ac7b2914",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-06-30 16:51:39 UTC; root",
+        "Packaged": "2026-07-01 12:46:58 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-06-30 16:51:40 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-07-01 12:46:58 UTC; unix"
       }
     },
     "tidyr": {
@@ -2456,7 +2456,7 @@
       "checksum": "b0b3177ac72498f5af3a16666a69320c"
     },
     "renv.lock": {
-      "checksum": "2deb3616a2c2fe3bd945beac1e9777bf"
+      "checksum": "3603b6f4a6b76e7daa8015b9b8e360d9"
     }
   },
   "users": null
