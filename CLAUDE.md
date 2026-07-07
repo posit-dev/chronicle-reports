@@ -34,7 +34,7 @@ All reports are now located in [inst/apps/](inst/apps/) and can be run using `ch
 
 ## Technology Stack
 
-- **Language**: R (>= 4.1.0)
+- **Language**: R (>= 4.2.0)
 - **UI Framework**: Shiny with bslib for modern Bootstrap UI
 - **Data Processing**: arrow, dplyr
 - **Visualization**: ggplot2, plotly

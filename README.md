@@ -47,7 +47,7 @@ pak::pak("posit-dev/chronicle-reports@dev")
 
 ### Prerequisites
 
-**R Version**: Requires R >= 4.1.0. The package supports the latest release version of R, as well as the previous four minor release versions. For example, if the latest release R version is 4.5, then versions 4.5, 4.4, 4.3, 4.2, and 4.1 are supported.
+**R Version**: Requires R >= 4.2.0.
 
 **Package Manager (optional)**: If using Posit Package Manager, [obtain an appropriate URL](https://docs.posit.co/rspm/user/get-repo-url.html) and [configure your R environment](https://docs.posit.co/rspm/user/configure-r.html) for optimized package installation:
 

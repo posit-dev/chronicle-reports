@@ -24,7 +24,7 @@
   },
   "environment": {
     "r": {
-      "requires": ">= 4.1.0"
+      "requires": ">= 4.2.0"
     }
   },
   "packages": {
@@ -462,7 +462,7 @@
         "License": "MIT + file LICENSE",
         "URL": "https://github.com/posit-dev/chronicle-reports",
         "BugReports": "https://github.com/posit-dev/chronicle-reports/issues",
-        "Depends": "R (>= 4.1.0)",
+        "Depends": "R (>= 4.2.0)",
         "Imports": "arrow, bsicons, bslib, charlatan, connectapi, dplyr, DT,\nggplot2, glue, lubridate, plotly, rlang, shiny,\nshinycssloaders, tidyr, withr (>= 3.0.2)",
         "Suggests": "devtools (>= 2.4.6), shinytest2, testthat (>= 3.0.0), tibble\n(>= 3.3.0)",
         "Encoding": "UTF-8",
