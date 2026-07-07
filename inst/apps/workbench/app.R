@@ -155,8 +155,9 @@ card_header_with_chart_downloads <- function(
   )
 }
 
-# Build a downloadHandler that writes data_fn() as CSV (empty CSV when the
-# data is NULL or has no rows). Shared by the chart/table download links.
+# Build a downloadHandler that writes data_fn() as CSV. NULL data (no data
+# source) becomes a fully empty file; a 0-row result keeps its columns so
+# the CSV still has headers. Shared by the chart/table download links.
 csv_download_handler <- function(data_fn, suffix) {
   shiny::downloadHandler(
     filename = function() {
@@ -164,7 +165,7 @@ csv_download_handler <- function(data_fn, suffix) {
     },
     content = function(file) {
       data <- data_fn()
-      if (is.null(data) || nrow(data) == 0) {
+      if (is.null(data)) {
         data <- data.frame()
       }
       utils::write.csv(data, file, row.names = FALSE)
@@ -1199,7 +1200,7 @@ sessions_overview_server <- function(
   # "All" is selected (sums are exact).
   sessions_trend_chart_data <- shiny::reactive({
     data <- filtered_sessions_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -1217,7 +1218,7 @@ sessions_overview_server <- function(
   # startup charts and their CSV downloads.
   startup_median_chart_data <- shiny::reactive({
     data <- filtered_sessions_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
     startup_duration_chart_data(data, "median_startup_duration_ms")
@@ -1225,7 +1226,7 @@ sessions_overview_server <- function(
 
   startup_p95_chart_data <- shiny::reactive({
     data <- filtered_sessions_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
     startup_duration_chart_data(data, "p95_startup_duration_ms")
@@ -1606,7 +1607,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
   # Daily duration statistics (minutes) per session type for the trend chart.
   duration_trend_data <- shiny::reactive({
     data <- duration_rows()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -1639,7 +1640,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
         dplyr::summarise(sessions = dplyr::n(), .groups = "drop"),
       "exit reason summary"
     )
-    if (is.null(counts) || nrow(counts) == 0) {
+    if (is.null(counts)) {
       return(NULL)
     }
 
@@ -1924,7 +1925,9 @@ sessions_by_user_server <- function(
     if (!is.null(lookup)) {
       data <- data |> dplyr::left_join(lookup, by = "user_guid")
     } else {
-      data$username <- NA_character_
+      # mutate() recycles to zero rows; `data$username <- NA` would error
+      # when the filters leave no rows
+      data <- data |> dplyr::mutate(username = NA_character_)
     }
     data <- data |>
       dplyr::mutate(
@@ -2149,7 +2152,7 @@ sessions_user_detail_server <- function(
       ds |> dplyr::filter(.data$user_guid == selected_user),
       "sessions for selected user"
     )
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -2158,7 +2161,9 @@ sessions_user_detail_server <- function(
     if (!is.null(lookup)) {
       data <- data |> dplyr::left_join(lookup, by = "user_guid")
     } else {
-      data$username <- NA_character_
+      # mutate() recycles to zero rows; `data$username <- NA` would error
+      # when the selected user has no sessions
+      data <- data |> dplyr::mutate(username = NA_character_)
     }
     data |>
       dplyr::mutate(
@@ -2207,7 +2212,7 @@ sessions_user_detail_server <- function(
   # ordered by start time. Drives the timeline chart and its CSV download.
   user_timeline_chart_data <- shiny::reactive({
     data <- user_sessions()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 

@@ -739,3 +739,61 @@ test_that("Workbench: sessions overview downloads handle empty data", {
     }
   )
 })
+
+test_that("Workbench: sessions downloads keep headers when range has no rows", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+  env <- source_app_env("workbench", base_path)
+
+  sessions <- chronicle_data(
+    "workbench/session_start_totals",
+    base_path
+  ) |>
+    dplyr::collect()
+  duration_ds <- chronicle_data(
+    "workbench/session_duration",
+    base_path
+  )
+
+  shiny::testServer(
+    wrap_server(
+      env$sessions_overview_server,
+      shiny::reactive(sessions),
+      shiny::reactive(duration_ds)
+    ),
+    {
+      # A real data source with a date range that matches no rows: the CSV
+      # must still parse (read.csv errors on fully empty files) and carry
+      # the chart columns, so 0-row downloads stay usable.
+      session$setInputs(
+        sessions_overview_date_range = c(
+          as.Date("1990-01-01"),
+          as.Date("1990-01-02")
+        ),
+        sessions_overview_environment = "All"
+      )
+
+      f <- output$download_sessions_trend_chart
+      csv <- utils::read.csv(f)
+      expect_equal(nrow(csv), 0)
+      expect_true(all(
+        c("date", "session_type", "sessions_started") %in% names(csv)
+      ))
+
+      f <- output$download_sessions_trend_raw
+      csv <- utils::read.csv(f)
+      expect_equal(nrow(csv), 0)
+      expect_true("sessions_started" %in% names(csv))
+
+      f <- output$download_startup_median_chart
+      csv <- utils::read.csv(f)
+      expect_equal(nrow(csv), 0)
+      expect_true(all(c("date", "session_type", "value") %in% names(csv)))
+
+      f <- output$download_startup_p95_chart
+      csv <- utils::read.csv(f)
+      expect_equal(nrow(csv), 0)
+      expect_true(all(c("date", "session_type", "value") %in% names(csv)))
+    }
+  )
+})
