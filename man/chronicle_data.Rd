@@ -15,7 +15,11 @@ chronicle_data(
 \item{base_path}{Base path to Chronicle data directory}
 }
 \value{
-Arrow dataset object
+Arrow dataset object, or \code{NULL} (with a message) when the curated
+dataset directory does not exist yet -- for example on a new install
+where the Chronicle Agent has not completed its first
+collection and curation cycle, or when data for that product is not
+being collected.
 }
 \description{
 Loads curated Chronicle metric data. This is the

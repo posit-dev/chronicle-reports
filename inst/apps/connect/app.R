@@ -50,6 +50,44 @@ initial_date_start <- function(min_date) {
   }
 }
 
+# Show a popup warning when a curated dataset directory does not exist yet,
+# so users get actionable guidance. All missing datasets share one persistent
+# notification -- re-shown with the same id, it updates in place with the
+# growing list rather than stacking a popup per dataset.
+notify_missing_dataset <- function(metric) {
+  session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session)) {
+    return(invisible(NULL))
+  }
+  missing <- session$userData$missing_datasets
+  if (metric %in% missing) {
+    return(invisible(NULL))
+  }
+  missing <- c(missing, metric)
+  session$userData$missing_datasets <- missing
+  shiny::showNotification(
+    # overflow-wrap lets long unbroken data paths wrap instead of
+    # overflowing the notification
+    shiny::div(
+      style = "overflow-wrap: anywhere;",
+      paste0(
+        "No curated data found for: ",
+        paste0("'", missing, "'", collapse = ", "),
+        ". Confirm that Chronicle data collection is enabled for Posit ",
+        "Connect, that at least 30 hours have passed since collection ",
+        "began, and that the data path ('",
+        base_path,
+        "') is correct."
+      )
+    ),
+    duration = NULL,
+    id = "chronicle-missing-datasets",
+    type = "warning",
+    session = session
+  )
+  invisible(NULL)
+}
+
 # Brand colors
 BRAND_COLORS <- list(
   BLUE = "#447099",
@@ -2123,6 +2161,10 @@ server <- function(input, output, session) {
     tryCatch(
       {
         ds <- chronicle_data("connect/user_totals", base_path)
+        if (is.null(ds)) {
+          notify_missing_dataset("connect/user_totals")
+          return(NULL)
+        }
         if (!is.null(range)) {
           range_min <- range$min
           range_max <- range$max
@@ -2157,6 +2199,10 @@ server <- function(input, output, session) {
     tryCatch(
       {
         ds <- chronicle_data("connect/user_list", base_path)
+        if (is.null(ds)) {
+          notify_missing_dataset("connect/user_list")
+          return(NULL)
+        }
         max_date <- ds |>
           dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
           dplyr::collect() |>
@@ -2180,6 +2226,10 @@ server <- function(input, output, session) {
     tryCatch(
       {
         ds <- chronicle_data("connect/content_totals", base_path)
+        if (is.null(ds)) {
+          notify_missing_dataset("connect/content_totals")
+          return(NULL)
+        }
         if (!is.null(range)) {
           range_min <- range$min
           range_max <- range$max
@@ -2211,6 +2261,10 @@ server <- function(input, output, session) {
     tryCatch(
       {
         ds <- chronicle_data("connect/content_list", base_path)
+        if (is.null(ds)) {
+          notify_missing_dataset("connect/content_list")
+          return(NULL)
+        }
         max_date <- ds |>
           dplyr::summarise(max_date = max(date, na.rm = TRUE)) |>
           dplyr::collect() |>
@@ -2247,6 +2301,10 @@ server <- function(input, output, session) {
           "connect/content_hits_totals_by_user",
           base_path
         )
+        if (is.null(ds)) {
+          notify_missing_dataset("connect/content_hits_totals_by_user")
+          return(NULL)
+        }
         if (!is.null(range)) {
           range_min <- range$min
           range_max <- range$max
