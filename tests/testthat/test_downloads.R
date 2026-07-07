@@ -407,6 +407,53 @@ test_that("Connect: downloads handle NULL data gracefully", {
   )
 })
 
+test_that("Connect: downloads keep headers when range has no rows", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+  env <- source_app_env("connect", base_path)
+
+  raw_data <- chronicle_data(
+    "connect/user_totals",
+    base_path
+  ) |>
+    dplyr::collect()
+
+  shiny::testServer(
+    wrap_server(
+      env$users_overview_server,
+      shiny::reactive(raw_data)
+    ),
+    {
+      # A real data source with a date range that matches no rows: the CSV
+      # must still parse (read.csv errors on fully empty files) and carry
+      # the chart columns, so 0-row downloads stay usable.
+      session$setInputs(
+        users_overview_date_range = c(
+          as.Date("1990-01-01"),
+          as.Date("1990-01-02")
+        )
+      )
+
+      f <- output$download_user_trends_chart
+      csv <- utils::read.csv(f)
+      expect_equal(nrow(csv), 0)
+      expect_true(all(c("date", "metric", "value") %in% names(csv)))
+
+      f <- output$download_user_trends_raw
+      csv <- utils::read.csv(f)
+      expect_equal(nrow(csv), 0)
+      expect_true("named_users" %in% names(csv))
+
+      f <- output$download_user_dow_chart
+      csv <- utils::read.csv(f)
+      expect_equal(nrow(csv), 0)
+      expect_true(all(
+        c("day_of_week", "avg_active_users") %in% names(csv)
+      ))
+    }
+  )
+})
+
 test_that("Connect: users list handles NULL data gracefully", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))

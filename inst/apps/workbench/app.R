@@ -372,7 +372,7 @@ users_overview_server <- function(input, output, session) {
   # Aggregated data for User Trends chart
   user_trends_chart_data <- shiny::reactive({
     data <- filtered_users_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -405,7 +405,7 @@ users_overview_server <- function(input, output, session) {
   # Aggregated data for Day of Week chart
   user_dow_chart_data <- shiny::reactive({
     data <- filtered_users_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -525,58 +525,22 @@ users_overview_server <- function(input, output, session) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Download handlers for User Trends chart
-  output$download_user_trends_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_trends_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_trends_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  # Download handlers for User Trends and Day of Week charts
+  output$download_user_trends_chart <- csv_download_handler(
+    user_trends_chart_data,
+    "user_trends_chart"
   )
-
-  output$download_user_trends_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_trends_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_users_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_trends_raw <- csv_download_handler(
+    filtered_users_data,
+    "user_trends_raw"
   )
-
-  # Download handlers for Day of Week chart
-  output$download_user_dow_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_dow_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_dow_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_dow_chart <- csv_download_handler(
+    user_dow_chart_data,
+    "user_dow_chart"
   )
-
-  output$download_user_dow_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_dow_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_users_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_dow_raw <- csv_download_handler(
+    filtered_users_data,
+    "user_dow_raw"
   )
 }
 
@@ -733,35 +697,32 @@ user_list_server <- function(input, output, session, user_list_data) {
       )
   })
 
-  # Download handler for User List table
-  output$download_user_list <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_list_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_user_list()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      } else {
-        data <- data |>
-          dplyr::mutate(
-            environment = ifelse(
-              is.na(.data$environment) |
-                .data$environment == "" |
-                .data$environment == " ",
-              "(Not Set)",
-              .data$environment
-            )
-          ) |>
-          dplyr::select(
-            "username",
-            "user_role",
-            "environment",
-            "last_active_at"
-          )
-      }
-      utils::write.csv(data, file, row.names = FALSE)
+  # Download handler for User List table — same display columns as the table
+  user_list_download_data <- shiny::reactive({
+    data <- filtered_user_list()
+    if (is.null(data)) {
+      return(NULL)
     }
+    data |>
+      dplyr::mutate(
+        environment = ifelse(
+          is.na(.data$environment) |
+            .data$environment == "" |
+            .data$environment == " ",
+          "(Not Set)",
+          .data$environment
+        )
+      ) |>
+      dplyr::select(
+        "username",
+        "user_role",
+        "environment",
+        "last_active_at"
+      )
+  })
+  output$download_user_list <- csv_download_handler(
+    user_list_download_data,
+    "user_list"
   )
 }
 
@@ -2010,17 +1971,9 @@ sessions_by_user_server <- function(
   })
 
   # Download handler for the pivoted summary table
-  output$download_user_summary <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_summary_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_summary_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_summary <- csv_download_handler(
+    user_summary_data,
+    "user_summary"
   )
 }
 
