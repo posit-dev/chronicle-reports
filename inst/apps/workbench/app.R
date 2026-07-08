@@ -193,6 +193,24 @@ card_header_with_chart_downloads <- function(
   )
 }
 
+# Build a downloadHandler that writes data_fn() as CSV. NULL data (no data
+# source) becomes a fully empty file; a 0-row result keeps its columns so
+# the CSV still has headers. Shared by the chart/table download links.
+csv_download_handler <- function(data_fn, suffix) {
+  shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_workbench_", suffix, "_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- data_fn()
+      if (is.null(data)) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+}
+
 # ==============================================
 # Users → Overview UI/Server
 # ==============================================
@@ -396,7 +414,7 @@ users_overview_server <- function(input, output, session) {
   # Aggregated data for User Trends chart
   user_trends_chart_data <- shiny::reactive({
     data <- filtered_users_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -429,7 +447,7 @@ users_overview_server <- function(input, output, session) {
   # Aggregated data for Day of Week chart
   user_dow_chart_data <- shiny::reactive({
     data <- filtered_users_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -549,58 +567,22 @@ users_overview_server <- function(input, output, session) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Download handlers for User Trends chart
-  output$download_user_trends_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_trends_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_trends_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  # Download handlers for User Trends and Day of Week charts
+  output$download_user_trends_chart <- csv_download_handler(
+    user_trends_chart_data,
+    "user_trends_chart"
   )
-
-  output$download_user_trends_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_trends_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_users_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_trends_raw <- csv_download_handler(
+    filtered_users_data,
+    "user_trends_raw"
   )
-
-  # Download handlers for Day of Week chart
-  output$download_user_dow_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_dow_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_dow_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_dow_chart <- csv_download_handler(
+    user_dow_chart_data,
+    "user_dow_chart"
   )
-
-  output$download_user_dow_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_dow_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_users_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_dow_raw <- csv_download_handler(
+    filtered_users_data,
+    "user_dow_raw"
   )
 }
 
@@ -757,35 +739,32 @@ user_list_server <- function(input, output, session, user_list_data) {
       )
   })
 
-  # Download handler for User List table
-  output$download_user_list <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_list_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_user_list()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      } else {
-        data <- data |>
-          dplyr::mutate(
-            environment = ifelse(
-              is.na(.data$environment) |
-                .data$environment == "" |
-                .data$environment == " ",
-              "(Not Set)",
-              .data$environment
-            )
-          ) |>
-          dplyr::select(
-            "username",
-            "user_role",
-            "environment",
-            "last_active_at"
-          )
-      }
-      utils::write.csv(data, file, row.names = FALSE)
+  # Download handler for User List table — same display columns as the table
+  user_list_download_data <- shiny::reactive({
+    data <- filtered_user_list()
+    if (is.null(data)) {
+      return(NULL)
     }
+    data |>
+      dplyr::mutate(
+        environment = ifelse(
+          is.na(.data$environment) |
+            .data$environment == "" |
+            .data$environment == " ",
+          "(Not Set)",
+          .data$environment
+        )
+      ) |>
+      dplyr::select(
+        "username",
+        "user_role",
+        "environment",
+        "last_active_at"
+      )
+  })
+  output$download_user_list <- csv_download_handler(
+    user_list_download_data,
+    "user_list"
   )
 }
 
@@ -832,7 +811,11 @@ sessions_overview_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Sessions Started Over Time"),
+    card_header_with_chart_downloads(
+      "Sessions Started Over Time",
+      "download_sessions_trend_chart",
+      "download_sessions_trend_raw"
+    ),
     shinycssloaders::withSpinner(
       plotly::plotlyOutput("sessions_trend_plot")
     )
@@ -840,13 +823,21 @@ sessions_overview_ui <- bslib::card(
   bslib::layout_columns(
     col_widths = c(6, 6),
     bslib::card(
-      bslib::card_header("Startup Duration Over Time (Median)"),
+      card_header_with_chart_downloads(
+        "Startup Duration Over Time (Median)",
+        "download_startup_median_chart",
+        "download_startup_median_raw"
+      ),
       shinycssloaders::withSpinner(
         plotly::plotlyOutput("sessions_duration_median_plot")
       )
     ),
     bslib::card(
-      bslib::card_header("Startup Duration Over Time (P95)"),
+      card_header_with_chart_downloads(
+        "Startup Duration Over Time (P95)",
+        "download_startup_p95_chart",
+        "download_startup_p95_raw"
+      ),
       shinycssloaders::withSpinner(
         plotly::plotlyOutput("sessions_duration_p95_plot")
       )
@@ -970,15 +961,12 @@ filter_duration_env <- function(data, env) {
   }
 }
 
-# Build a startup-duration plotly for one metric column (median or p95).
-# Collapses multiple environments into one line per session type via a
+# Aggregate startup-duration rows for one metric column (median or p95):
+# one value per date and session type. Collapses multiple environments via a
 # sessions-weighted average (daily percentiles can't be re-medianed exactly).
-render_startup_duration_plot <- function(data, metric_col, metric_label) {
-  if (is.null(data) || nrow(data) == 0) {
-    return(sessions_empty_plot())
-  }
-
-  plot_data <- data |>
+# Shared by the startup-duration charts and their CSV downloads.
+startup_duration_chart_data <- function(data, metric_col) {
+  data |>
     dplyr::filter(!is.na(date)) |>
     dplyr::transmute(
       date = date,
@@ -997,6 +985,14 @@ render_startup_duration_plot <- function(data, metric_col, metric_label) {
     ) |>
     dplyr::filter(is.finite(.data$value)) |>
     dplyr::arrange(date)
+}
+
+# Build a startup-duration plotly from pre-aggregated chart data (one value
+# per date and session type), one line per session type.
+render_startup_duration_plot <- function(plot_data, metric_label) {
+  if (is.null(plot_data)) {
+    return(sessions_empty_plot())
+  }
 
   if (nrow(plot_data) == 0) {
     return(sessions_empty_plot("No data available for selected date range", ""))
@@ -1202,15 +1198,16 @@ sessions_overview_server <- function(
     format_total_hours(summary$total_duration_seconds)
   })
 
-  # Sessions started over time, one line per session type. Counts are summed
-  # across environments only when "All" is selected (sums are exact).
-  output$sessions_trend_plot <- plotly::renderPlotly({
+  # Daily sessions-started counts per session type — drives the trend chart
+  # and its CSV download. Counts are summed across environments only when
+  # "All" is selected (sums are exact).
+  sessions_trend_chart_data <- shiny::reactive({
     data <- filtered_sessions_data()
-    if (is.null(data) || nrow(data) == 0) {
-      return(sessions_empty_plot())
+    if (is.null(data)) {
+      return(NULL)
     }
 
-    plot_data <- data |>
+    data |>
       dplyr::filter(!is.na(date)) |>
       dplyr::group_by(date, .data$session_type) |>
       dplyr::summarise(
@@ -1218,6 +1215,32 @@ sessions_overview_server <- function(
         .groups = "drop"
       ) |>
       dplyr::arrange(date)
+  })
+
+  # Weighted daily startup-duration values per session type — drive the
+  # startup charts and their CSV downloads.
+  startup_median_chart_data <- shiny::reactive({
+    data <- filtered_sessions_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
+    startup_duration_chart_data(data, "median_startup_duration_ms")
+  })
+
+  startup_p95_chart_data <- shiny::reactive({
+    data <- filtered_sessions_data()
+    if (is.null(data)) {
+      return(NULL)
+    }
+    startup_duration_chart_data(data, "p95_startup_duration_ms")
+  })
+
+  # Sessions started over time, one line per session type.
+  output$sessions_trend_plot <- plotly::renderPlotly({
+    plot_data <- sessions_trend_chart_data()
+    if (is.null(plot_data)) {
+      return(sessions_empty_plot())
+    }
 
     if (nrow(plot_data) == 0) {
       return(sessions_empty_plot(
@@ -1270,20 +1293,38 @@ sessions_overview_server <- function(
   })
 
   output$sessions_duration_median_plot <- plotly::renderPlotly({
-    render_startup_duration_plot(
-      filtered_sessions_data(),
-      "median_startup_duration_ms",
-      "Median"
-    )
+    render_startup_duration_plot(startup_median_chart_data(), "Median")
   })
 
   output$sessions_duration_p95_plot <- plotly::renderPlotly({
-    render_startup_duration_plot(
-      filtered_sessions_data(),
-      "p95_startup_duration_ms",
-      "P95"
-    )
+    render_startup_duration_plot(startup_p95_chart_data(), "P95")
   })
+
+  # Download handlers
+  output$download_sessions_trend_chart <- csv_download_handler(
+    sessions_trend_chart_data,
+    "sessions_trend_chart"
+  )
+  output$download_sessions_trend_raw <- csv_download_handler(
+    filtered_sessions_data,
+    "sessions_trend_raw"
+  )
+  output$download_startup_median_chart <- csv_download_handler(
+    startup_median_chart_data,
+    "startup_duration_median_chart"
+  )
+  output$download_startup_median_raw <- csv_download_handler(
+    filtered_sessions_data,
+    "startup_duration_median_raw"
+  )
+  output$download_startup_p95_chart <- csv_download_handler(
+    startup_p95_chart_data,
+    "startup_duration_p95_chart"
+  )
+  output$download_startup_p95_raw <- csv_download_handler(
+    filtered_sessions_data,
+    "startup_duration_p95_raw"
+  )
 }
 
 # ==============================================
@@ -1569,7 +1610,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
   # Daily duration statistics (minutes) per session type for the trend chart.
   duration_trend_data <- shiny::reactive({
     data <- duration_rows()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -1602,7 +1643,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
         dplyr::summarise(sessions = dplyr::n(), .groups = "drop"),
       "exit reason summary"
     )
-    if (is.null(counts) || nrow(counts) == 0) {
+    if (is.null(counts)) {
       return(NULL)
     }
 
@@ -1686,34 +1727,19 @@ sessions_duration_server <- function(input, output, session, duration_data) {
   })
 
   # Download handlers
-  duration_download <- function(data_fn, suffix) {
-    shiny::downloadHandler(
-      filename = function() {
-        paste0("chronicle_workbench_", suffix, "_", Sys.Date(), ".csv")
-      },
-      content = function(file) {
-        data <- data_fn()
-        if (is.null(data) || nrow(data) == 0) {
-          data <- data.frame()
-        }
-        utils::write.csv(data, file, row.names = FALSE)
-      }
-    )
-  }
-
-  output$download_duration_median_chart <- duration_download(
+  output$download_duration_median_chart <- csv_download_handler(
     duration_trend_data,
     "session_duration_trend_chart"
   )
-  output$download_duration_median_raw <- duration_download(
+  output$download_duration_median_raw <- csv_download_handler(
     duration_rows,
     "session_duration_raw"
   )
-  output$download_duration_exit_chart <- duration_download(
+  output$download_duration_exit_chart <- csv_download_handler(
     duration_exit_data,
     "session_exit_reason_chart"
   )
-  output$download_duration_exit_raw <- duration_download(
+  output$download_duration_exit_raw <- csv_download_handler(
     duration_rows,
     "session_exit_reason_raw"
   )
@@ -1906,7 +1932,9 @@ sessions_by_user_server <- function(
     if (!is.null(lookup)) {
       data <- data |> dplyr::left_join(lookup, by = "user_guid")
     } else {
-      data$username <- NA_character_
+      # mutate() recycles to zero rows; `data$username <- NA` would error
+      # when the filters leave no rows
+      data <- data |> dplyr::mutate(username = NA_character_)
     }
     data <- data |>
       dplyr::mutate(
@@ -1989,17 +2017,9 @@ sessions_by_user_server <- function(
   })
 
   # Download handler for the pivoted summary table
-  output$download_user_summary <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_summary_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_summary_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_summary <- csv_download_handler(
+    user_summary_data,
+    "user_summary"
   )
 }
 
@@ -2048,7 +2068,11 @@ sessions_user_detail_ui <- bslib::card(
     )
   ),
   bslib::card(
-    bslib::card_header("Session Timeline"),
+    card_header_with_chart_downloads(
+      "Session Timeline",
+      "download_user_detail_timeline_chart",
+      "download_user_detail_timeline_raw"
+    ),
     shinycssloaders::withSpinner(
       plotly::plotlyOutput("user_detail_timeline_plot")
     )
@@ -2127,7 +2151,7 @@ sessions_user_detail_server <- function(
       ds |> dplyr::filter(.data$user_guid == selected_user),
       "sessions for selected user"
     )
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -2136,7 +2160,9 @@ sessions_user_detail_server <- function(
     if (!is.null(lookup)) {
       data <- data |> dplyr::left_join(lookup, by = "user_guid")
     } else {
-      data$username <- NA_character_
+      # mutate() recycles to zero rows; `data$username <- NA` would error
+      # when the selected user has no sessions
+      data <- data |> dplyr::mutate(username = NA_character_)
     }
     data |>
       dplyr::mutate(
@@ -2181,25 +2207,32 @@ sessions_user_detail_server <- function(
     format(last_seen, "%b %d, %Y")
   })
 
+  # Sessions shown on the timeline: rows with both start and end timestamps,
+  # ordered by start time. Drives the timeline chart and its CSV download.
+  user_timeline_chart_data <- shiny::reactive({
+    data <- user_sessions()
+    if (is.null(data)) {
+      return(NULL)
+    }
+
+    data |>
+      dplyr::filter(
+        !is.na(.data$session_started_at),
+        !is.na(.data$session_ended_at)
+      ) |>
+      dplyr::arrange(.data$session_started_at)
+  })
+
   # Gantt-style timeline: one horizontal segment per session, ordered by start
   # time, colored by session type.
   output$user_detail_timeline_plot <- plotly::renderPlotly({
-    data <- user_sessions()
+    data <- user_timeline_chart_data()
     if (is.null(data) || nrow(data) == 0) {
       return(sessions_empty_plot("No sessions for selected user", ""))
     }
 
     plot_data <- data |>
-      dplyr::filter(
-        !is.na(.data$session_started_at),
-        !is.na(.data$session_ended_at)
-      ) |>
-      dplyr::arrange(.data$session_started_at) |>
       dplyr::mutate(lane = dplyr::row_number())
-
-    if (nrow(plot_data) == 0) {
-      return(sessions_empty_plot("No sessions for selected user", ""))
-    }
 
     # format_duration_secs() is scalar; precompute the tooltip labels.
     plot_data$duration_label <- vapply(
@@ -2336,18 +2369,18 @@ sessions_user_detail_server <- function(
       )
   })
 
-  # Download handler for the user's sessions
-  output$download_user_detail_sessions <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_workbench_user_detail_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_sessions()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  # Download handlers for the timeline chart and the user's sessions
+  output$download_user_detail_timeline_chart <- csv_download_handler(
+    user_timeline_chart_data,
+    "user_detail_timeline_chart"
+  )
+  output$download_user_detail_timeline_raw <- csv_download_handler(
+    user_sessions,
+    "user_detail_timeline_raw"
+  )
+  output$download_user_detail_sessions <- csv_download_handler(
+    user_sessions,
+    "user_detail"
   )
 }
 

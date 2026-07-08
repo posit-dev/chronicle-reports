@@ -173,6 +173,24 @@ card_header_with_chart_downloads <- function(
   )
 }
 
+# Build a downloadHandler that writes data_fn() as CSV. NULL data (no data
+# source) becomes a fully empty file; a 0-row result keeps its columns so
+# the CSV still has headers. Shared by the chart/table download links.
+csv_download_handler <- function(data_fn, suffix) {
+  shiny::downloadHandler(
+    filename = function() {
+      paste0("chronicle_connect_", suffix, "_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data <- data_fn()
+      if (is.null(data)) {
+        data <- data.frame()
+      }
+      utils::write.csv(data, file, row.names = FALSE)
+    }
+  )
+}
+
 # ==============================================
 # Users - Overview UI/Server
 # ==============================================
@@ -296,7 +314,7 @@ users_overview_server <- function(input, output, session, user_totals) {
   # Aggregated data for User Trends chart
   user_trends_chart_data <- shiny::reactive({
     data <- filtered_users_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -318,7 +336,7 @@ users_overview_server <- function(input, output, session, user_totals) {
   # Aggregated data for Day of Week chart
   user_dow_chart_data <- shiny::reactive({
     data <- filtered_users_data()
-    if (is.null(data) || nrow(data) == 0) {
+    if (is.null(data)) {
       return(NULL)
     }
 
@@ -462,58 +480,22 @@ users_overview_server <- function(input, output, session, user_totals) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Download handlers for User Trends chart
-  output$download_user_trends_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_user_trends_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_trends_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  # Download handlers for User Trends and Day of Week charts
+  output$download_user_trends_chart <- csv_download_handler(
+    user_trends_chart_data,
+    "user_trends_chart"
   )
-
-  output$download_user_trends_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_user_trends_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_users_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_trends_raw <- csv_download_handler(
+    filtered_users_data,
+    "user_trends_raw"
   )
-
-  # Download handlers for Day of Week chart
-  output$download_user_dow_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_user_dow_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- user_dow_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_dow_chart <- csv_download_handler(
+    user_dow_chart_data,
+    "user_dow_chart"
   )
-
-  output$download_user_dow_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_user_dow_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_users_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_user_dow_raw <- csv_download_handler(
+    filtered_users_data,
+    "user_dow_raw"
   )
 }
 
@@ -683,38 +665,35 @@ users_list_server <- function(input, output, session, user_list) {
       )
   })
 
-  # Download handler for users list
-  output$download_users_list <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_users_list_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_users_list()
-      if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(data.frame(), file, row.names = FALSE)
-        return()
-      }
-      export_data <- data |>
-        dplyr::mutate(
-          environment = ifelse(
-            is.na(environment) |
-              environment == "" |
-              environment == " ",
-            "(Not Set)",
-            environment
-          )
-        ) |>
-        dplyr::select(
-          "username",
-          "email",
-          "first_name",
-          "last_name",
-          "environment",
-          "user_role",
-          "last_active_at"
-        )
-      utils::write.csv(export_data, file, row.names = FALSE)
+  # Download handler for users list — same display columns as the table
+  users_list_download_data <- shiny::reactive({
+    data <- filtered_users_list()
+    if (is.null(data)) {
+      return(NULL)
     }
+    data |>
+      dplyr::mutate(
+        environment = ifelse(
+          is.na(environment) |
+            environment == "" |
+            environment == " ",
+          "(Not Set)",
+          environment
+        )
+      ) |>
+      dplyr::select(
+        "username",
+        "email",
+        "first_name",
+        "last_name",
+        "environment",
+        "user_role",
+        "last_active_at"
+      )
+  })
+  output$download_users_list <- csv_download_handler(
+    users_list_download_data,
+    "users_list"
   )
 }
 
@@ -906,7 +885,7 @@ content_overview_server <- function(input, output, session, content_totals) {
   # Aggregated data for Content Trends chart
   content_trends_chart_data <- shiny::reactive({
     df <- filtered_contents_in_range()
-    if (is.null(df) || nrow(df) == 0) {
+    if (is.null(df)) {
       return(NULL)
     }
     df |>
@@ -920,7 +899,7 @@ content_overview_server <- function(input, output, session, content_totals) {
   # Aggregated data for Content by Type chart
   content_type_chart_data <- shiny::reactive({
     df <- filtered_contents_in_range()
-    if (is.null(df) || nrow(df) == 0) {
+    if (is.null(df)) {
       return(NULL)
     }
     latest_date <- suppressWarnings(max(df$date, na.rm = TRUE))
@@ -1088,58 +1067,22 @@ content_overview_server <- function(input, output, session, content_totals) {
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Download handlers for Content Trends chart
-  output$download_content_trends_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_trends_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- content_trends_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  # Download handlers for Content Trends and Content by Type charts
+  output$download_content_trends_chart <- csv_download_handler(
+    content_trends_chart_data,
+    "content_trends_chart"
   )
-
-  output$download_content_trends_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_trends_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_contents_in_range()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_content_trends_raw <- csv_download_handler(
+    filtered_contents_in_range,
+    "content_trends_raw"
   )
-
-  # Download handlers for Content by Type chart
-  output$download_content_type_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_type_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- content_type_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_content_type_chart <- csv_download_handler(
+    content_type_chart_data,
+    "content_type_chart"
   )
-
-  output$download_content_type_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_type_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_contents_in_range()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_content_type_raw <- csv_download_handler(
+    filtered_contents_in_range,
+    "content_type_raw"
   )
 }
 
@@ -1399,29 +1342,27 @@ content_list_server <- function(
     )
   })
 
-  # Download handler for content list
-  output$download_content_list <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_list_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- filtered_content_list()
-      if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(data.frame(), file, row.names = FALSE)
-        return()
-      }
-      cols <- c(
-        "title",
-        "owner",
-        "type",
-        "environment",
-        "py_version",
-        "r_version",
-        "quarto_version",
-        "last_deployed_time"
-      )
-      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+  # Download handler for content list — same display columns as the table
+  content_list_download_data <- shiny::reactive({
+    data <- filtered_content_list()
+    if (is.null(data)) {
+      return(NULL)
     }
+    cols <- c(
+      "title",
+      "owner",
+      "type",
+      "environment",
+      "py_version",
+      "r_version",
+      "quarto_version",
+      "last_deployed_time"
+    )
+    data[, cols, drop = FALSE]
+  })
+  output$download_content_list <- csv_download_handler(
+    content_list_download_data,
+    "content_list"
   )
 }
 
@@ -1623,7 +1564,7 @@ content_hits_overview_server <- function(
   # Aggregated data for Total Hits chart
   hits_chart_data <- shiny::reactive({
     df <- hits_filtered()
-    if (is.null(df) || nrow(df) == 0 || !"hits" %in% names(df)) {
+    if (is.null(df) || !"hits" %in% names(df)) {
       return(NULL)
     }
     df |>
@@ -1637,7 +1578,7 @@ content_hits_overview_server <- function(
   # Aggregated data for Unique Users chart
   unique_users_chart_data <- shiny::reactive({
     df <- hits_filtered()
-    if (is.null(df) || nrow(df) == 0 || !"user_guid" %in% names(df)) {
+    if (is.null(df) || !"user_guid" %in% names(df)) {
       return(NULL)
     }
     df |>
@@ -1741,62 +1682,22 @@ content_hits_overview_server <- function(
       plotly::config(displayModeBar = FALSE)
   })
 
-  # Download handlers for Total Hits chart
-  output$download_content_hits_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_hits_chart_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- hits_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  # Download handlers for Total Hits and Unique Users charts
+  output$download_content_hits_chart <- csv_download_handler(
+    hits_chart_data,
+    "content_hits_chart"
   )
-
-  output$download_content_hits_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_hits_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- hits_filtered()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_content_hits_raw <- csv_download_handler(
+    hits_filtered,
+    "content_hits_raw"
   )
-
-  # Download handlers for Unique Users chart
-  output$download_content_hits_unique_chart <- shiny::downloadHandler(
-    filename = function() {
-      paste0(
-        "chronicle_connect_content_hits_unique_chart_",
-        Sys.Date(),
-        ".csv"
-      )
-    },
-    content = function(file) {
-      data <- unique_users_chart_data()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_content_hits_unique_chart <- csv_download_handler(
+    unique_users_chart_data,
+    "content_hits_unique_chart"
   )
-
-  output$download_content_hits_unique_raw <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_hits_unique_raw_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- hits_filtered()
-      if (is.null(data) || nrow(data) == 0) {
-        data <- data.frame()
-      }
-      utils::write.csv(data, file, row.names = FALSE)
-    }
+  output$download_content_hits_unique_raw <- csv_download_handler(
+    hits_filtered,
+    "content_hits_unique_raw"
   )
 }
 
@@ -2062,20 +1963,19 @@ content_hits_by_user_server <- function(
     )
   })
 
-  # Download handler for Content Hits by User table
-  output$download_content_hits_by_user <- shiny::downloadHandler(
-    filename = function() {
-      paste0("chronicle_connect_content_hits_by_user_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      data <- content_hits_by_user_table_data()
-      if (is.null(data) || nrow(data) == 0) {
-        utils::write.csv(data.frame(), file, row.names = FALSE)
-        return()
-      }
-      cols <- c("username", "title", "environment", "total_hits")
-      utils::write.csv(data[, cols, drop = FALSE], file, row.names = FALSE)
+  # Download handler for Content Hits by User table — same display columns
+  # as the table
+  content_hits_by_user_download_data <- shiny::reactive({
+    data <- content_hits_by_user_table_data()
+    if (is.null(data)) {
+      return(NULL)
     }
+    cols <- c("username", "title", "environment", "total_hits")
+    data[, cols, drop = FALSE]
+  })
+  output$download_content_hits_by_user <- csv_download_handler(
+    content_hits_by_user_download_data,
+    "content_hits_by_user"
   )
 }
 
