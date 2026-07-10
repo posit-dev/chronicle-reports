@@ -48,7 +48,40 @@ Chronicle helps data science managers understand their organization's use of Pos
 - **Visualization**: ggplot2, plotly
 - **Testing**: testthat, shinytest2
 
-## Development Workflow
+## Architecture Patterns
+
+### Data Flow
+
+1. **Data Loading**: Reports use `chronicle_data()` (for curated data) or `chronicle_raw_data()` (for raw data) from utils.R to load Chronicle metrics
+2. **Data Processing**: Each app has its own calculation function (e.g., `calculate_connect_daily_user_counts()`)
+3. **Reactivity**: Shiny reactive expressions handle data filtering and updates
+4. **Visualization**: Combination of plotly (interactive) and ggplot2 (static) charts
+
+### UI Structure
+
+Reports use `bslib::page_sidebar()` layout with:
+- Sidebar for filters (e.g., date range)
+- Value boxes for current metrics
+- Cards with charts for historical trends
+
+### Color Scheme
+
+Brand colors are defined in `chronicle_constants.R` and used consistently across reports:
+- Blue: Licensed users
+- Green: Daily/active users
+- Burgundy: Publishers
+
+You can change these to match your company branding.
+
+## Important Conventions
+
+1. **Function Documentation**: Use roxygen2 comments with `@param`, `@return`, `@export`
+2. **Internal Functions**: Mark with `@noRd` to exclude from package docs
+3. **Pipe Operator**: Use `|>` (base R pipe) not `%>%` (magrittr)
+4. **Dependencies**: Import functions explicitly with `@importFrom` or use `package::function()`
+5. **Code Style**: Follow tidyverse style guide (enforced by `.lintr` config)
+
+## Common Tasks
 
 ### Setup
 
@@ -76,65 +109,6 @@ chronicle_run_app("connect", base_path = "/path/to/chronicle/data")
 # Run an app with S3 data
 chronicle_run_app("workbench", base_path = "s3://chronicle-bucket/optional-prefix")
 ```
-
-### Testing
-
-The project uses testthat for unit tests:
-
-```r
-library(testthat)
-test()
-```
-
-### Deployment to Posit Connect
-
-Create an `app.R` file:
-
-```r
-chronicle.reports::chronicle_run_app(
-  app_name = "connect",
-  base_path = "/path/to/chronicle/data"
-)
-```
-
-Then deploy:
-
-```r
-rsconnect::deployApp(appDir = "your-report-dir", appFiles = c("app.R"))
-```
-
-## Architecture Patterns
-
-### Data Flow
-
-1. **Data Loading**: Reports use `chronicle_data()` (for curated data) or `chronicle_raw_data()` (for raw data) from utils.R to load Chronicle metrics
-2. **Data Processing**: Each app has its own calculation function (e.g., `calculate_connect_daily_user_counts()`)
-3. **Reactivity**: Shiny reactive expressions handle data filtering and updates
-4. **Visualization**: Combination of plotly (interactive) and ggplot2 (static) charts
-
-### UI Structure
-
-Reports use `bslib::page_sidebar()` layout with:
-- Sidebar for filters (e.g., date range)
-- Value boxes for current metrics
-- Cards with charts for historical trends
-
-### Color Scheme
-
-Brand colors are defined in `chronicle_constants.R` and used consistently across reports:
-- Blue: Licensed users
-- Green: Daily/active users
-- Burgundy: Publishers
-
-## Important Conventions
-
-1. **Function Documentation**: Use roxygen2 comments with `@param`, `@return`, `@export`
-2. **Internal Functions**: Mark with `@noRd` to exclude from package docs
-3. **Pipe Operator**: Use `|>` (base R pipe) not `%>%` (magrittr)
-4. **Dependencies**: Import functions explicitly with `@importFrom` or use `package::function()`
-5. **Code Style**: Follow tidyverse style guide (enforced by `.lintr` config)
-
-## Common Tasks
 
 ### Adding a New Report
 
@@ -293,17 +267,6 @@ chronicle_data("workbench/session_duration", sp) |>
 When counting users, deduplicate carefully — `*_list` datasets have one row per user
 **per day**, so a distinct count of `id` across a range is not the same as summing a
 daily count.
-
-## Pre-commit Hooks
-
-The project uses pre-commit hooks (`.pre-commit-config.yaml`) for code quality checks. Make sure changes pass linting before committing.
-
-## Related Resources
-
-- [Chronicle Announcement](https://posit.co/blog/chronicle-product-announcement-aug-2025/)
-- [Chronicle Cookbook](https://docs.posit.co/chronicle/reports/)
-- [Example Cookbook Report](https://pub.current.posit.team/public/example-chronicle-cookbook/)
-- [Package Manager Configuration](https://docs.posit.co/rspm/user/get-repo-url.html)
 
 ## Notes for AI Assistants
 
