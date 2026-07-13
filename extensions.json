@@ -3,7 +3,7 @@
     {
       "id": "chronicle-reports",
       "title": "Chronicle Reports",
-      "description": "Usage analytics dashboards powered by Posit Chronicle data."
+      "description": "Pre-built dashboards for exploring the Connect and Workbench usage data collected by Posit Chronicle."
     }
   ],
   "tags": [
@@ -14,7 +14,7 @@
     {
       "name": "connect",
       "title": "Chronicle Connect Dashboard",
-      "description": "Comprehensive Posit Connect usage analytics — tracks licensed users, daily active users, publishers, content metrics, and usage patterns over time.",
+      "description": "Track how your organization uses Posit Connect: licensed users, daily active users, publishers, content, and activity trends over time, from data collected by Posit Chronicle.",
       "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/connect",
       "latestVersion": {
         "version": "1.0.0",
@@ -59,7 +59,7 @@
     {
       "name": "workbench",
       "title": "Chronicle Workbench Dashboard",
-      "description": "Comprehensive Posit Workbench usage analytics — tracks licensed users, daily active users, session metrics, and admin activity over time.",
+      "description": "Track how your organization uses Posit Workbench: licensed users, daily active users, sessions, and admin activity over time, from data collected by Posit Chronicle. If you don't run Workbench, this dashboard will have no data.",
       "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/workbench",
       "latestVersion": {
         "version": "1.0.0",
