@@ -2,7 +2,7 @@
   "extension": {
     "name": "connect",
     "title": "Chronicle Connect Dashboard",
-    "description": "Comprehensive Posit Connect usage analytics — tracks licensed users, daily active users, publishers, content metrics, and usage patterns over time.",
+    "description": "Track how your organization uses Posit Connect: licensed users, daily active users, publishers, content, and activity trends over time, from data collected by Posit Chronicle.",
     "homepage": "https://github.com/posit-dev/chronicle-reports/tree/main/inst/apps/connect",
     "category": "chronicle-reports",
     "tags": [
