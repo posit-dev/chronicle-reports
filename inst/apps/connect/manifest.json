@@ -9,7 +9,9 @@
       "Chronicle reports"
     ],
     "minimumConnectVersion": "2026.06.0",
-    "requiredFeatures": [],
+    "requiredFeatures": [
+      "Posit Chronicle"
+    ],
     "version": "1.0.0"
   },
   "version": 1,

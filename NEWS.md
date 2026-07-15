@@ -1,5 +1,7 @@
 # chronicle.reports
 
+* The Connect and Workbench dashboards now declare that they require Posit Chronicle, so the Connect Gallery shows how to enable it when Chronicle is not running.
+
 # chronicle.reports 1.0.0
 
 * Added Workbench session reporting. These new reports require additional curated datasets: `workbench/session_start_totals`, `workbench/session_start_totals_by_user` and `workbench/session_duration` available in Workbench 2026.06.0 and later.
