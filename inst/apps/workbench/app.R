@@ -591,7 +591,7 @@ users_overview_server <- function(input, output, session) {
 # ==============================================
 
 user_list_ui <- bslib::card(
-  card_header_with_download("Filters", "download_user_list"),
+  bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
@@ -610,8 +610,11 @@ user_list_ui <- bslib::card(
       placeholder = "Username"
     )
   ),
-  shinycssloaders::withSpinner(
-    DT::dataTableOutput("user_list_table")
+  bslib::card(
+    card_header_with_download("Users", "download_user_list"),
+    shinycssloaders::withSpinner(
+      DT::dataTableOutput("user_list_table")
+    )
   )
 )
 
