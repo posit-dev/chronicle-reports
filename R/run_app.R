@@ -6,9 +6,6 @@
 #'
 #' @param app_name Name of the app to run. Available apps:
 #'   \itemize{
-#'     \item `"connect_users"` - Connect Users Dashboard (legacy, raw data)
-#'     \item `"workbench_users"` - Workbench Users Dashboard (legacy, raw data)
-#'     \item `"connect_user_totals"` - Connect Users Dashboard (curated data)
 #'     \item `"connect"` - Comprehensive Connect Dashboard
 #'     \item `"workbench"` - Comprehensive Workbench Dashboard
 #'   }
@@ -32,13 +29,13 @@
 #'   chronicle_list_apps()
 #'
 #'   # Run an app with default data path
-#'   chronicle_run_app("connect_users")
+#'   chronicle_run_app("connect")
 #'
 #'   # Run an app with custom filesystem path
-#'   chronicle_run_app("connect_users", "/path/to/chronicle/data")
+#'   chronicle_run_app("connect", "/path/to/chronicle/data")
 #'
 #'   # Run an app with S3 path
-#'   chronicle_run_app("connect_users", "s3://chronicle-bucket/data")
+#'   chronicle_run_app("connect", "s3://chronicle-bucket/data")
 #' }
 chronicle_run_app <- function(
   app_name,
