@@ -591,7 +591,7 @@ users_overview_server <- function(input, output, session) {
 # ==============================================
 
 user_list_ui <- bslib::card(
-  card_header_with_download("Filters", "download_user_list"),
+  bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
@@ -610,8 +610,11 @@ user_list_ui <- bslib::card(
       placeholder = "Username"
     )
   ),
-  shinycssloaders::withSpinner(
-    DT::dataTableOutput("user_list_table")
+  bslib::card(
+    card_header_with_download("Users", "download_user_list"),
+    shinycssloaders::withSpinner(
+      DT::dataTableOutput("user_list_table")
+    )
   )
 )
 
@@ -1750,7 +1753,7 @@ sessions_duration_server <- function(input, output, session, duration_data) {
 # ==============================================
 
 sessions_by_user_ui <- bslib::card(
-  card_header_with_download("Filters", "download_user_summary"),
+  bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::dateRangeInput(
@@ -1771,8 +1774,11 @@ sessions_by_user_ui <- bslib::card(
       placeholder = "User"
     )
   ),
-  shinycssloaders::withSpinner(
-    DT::dataTableOutput("sessions_by_user_table")
+  bslib::card(
+    card_header_with_download("User Sessions", "download_user_summary"),
+    shinycssloaders::withSpinner(
+      DT::dataTableOutput("sessions_by_user_table")
+    )
   )
 )
 

@@ -504,11 +504,7 @@ users_overview_server <- function(input, output, session, user_totals) {
 # ==============================================
 
 users_list_ui <- bslib::card(
-  card_header_with_download(
-    "Filters",
-    "download_users_list",
-    shiny::textOutput("users_list_as_of", inline = TRUE)
-  ),
+  bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(6, 6),
     shiny::selectInput(
@@ -522,8 +518,15 @@ users_list_ui <- bslib::card(
       choices = c("All", "publisher", "viewer", "administrator")
     )
   ),
-  shinycssloaders::withSpinner(
-    DT::dataTableOutput("users_list_table")
+  bslib::card(
+    card_header_with_download(
+      "Users",
+      "download_users_list",
+      shiny::textOutput("users_list_as_of", inline = TRUE)
+    ),
+    shinycssloaders::withSpinner(
+      DT::dataTableOutput("users_list_table")
+    )
   )
 )
 
@@ -1091,7 +1094,7 @@ content_overview_server <- function(input, output, session, content_totals) {
 # ==============================================
 
 content_list_ui <- bslib::card(
-  card_header_with_download("Content List", "download_content_list"),
+  bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(4, 4, 4),
     shiny::selectInput(
@@ -1110,8 +1113,11 @@ content_list_ui <- bslib::card(
       choices = c("All")
     )
   ),
-  shinycssloaders::withSpinner(
-    DT::dataTableOutput("content_list_table")
+  bslib::card(
+    card_header_with_download("Content List", "download_content_list"),
+    shinycssloaders::withSpinner(
+      DT::dataTableOutput("content_list_table")
+    )
   )
 )
 
@@ -1706,10 +1712,7 @@ content_hits_overview_server <- function(
 # ==============================================
 
 content_hits_by_user_ui <- bslib::card(
-  card_header_with_download(
-    "Content Hits by User",
-    "download_content_hits_by_user"
-  ),
+  bslib::card_header("Filters"),
   bslib::layout_columns(
     col_widths = c(4, 8),
     shiny::selectInput(
@@ -1725,8 +1728,14 @@ content_hits_by_user_ui <- bslib::card(
       format = "yyyy-mm-dd"
     )
   ),
-  shinycssloaders::withSpinner(
-    DT::dataTableOutput("content_hits_by_user_table")
+  bslib::card(
+    card_header_with_download(
+      "Content Hits by User",
+      "download_content_hits_by_user"
+    ),
+    shinycssloaders::withSpinner(
+      DT::dataTableOutput("content_hits_by_user_table")
+    )
   )
 )
 
