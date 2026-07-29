@@ -350,6 +350,67 @@ file.copy(
 shiny::runApp("my-custom-report")
 ```
 
+## Using Posit Assistant
+
+[Posit Assistant](https://assistant.posit.co/) is Posit's AI data analysis assistant. It
+runs in [Positron](https://assistant.posit.co/docs/downloads/positron),
+[RStudio](https://assistant.posit.co/docs/downloads/rstudio), or your
+[terminal](https://assistant.posit.co/docs/downloads/tui), and makes it easy to explore
+Chronicle data interactively and to build or modify reports with AI.
+
+This repository ships an [`AGENTS.md`](AGENTS.md) file that Posit Assistant loads
+automatically at the start of every conversation. It gives the assistant accurate context.
+
+### Getting started
+
+1. [Set up Posit Assistant](https://assistant.posit.co/docs/getting-started/) if you
+   haven't already.
+2. Open this repository in your IDE (or start the assistant in the repository directory)
+   and trust the workspace if prompted — `AGENTS.md` only loads in trusted workspaces.
+3. Start an R session and load the package and some data to explore:
+
+   ```r
+   library(devtools)
+   load_all()
+
+   # Sample data lets you explore without a real Chronicle deployment.
+   # If you have Chronicle installed you can skip this step and
+   # use your Chronicle data directory as the path variable
+   sample_path <- chronicle_sample_data()
+   ```
+
+4. Open Posit Assistant and start asking questions. The assistant works best once data is
+   loaded into your session, so it can inspect columns and run code against it.
+
+### Example prompts for analyzing data
+
+- "Using `path_to_data`, which licensed Connect users haven't been active in the last 30
+  days? I want to find seats we could reclaim."
+- "Find Connect content with zero hits in the last 30 days — who owns it, and when was it
+  last deployed? I'm looking for cleanup candidates."
+- "Who are our most impactful publishers? Rank content owners by the total unique audience
+  their content reaches, joining `connect/content_list`, `connect/content_hits_totals`,
+  and `connect/user_list`."
+- "Compare Connect and Workbench user lists: who is active in both products, and who uses
+  Workbench heavily but never publishes to Connect?"
+- "What R and Python versions is our deployed content running on? Show the spread from
+  `connect/content_list` so we can plan runtime upgrades."
+
+### Example prompts for building or altering reports
+
+- "Add a license utilization value box to the Connect overview: 30-day active users as a
+  percentage of licensed seats, with a trend chart."
+- "Change the users trend chart in `inst/apps/connect/app.R` to a 7-day rolling average."
+- "Add a stale content table to the Connect content page: items with no hits in the last
+  30 days, showing owner and last-deployed date."
+- "Copy the connect app as a template and start a new report focused on content ownership
+  and orphaned content."
+
+For larger changes, consider starting with `/plan` (Plan Mode), which has the assistant
+explore the codebase and write a plan before touching code.
+
+The assistant respects the conventions documented in [`AGENTS.md`](AGENTS.md).
+
 ## License
 
 MIT License. See LICENSE file for details.
