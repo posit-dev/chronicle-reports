@@ -54,7 +54,8 @@
       "tags": [
         "Chronicle reports"
       ],
-      "category": "chronicle-reports"
+      "category": "chronicle-reports",
+      "adminOnly": true
     },
     {
       "name": "workbench",
@@ -99,7 +100,8 @@
       "tags": [
         "Chronicle reports"
       ],
-      "category": "chronicle-reports"
+      "category": "chronicle-reports",
+      "adminOnly": true
     }
   ]
 }
