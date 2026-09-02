@@ -193,6 +193,138 @@ chronicle_raw_data <- function(
   )
 }
 
+#' Find the most recent Y/M/D partition of a daily dataset
+#'
+#' Daily data is partitioned as `<metric>/YYYY/MM/DD/` and is not hive-styled,
+#' so the newest partition is found by walking one level at a time and taking
+#' the numerically largest directory at each step. This keeps the cost to three
+#' directory listings instead of a scan of the whole daily tree, which matters
+#' on S3.
+#'
+#' @param metric Name of the raw metric (e.g. "connect_users")
+#' @param base_path Base path to Chronicle data directory
+#'
+#' @return A list with `year`, `month` and `day` character components suitable
+#'   for the `ymd` argument of [chronicle_raw_data()], or `NULL` when the
+#'   dataset is absent or holds no date partitions.
+#'
+#' @keywords internal
+#' @noRd
+chronicle_latest_daily_ymd <- function(metric, base_path) {
+  path <- chronicle_path(base_path, metric, "daily")
+
+  if (!chronicle_dataset_exists(path)) {
+    return(NULL)
+  }
+
+  latest_child <- function(parent) {
+    dirs <- chronicle_list_dirs(parent)
+    dirs <- dirs[grepl("^[0-9]+$", dirs)]
+    if (length(dirs) == 0) {
+      return(NULL)
+    }
+    dirs[which.max(as.integer(dirs))]
+  }
+
+  year <- latest_child(path)
+  if (is.null(year)) {
+    return(NULL)
+  }
+
+  month <- latest_child(paste0(path, year, "/"))
+  if (is.null(month)) {
+    return(NULL)
+  }
+
+  day <- latest_child(paste0(path, year, "/", month, "/"))
+  if (is.null(day)) {
+    return(NULL)
+  }
+
+  list(year = year, month = month, day = day)
+}
+
+#' Build a user GUID to username lookup from the latest daily snapshot
+#'
+#' Resolves display names for the user GUIDs referenced by other Chronicle
+#' datasets -- `owner_guid` on `connect/content_list`, `user_guid` on
+#' `connect/content_hits_totals_by_user`, and `user_guid` on the Workbench
+#' session datasets.
+#'
+#' The curated `user_list` dataset is deliberately not used for this. It
+#' deduplicates users by email address, so when two accounts share an email
+#' only one survives curation and content owned by the others has no row to
+#' join against, surfacing in reports as an unattributed owner. The daily layer
+#' keys on GUID and so retains every account.
+#'
+#' Only the most recent daily partition is read. That is enough to name every
+#' account the product currently knows about, and costs a single file read
+#' rather than a scan of the full daily history.
+#'
+#' @param metric Name of the raw users metric, either `"connect_users"` or
+#'   `"workbench_users"`.
+#' @param base_path Base path to Chronicle data directory
+#'
+#' @return A two-column data frame of `id` and `username`, one row per GUID
+#'   holding the most recently observed username, or `NULL` when the daily
+#'   dataset is unavailable or lacks the required columns. Callers should treat
+#'   `NULL` as "fall back to the curated user list".
+#'
+#' @export
+#'
+#' @examples
+#' # Build a lookup from the bundled sample data
+#' sample_path <- chronicle_sample_data()
+#' lookup <- chronicle_user_lookup("connect_users", sample_path)
+#' head(lookup)
+chronicle_user_lookup <- function(
+  metric,
+  base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
+) {
+  ymd <- chronicle_latest_daily_ymd(metric, base_path)
+  if (is.null(ymd)) {
+    return(NULL)
+  }
+
+  df <- tryCatch(
+    chronicle_raw_data(metric, base_path, frequency = "daily", ymd = ymd) |>
+      dplyr::select(dplyr::any_of(c("id", "username", "timestamp"))) |>
+      dplyr::collect(),
+    error = function(e) {
+      message(
+        "Could not read the latest daily '",
+        metric,
+        "' snapshot: ",
+        conditionMessage(e)
+      )
+      NULL
+    }
+  )
+
+  if (
+    is.null(df) ||
+      nrow(df) == 0 ||
+      !all(c("id", "username") %in% names(df))
+  ) {
+    return(NULL)
+  }
+
+  # The daily layer holds one row per (host, environment, GUID) for every
+  # observed state change, so collapse to the most recent row per GUID. Keying
+  # on GUID -- rather than email or username -- is precisely what keeps
+  # distinct accounts distinct.
+  if ("timestamp" %in% names(df)) {
+    df <- df[order(df$id, df$timestamp), , drop = FALSE]
+  }
+  df <- df[!duplicated(df$id, fromLast = TRUE), , drop = FALSE]
+
+  data.frame(
+    id = df$id,
+    username = df$username,
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Load Chronicle data
 #'
 #' Loads curated Chronicle metric data. This is the

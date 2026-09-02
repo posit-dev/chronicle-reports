@@ -20,8 +20,8 @@ test_that("chronicle_raw_data loads raw daily data successfully", {
   expect_true("user_role" %in% names(collected))
   expect_true("locked" %in% names(collected))
 
-  # Should have data from multiple days (30 days × 15 users = 450 rows)
-  expect_equal(nrow(collected), 450)
+  # Every user appears in every snapshot (30 days x 26 users = 780 rows)
+  expect_equal(nrow(collected), 780)
 })
 
 test_that("chronicle_raw_data defaults to daily frequency", {
@@ -52,7 +52,7 @@ test_that("chronicle_raw_data supports date filtering", {
     dplyr::filter(date == first_date) |>
     dplyr::collect()
 
-  expect_equal(nrow(filtered), 15) # 15 users for that day
+  expect_equal(nrow(filtered), 26) # the full user pool for that day
   expect_true(all(filtered$date == first_date))
 })
 
@@ -85,7 +85,7 @@ test_that("chronicle_raw_data supports ymd filtering", {
   collected <- dplyr::collect(data)
 
   # Should only have data from that date
-  expect_equal(nrow(collected), 15) # 15 users
+  expect_equal(nrow(collected), 26) # the full user pool
   expect_true(all(collected$date == first_date))
 })
 
@@ -117,7 +117,7 @@ test_that("chronicle_raw_data ymd filtering with different dates", {
   )
 
   collected <- dplyr::collect(data)
-  expect_equal(nrow(collected), 15)
+  expect_equal(nrow(collected), 26)
   expect_true(all(collected$date == third_date))
 })
 
@@ -135,8 +135,8 @@ test_that("chronicle_raw_data preserves data integrity", {
   collected <- all_data |>
     dplyr::filter(date == first_date)
 
-  # Verify we have all 15 users
-  expect_equal(nrow(collected), 15)
+  # Verify we have the full user pool
+  expect_equal(nrow(collected), 26)
 
   # Check that all users have the same created_at
   expect_equal(
@@ -170,14 +170,14 @@ test_that("chronicle_raw_data includes expected user roles", {
   collected <- all_data |>
     dplyr::filter(date == first_date)
 
-  # Check that we have role variety (since we're sampling 15 from 26 users)
+  # Check that we have role variety across the 26-user pool
   # We should see at least viewers and publishers
   role_counts <- table(collected$user_role)
   expect_true("viewer" %in% names(role_counts))
   expect_true("publisher" %in% names(role_counts))
 
-  # Total should be 15 users
-  expect_equal(sum(role_counts), 15)
+  # Total should be the full user pool
+  expect_equal(sum(role_counts), 26)
 })
 
 test_that("chronicle_raw_data can be used with dplyr operations", {
@@ -200,7 +200,7 @@ test_that("chronicle_raw_data can be used with dplyr operations", {
     dplyr::collect()
 
   expect_equal(nrow(result), 30) # 30 days
-  expect_true(all(result$user_count == 15)) # 15 users per day
+  expect_true(all(result$user_count == 26)) # full user pool per day
 })
 
 test_that("chronicle_raw_data validates frequency parameter", {
@@ -239,10 +239,10 @@ test_that("chronicle_raw_data handles multiple days correctly", {
   date_diffs <- diff(as.numeric(sorted_dates))
   expect_true(all(date_diffs == 1)) # All dates should be 1 day apart
 
-  # Each date should have 15 users
+  # Each date should have the full user pool
   for (d in dates) {
     count <- sum(collected$date == d)
-    expect_equal(count, 15)
+    expect_equal(count, 26)
   }
 })
 

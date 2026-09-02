@@ -915,18 +915,19 @@ format_total_hours <- function(secs) {
   }
 }
 
-# Map user GUIDs to usernames using the latest user list snapshot. Returns a
-# two-column data frame (user_guid, username), or NULL when the user list is
-# unavailable. Mirrors how the Connect app labels content visits.
-username_lookup <- function(user_list) {
+# Map user GUIDs to usernames. Accepts any frame carrying `id` and `username`
+# -- in practice the daily-sourced lookup built in the main server -- and
+# returns a two-column data frame (user_guid, username), or NULL when no
+# usable input is available. Mirrors how the Connect app labels content visits.
+username_lookup <- function(user_lookup) {
   if (
-    is.null(user_list) ||
-      nrow(user_list) == 0 ||
-      !all(c("id", "username") %in% names(user_list))
+    is.null(user_lookup) ||
+      nrow(user_lookup) == 0 ||
+      !all(c("id", "username") %in% names(user_lookup))
   ) {
     return(NULL)
   }
-  user_list |>
+  user_lookup |>
     dplyr::distinct(.data$id, .data$username) |>
     dplyr::rename(user_guid = "id")
 }
@@ -1787,7 +1788,7 @@ sessions_by_user_server <- function(
   output,
   session,
   should_load,
-  user_list_data
+  user_lookup_data
 ) {
   # Daily by-user rows, deferred until the tab is first visited. The loaded
   # range expands when the date selector extends beyond it (only the
@@ -1934,7 +1935,7 @@ sessions_by_user_server <- function(
     # Any username column already present is dropped so the user list is the
     # single source of display names.
     data <- data |> dplyr::select(-dplyr::any_of("username"))
-    lookup <- username_lookup(user_list_data())
+    lookup <- username_lookup(user_lookup_data())
     if (!is.null(lookup)) {
       data <- data |> dplyr::left_join(lookup, by = "user_guid")
     } else {
@@ -2096,7 +2097,7 @@ sessions_user_detail_server <- function(
   output,
   session,
   duration_data,
-  user_list_data
+  user_lookup_data
 ) {
   # Populate the searchable user dropdown (single user at a time, no "All").
   # Distinct users are computed in Arrow; options are labeled with usernames
@@ -2120,7 +2121,7 @@ sessions_user_detail_server <- function(
 
     users <- sort(users_df$user_guid)
     labels <- users
-    lookup <- username_lookup(user_list_data())
+    lookup <- username_lookup(user_lookup_data())
     if (!is.null(lookup)) {
       idx <- match(users, lookup$user_guid)
       found <- !is.na(idx)
@@ -2162,7 +2163,7 @@ sessions_user_detail_server <- function(
     }
 
     data <- data |> dplyr::select(-dplyr::any_of("username"))
-    lookup <- username_lookup(user_list_data())
+    lookup <- username_lookup(user_lookup_data())
     if (!is.null(lookup)) {
       data <- data |> dplyr::left_join(lookup, by = "user_guid")
     } else {
@@ -2484,6 +2485,35 @@ server <- function(input, output, session) {
     )
   })
 
+  # GUID -> username lookup for the session tables.
+  #
+  # Sourced from the daily layer rather than curated/user_list: the curated
+  # dataset deduplicates users by (username, environment), so accounts that
+  # share a username across installs collapse into one and sessions belonging
+  # to the others render without a name. The daily layer keys on GUID and keeps
+  # every account. Falls back to the curated list when no daily snapshot is
+  # readable, for instance once DailyRetainDays has pruned it.
+  user_lookup_data <- shiny::reactive({
+    shiny::req(should_load_user_list())
+
+    lookup <- tryCatch(
+      chronicle_user_lookup("pwb_users", base_path),
+      error = function(e) {
+        message("Error loading daily user lookup: ", e$message)
+        NULL
+      }
+    )
+    if (!is.null(lookup) && nrow(lookup) > 0) {
+      return(lookup)
+    }
+
+    ulist <- user_list_data()
+    if (is.null(ulist) || nrow(ulist) == 0) {
+      return(NULL)
+    }
+    ulist |> dplyr::select(dplyr::any_of(c("id", "username")))
+  })
+
   # Users → Overview
   users_overview_server(input, output, session)
 
@@ -2625,7 +2655,7 @@ server <- function(input, output, session) {
     output,
     session,
     duration_data,
-    user_list_data
+    user_lookup_data
   )
 
   # Sessions → User Summary: load the by-user totals deferred until visited.
@@ -2644,7 +2674,7 @@ server <- function(input, output, session) {
     output,
     session,
     should_load_sessions_by_user,
-    user_list_data
+    user_lookup_data
   )
 }
 
