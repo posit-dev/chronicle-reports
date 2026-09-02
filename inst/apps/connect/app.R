@@ -50,6 +50,78 @@ initial_date_start <- function(min_date) {
   }
 }
 
+# Map user GUIDs to usernames using the latest daily snapshot.
+#
+# The curated user_list dataset cannot be used for this: it deduplicates users
+# by email address, so when two accounts share an email only one survives and
+# content owned by the others has no user row to join to -- it renders as
+# "(Not Set)" or "(anonymous)". The daily layer keys on GUID and so retains
+# every account.
+#
+# Only the newest date partition is read, which is enough to name every
+# account the product currently knows about. Returns a two-column data frame
+# (id, username), or NULL when no daily data is readable -- for instance once
+# DailyRetainDays has pruned it -- in which case callers should fall back to
+# the curated user list.
+daily_user_lookup <- function(metric, base_path) {
+  ds <- tryCatch(
+    chronicle_raw_data(metric, base_path, frequency = "daily"),
+    error = function(e) NULL
+  )
+  if (is.null(ds)) {
+    return(NULL)
+  }
+
+  # Daily data is partitioned as YYYY/MM/DD, surfaced by Arrow as integer
+  # Year/Month/Day columns.
+  parts <- tryCatch(
+    ds |>
+      dplyr::distinct(.data$Year, .data$Month, .data$Day) |>
+      dplyr::collect(),
+    error = function(e) NULL
+  )
+  if (is.null(parts) || nrow(parts) == 0) {
+    return(NULL)
+  }
+  latest <- parts[
+    which.max(parts$Year * 10000L + parts$Month * 100L + parts$Day),
+  ]
+
+  df <- tryCatch(
+    ds |>
+      dplyr::filter(
+        .data$Year == latest$Year,
+        .data$Month == latest$Month,
+        .data$Day == latest$Day
+      ) |>
+      dplyr::select(dplyr::any_of(c("id", "username", "timestamp"))) |>
+      dplyr::collect(),
+    error = function(e) NULL
+  )
+  if (
+    is.null(df) ||
+      nrow(df) == 0 ||
+      !all(c("id", "username") %in% names(df))
+  ) {
+    return(NULL)
+  }
+
+  # The daily layer holds one row per (host, environment, GUID) for every
+  # observed state change, so collapse to the most recent row per GUID.
+  # Keying on GUID -- rather than email or username -- is precisely what
+  # keeps distinct accounts distinct.
+  if ("timestamp" %in% names(df)) {
+    df <- df[order(df$id, df$timestamp), , drop = FALSE]
+  }
+  df <- df[!duplicated(df$id, fromLast = TRUE), , drop = FALSE]
+
+  data.frame(
+    id = df$id,
+    username = df$username,
+    stringsAsFactors = FALSE
+  )
+}
+
 # Show a popup warning when a curated dataset directory does not exist yet,
 # so users get actionable guidance. All missing datasets share one persistent
 # notification -- re-shown with the same id, it updates in place with the
@@ -2141,7 +2213,7 @@ server <- function(input, output, session) {
     shiny::req(should_load_user_list())
 
     lookup <- tryCatch(
-      chronicle_user_lookup("connect_users", base_path),
+      daily_user_lookup("connect_users", base_path),
       error = function(e) {
         message("Error loading daily user lookup: ", e$message)
         NULL
