@@ -1,9 +1,10 @@
-# Tests for CSV download functionality in Connect and Workbench apps
+# Server-level tests for the Connect and Workbench apps
 #
 # These tests verify that:
 # 1. Download helper functions produce correct UI structures
 # 2. Download handlers produce valid CSV content
 # 3. Empty/NULL data states are handled gracefully
+# 4. Filters offer choices that match the data and return matching rows
 
 # ============================================================
 # Helper: source an app file in its own environment so we can
