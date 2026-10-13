@@ -50,6 +50,78 @@ initial_date_start <- function(min_date) {
   }
 }
 
+# Map user GUIDs to usernames using the latest daily snapshot.
+#
+# The curated user_list dataset cannot be used for this: it deduplicates users
+# by email address, so when two accounts share an email only one survives and
+# content owned by the others has no user row to join to -- it renders as
+# "(Not Set)" or "(anonymous)". The daily layer keys on GUID and so retains
+# every account.
+#
+# Only the newest date partition is read, which is enough to name every
+# account the product currently knows about. Returns a two-column data frame
+# (id, username), or NULL when no daily data is readable -- for instance once
+# DailyRetainDays has pruned it -- in which case callers should fall back to
+# the curated user list.
+daily_user_lookup <- function(metric, base_path) {
+  ds <- tryCatch(
+    chronicle_raw_data(metric, base_path, frequency = "daily"),
+    error = function(e) NULL
+  )
+  if (is.null(ds)) {
+    return(NULL)
+  }
+
+  # Daily data is partitioned as YYYY/MM/DD, surfaced by Arrow as integer
+  # Year/Month/Day columns.
+  parts <- tryCatch(
+    ds |>
+      dplyr::distinct(.data$Year, .data$Month, .data$Day) |>
+      dplyr::collect(),
+    error = function(e) NULL
+  )
+  if (is.null(parts) || nrow(parts) == 0) {
+    return(NULL)
+  }
+  latest <- parts[
+    which.max(parts$Year * 10000L + parts$Month * 100L + parts$Day),
+  ]
+
+  df <- tryCatch(
+    ds |>
+      dplyr::filter(
+        .data$Year == latest$Year,
+        .data$Month == latest$Month,
+        .data$Day == latest$Day
+      ) |>
+      dplyr::select(dplyr::any_of(c("id", "username", "timestamp"))) |>
+      dplyr::collect(),
+    error = function(e) NULL
+  )
+  if (
+    is.null(df) ||
+      nrow(df) == 0 ||
+      !all(c("id", "username") %in% names(df))
+  ) {
+    return(NULL)
+  }
+
+  # The daily layer holds one row per (host, environment, GUID) for every
+  # observed state change, so collapse to the most recent row per GUID.
+  # Keying on GUID -- rather than email or username -- is precisely what
+  # keeps distinct accounts distinct.
+  if ("timestamp" %in% names(df)) {
+    df <- df[order(df$id, df$timestamp), , drop = FALSE]
+  }
+  df <- df[!duplicated(df$id, fromLast = TRUE), , drop = FALSE]
+
+  data.frame(
+    id = df$id,
+    username = df$username,
+    stringsAsFactors = FALSE
+  )
+}
+
 # Show a popup warning when a curated dataset directory does not exist yet,
 # so users get actionable guidance. All missing datasets share one persistent
 # notification -- re-shown with the same id, it updates in place with the
@@ -1125,7 +1197,7 @@ content_list_server <- function(
   input,
   output,
   session,
-  user_list,
+  user_lookup,
   content_list
 ) {
   # Use shared content_list data (already latest snapshot from main server)
@@ -1137,9 +1209,10 @@ content_list_server <- function(
     df
   })
 
-  # Use shared user_list (already latest snapshot from main server)
-  latest_user_list <- shiny::reactive({
-    udf <- user_list()
+  # Shared GUID -> username lookup from the main server (daily-sourced, so
+  # accounts sharing an email address are not collapsed away).
+  latest_user_lookup <- shiny::reactive({
+    udf <- user_lookup()
     if (is.null(udf) || nrow(udf) == 0) {
       return(NULL)
     }
@@ -1196,7 +1269,7 @@ content_list_server <- function(
 
     # Resolve owner names by joining latest user list on owner id
     owners_choices <- c("All")
-    ulist <- latest_user_list()
+    ulist <- latest_user_lookup()
     if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
       owners <- df |>
         dplyr::left_join(
@@ -1264,8 +1337,8 @@ content_list_server <- function(
       }
     }
 
-    # Join owner display for filtering, using latest user list
-    ulist <- latest_user_list()
+    # Join owner display for filtering, using the latest user lookup
+    ulist <- latest_user_lookup()
     if (!is.null(ulist) && nrow(ulist) > 0 && "owner_guid" %in% names(df)) {
       owner_lookup <- ulist |>
         dplyr::select("id", "username") |>
@@ -1745,7 +1818,7 @@ content_hits_by_user_server <- function(
   session,
   content_hits_by_user,
   content_list,
-  user_list
+  user_lookup
 ) {
   hits_data <- content_hits_by_user
 
@@ -1762,9 +1835,10 @@ content_hits_by_user_server <- function(
     df
   })
 
-  # Use shared user_list (already latest snapshot from main server)
-  user_list_latest <- shiny::reactive({
-    df <- user_list()
+  # Shared GUID -> username lookup from the main server (daily-sourced, so
+  # accounts sharing an email address are not collapsed away).
+  user_lookup_latest <- shiny::reactive({
+    df <- user_lookup()
     if (is.null(df) || nrow(df) == 0) {
       return(NULL)
     }
@@ -1901,7 +1975,7 @@ content_hits_by_user_server <- function(
       )
 
     # Join usernames
-    u_df <- user_list_latest()
+    u_df <- user_lookup_latest()
     if (!is.null(u_df) && all(c("id", "username") %in% names(u_df))) {
       user_join <- u_df |> dplyr::select("id", "username")
       summary_df <- summary_df |>
@@ -2127,6 +2201,35 @@ server <- function(input, output, session) {
     )
   })
 
+  # user_lookup: GUID -> username, used to label content owners and visitors.
+  #
+  # Sourced from the daily layer rather than curated/user_list: the curated
+  # dataset deduplicates users by email address, so when two accounts share an
+  # email only one survives and content owned by the others renders as
+  # "(Not Set)" or "(anonymous)". The daily layer keys on GUID and keeps every
+  # account. Falls back to the curated list when no daily snapshot is readable,
+  # for instance once DailyRetainDays has pruned it.
+  all_user_lookup <- shiny::reactive({
+    shiny::req(should_load_user_list())
+
+    lookup <- tryCatch(
+      daily_user_lookup("connect_users", base_path),
+      error = function(e) {
+        message("Error loading daily user lookup: ", e$message)
+        NULL
+      }
+    )
+    if (!is.null(lookup) && nrow(lookup) > 0) {
+      return(lookup)
+    }
+
+    ulist <- all_user_list()
+    if (is.null(ulist) || nrow(ulist) == 0) {
+      return(NULL)
+    }
+    ulist |> dplyr::select(dplyr::any_of(c("id", "username")))
+  })
+
   # --- content_totals: Deferred until Content Overview visited ---
   content_totals_range <- shiny::reactiveVal(initial_range)
   all_content_totals <- shiny::reactive({
@@ -2259,7 +2362,7 @@ server <- function(input, output, session) {
   users_overview_server(input, output, session, all_user_totals)
   users_list_server(input, output, session, all_user_list)
   content_overview_server(input, output, session, all_content_totals)
-  content_list_server(input, output, session, all_user_list, all_content_list)
+  content_list_server(input, output, session, all_user_lookup, all_content_list)
   content_hits_overview_server(
     input,
     output,
@@ -2272,7 +2375,7 @@ server <- function(input, output, session) {
     session,
     all_content_hits_by_user,
     all_content_list,
-    all_user_list
+    all_user_lookup
   )
 }
 

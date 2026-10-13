@@ -9,6 +9,7 @@ connectapi
 cph
 cre
 curation
+deduplicates
 dev
 devtools
 dplyr
