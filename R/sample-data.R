@@ -907,11 +907,11 @@ sample_workbench_user_list_internal <- function() {
   # Create emails from username@example.com
   emails <- sprintf("%s@example.com", usernames)
 
-  # Workbench role distribution
+  # Workbench role distribution, using the role values Chronicle records
   roles <- c(
-    rep("user", 16),
-    rep("admin", 4),
-    "super_admin"
+    rep("User", 16),
+    rep("Administrator", 4),
+    "Superuser"
   )
 
   envs <- c(
