@@ -12,7 +12,8 @@
     "requiredFeatures": [
       "Posit Chronicle"
     ],
-    "version": "1.0.0"
+    "adminOnly": true,
+    "version": "1.1.0"
   },
   "version": 1,
   "locale": "en_US",
