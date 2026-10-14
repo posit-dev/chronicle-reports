@@ -1,9 +1,10 @@
-# Tests for CSV download functionality in Connect and Workbench apps
+# Server-level tests for the Connect and Workbench apps
 #
 # These tests verify that:
 # 1. Download helper functions produce correct UI structures
 # 2. Download handlers produce valid CSV content
 # 3. Empty/NULL data states are handled gracefully
+# 4. Filters offer choices that match the data and return matching rows
 
 # ============================================================
 # Helper: source an app file in its own environment so we can
@@ -549,13 +550,10 @@ test_that("Workbench: user trends downloads work", {
   )
 })
 
-test_that("Workbench: user list download works", {
-  base_path <- create_sample_chronicle_data()
-  on.exit(unlink(base_path, recursive = TRUE))
-  env <- source_app_env("workbench", base_path)
-
-  # user_list_server takes the shared user-list snapshot reactive (loaded by
-  # the main server in the app); recreate it here from the sample data.
+# Helper: build a testServer()-ready Workbench user_list_server. It takes the
+# shared user-list snapshot reactive (loaded by the main server in the app);
+# recreate it here from the sample data.
+workbench_user_list_server <- function(env, base_path) {
   user_list_data <- shiny::reactive({
     ds <- chronicle_data("workbench/user_list", base_path)
     max_date <- ds |>
@@ -566,17 +564,16 @@ test_that("Workbench: user list download works", {
       dplyr::filter(date == max_date) |>
       dplyr::collect()
   })
-  wb_list_server <- function(input, output, session) {
-    env$user_list_server(
-      input,
-      output,
-      session,
-      user_list_data
-    )
-  }
+  wrap_server(env$user_list_server, user_list_data)
+}
+
+test_that("Workbench: user list download works", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+  env <- source_app_env("workbench", base_path)
 
   shiny::testServer(
-    wb_list_server,
+    workbench_user_list_server(env, base_path),
     {
       session$setInputs(
         user_list_environment = "All",
@@ -592,6 +589,49 @@ test_that("Workbench: user list download works", {
       expect_true("user_role" %in% names(csv))
       expect_true("environment" %in% names(csv))
       expect_true("last_active_at" %in% names(csv))
+    }
+  )
+})
+
+test_that("Workbench: user list role filter matches data roles", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+  env <- source_app_env("workbench", base_path)
+
+  # Capture the choices the server pushes to the Role dropdown
+  role_choices <- NULL
+  local_mocked_bindings(
+    updateSelectInput = function(session, input_id, ..., choices = NULL) {
+      if (input_id == "user_list_role") {
+        role_choices <<- choices
+      }
+    },
+    .package = "shiny"
+  )
+
+  shiny::testServer(
+    workbench_user_list_server(env, base_path),
+    {
+      session$setInputs(
+        user_list_environment = "All",
+        user_list_role = "All",
+        user_list_search = ""
+      )
+
+      # Chronicle records Workbench roles as User / Administrator / Superuser
+      expect_equal(role_choices[1], "All")
+      expect_setequal(
+        role_choices,
+        c("All", "User", "Administrator", "Superuser")
+      )
+
+      # Every offered role returns only, and at least one, matching user
+      for (role in setdiff(role_choices, "All")) {
+        session$setInputs(user_list_role = role)
+        csv <- read_csv_safe(output$download_user_list)
+        expect_gt(nrow(csv), 0, label = paste("rows for role", role))
+        expect_true(all(csv$user_role == role))
+      }
     }
   )
 })

@@ -674,7 +674,7 @@ user_list_ui <- bslib::card(
     shiny::selectInput(
       "user_list_role",
       "Role:",
-      choices = c("All", "user", "administrator", "super_administrator")
+      choices = c("All")
     ),
     shiny::textInput(
       "user_list_search",
@@ -694,12 +694,27 @@ user_list_server <- function(input, output, session, user_list_data) {
   # Uses the shared user_list reactive (latest snapshot, loaded in the main
   # server and shared with the Sessions user tables for username lookups).
 
-  # Populate environment filter dynamically
+  # Populate environment and role filters dynamically from the data.
   shiny::observe({
     data <- user_list_data()
     if (is.null(data) || nrow(data) == 0) {
       return()
     }
+
+    role_values <- data |>
+      dplyr::pull(.data$user_role) |>
+      unique()
+
+    role_values <- role_values[
+      !is.na(role_values) & trimws(role_values) != ""
+    ] |>
+      sort()
+
+    shiny::updateSelectInput(
+      session,
+      "user_list_role",
+      choices = c("All", role_values)
+    )
 
     env_values <- data |>
       dplyr::pull(.data$environment) |>
