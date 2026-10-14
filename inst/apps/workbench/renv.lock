@@ -531,7 +531,7 @@
     },
     "chronicle.reports": {
       "Package": "chronicle.reports",
-      "Version": "1.0.0",
+      "Version": "1.1.0",
       "Source": "GitHub",
       "Title": "Posit Chronicle Reports",
       "Authors@R": "c( person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")), person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")), person(\"Tim\", \"Margheim\", , \"tim.margheim@posit.co\", role = c(\"aut\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
@@ -577,7 +577,7 @@
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
       "RemoteRef": "dev",
-      "RemoteSha": "52f17ae3625f8bbb60d4ab67728ee7e186937ec8",
+      "RemoteSha": "2f884b0cb34a2df62663ccab5aa8a1c05e46ea0a",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Tim Margheim [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"

@@ -458,7 +458,7 @@
       "description": {
         "Package": "chronicle.reports",
         "Title": "Posit Chronicle Reports",
-        "Version": "1.0.0",
+        "Version": "1.1.0",
         "Authors@R": "c(\n    person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")),\n    person(\"Tim\", \"Margheim\", , \"tim.margheim@posit.co\", role = c(\"aut\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "Run reports for Posit Chronicle. You provide the\n    location of your Chronicle data and this package will generate reports\n    to help you analyze and visualize your data.",
         "License": "MIT + file LICENSE",
@@ -478,16 +478,16 @@
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
         "RemoteRef": "dev",
-        "RemoteSha": "52f17ae3625f8bbb60d4ab67728ee7e186937ec8",
+        "RemoteSha": "2f884b0cb34a2df62663ccab5aa8a1c05e46ea0a",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
         "GithubRef": "dev",
-        "GithubSHA1": "52f17ae3625f8bbb60d4ab67728ee7e186937ec8",
+        "GithubSHA1": "2f884b0cb34a2df62663ccab5aa8a1c05e46ea0a",
         "NeedsCompilation": "no",
-        "Packaged": "2026-10-14 14:22:05 UTC; root",
+        "Packaged": "2026-10-14 20:31:20 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-10-14 14:22:05 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-10-14 20:31:21 UTC; unix"
       }
     },
     "cli": {
@@ -2087,10 +2087,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "e9c3ffbb0c022ef0a311ad17bc56bcc5cd93811d",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-10-14 14:21:30 UTC; root",
+        "Packaged": "2026-10-14 20:30:34 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-10-14 14:21:31 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-10-14 20:30:35 UTC; unix"
       }
     },
     "tidyr": {
@@ -2460,7 +2460,7 @@
       "checksum": "65bdcaa37b1d12bc45ddf0093351e4c3"
     },
     "renv.lock": {
-      "checksum": "5141e2e7625982e161a3a6a4f930ff9a"
+      "checksum": "27363b9ca49d79a97603fe2cf48704cd"
     }
   },
   "users": null
