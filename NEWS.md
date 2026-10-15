@@ -1,4 +1,13 @@
-# chronicle.reports
+# chronicle.reports 1.1.0
+
+* chronicle.reports now requires R 4.2.0 or later.
+* Added CSV download buttons to the Workbench Session Overview charts (Sessions Started Over Time and Startup Duration Over Time) and to the User Detail Session Timeline.
+* The Connect and Workbench dashboards now show a notification listing any curated datasets that have no data, along with the path that was checked. `chronicle_data()` now returns `NULL` with a message when a curated dataset does not exist yet.
+* The Connect and Workbench dashboards now declare that they require Posit Chronicle, so the Connect Gallery shows how to enable it when Chronicle is not running.
+* The Connect and Workbench dashboards are now marked as admin-only in the Connect Gallery, which hides them from non-administrators.
+* `chronicle_sample_data()` now also writes raw daily Workbench users data, and its sample Workbench user roles match the values Chronicle records.
+* Fixed the Workbench User List Role filter, which showed no data for any role other than "All". The role choices now come from the data.
+* Fixed user matching in the Connect and Workbench dashboards when more than one user GUID is associated with the same email address.
 
 # chronicle.reports 1.0.0
 

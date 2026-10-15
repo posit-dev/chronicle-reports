@@ -1,6 +1,6 @@
 Package: chronicle.reports
 Title: Posit Chronicle Reports
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: c(
     person("Mark", "Tucker", , "mark.tucker@posit.co", role = c("aut", "cre")),
     person("Matt", "Urbina", , "matt.urbina@posit.co", role = c("aut")),
@@ -15,7 +15,7 @@ License: MIT + file LICENSE
 URL: https://github.com/posit-dev/chronicle-reports
 BugReports: https://github.com/posit-dev/chronicle-reports/issues
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.2.0)
 Imports:
     arrow,
     bsicons,
@@ -40,9 +40,10 @@ Suggests:
     tibble (>= 3.3.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 Remotes:
     r-lib/devtools,
     tidyverse/tibble,
     r-lib/withr
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.2

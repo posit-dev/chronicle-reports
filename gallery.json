@@ -3,7 +3,7 @@
     {
       "id": "chronicle-reports",
       "title": "Chronicle Reports",
-      "description": "Usage analytics dashboards powered by Posit Chronicle data."
+      "description": "Pre-built dashboards for exploring the Connect and Workbench usage data collected by Posit Chronicle."
     }
   ]
 }

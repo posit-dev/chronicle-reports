@@ -22,6 +22,7 @@ Useful links:
 Authors:
 \itemize{
   \item Matt Urbina \email{matt.urbina@posit.co}
+  \item Tim Margheim \email{tim.margheim@posit.co}
 }
 
 Other contributors:

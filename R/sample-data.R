@@ -889,6 +889,7 @@ generate_workbench_user_pool <- function() {
   ))
   data.frame(
     id = sprintf("wb-user-guid-%03d", seq_len(n_users)),
+    uid = 1000L + seq_len(n_users),
     username = usernames,
     stringsAsFactors = FALSE
   )
@@ -907,11 +908,11 @@ sample_workbench_user_list_internal <- function() {
   # Create emails from username@example.com
   emails <- sprintf("%s@example.com", usernames)
 
-  # Workbench role distribution
+  # Workbench role distribution, using the role values Chronicle records
   roles <- c(
-    rep("user", 16),
-    rep("admin", 4),
-    "super_admin"
+    rep("User", 16),
+    rep("Administrator", 4),
+    "Superuser"
   )
 
   envs <- c(
@@ -1212,23 +1213,53 @@ sample_raw_connect_users_internal <- function() {
   dates <- generate_sample_date_sequence(30)
   user_pool <- generate_user_pool(26)
 
-  # Create daily snapshots for subset of users (15 users)
+  # A scrape returns every user the product knows about, so each daily snapshot
+  # covers the whole pool. Anything less leaves GUIDs that the content and hit
+  # datasets reference but chronicle_user_lookup() cannot name.
+  n_users <- nrow(user_pool)
+
   daily_snapshots <- lapply(seq_along(dates), function(i) {
     set.seed(7000 + i)
     date <- dates[i]
 
-    # Sample 15 users for this snapshot
-    sampled_users <- user_pool[sample(nrow(user_pool), 15), ]
-
     data.frame(
       date = date,
       timestamp = as.POSIXct(paste(date, "08:00:00"), tz = "UTC"),
-      email = sampled_users$email,
+      id = user_pool$user_guid,
+      username = user_pool$username,
+      email = user_pool$email,
       created_at = as.POSIXct("2023-06-01 10:00:00", tz = "UTC"),
       last_active_at = as.POSIXct(paste(date, "07:00:00"), tz = "UTC") -
-        sample(0:7, 15, replace = TRUE) * 86400,
-      locked = sample(c(FALSE, TRUE), 15, replace = TRUE, prob = c(0.95, 0.05)),
-      user_role = sampled_users$user_role,
+        sample(0:7, n_users, replace = TRUE) * 86400,
+      locked = sample(
+        c(FALSE, TRUE),
+        n_users,
+        replace = TRUE,
+        prob = c(0.95, 0.05)
+      ),
+      user_role = user_pool$user_role,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  do.call(rbind, daily_snapshots)
+}
+
+#' @noRd
+sample_raw_workbench_users_internal <- function() {
+  dates <- generate_sample_date_sequence(30)
+  wb_pool <- generate_workbench_user_pool()
+
+  # As with Connect, every user appears in every snapshot so that session
+  # GUIDs always resolve to a name.
+  daily_snapshots <- lapply(dates, function(date) {
+    data.frame(
+      date = date,
+      timestamp = as.POSIXct(paste(date, "08:00:00"), tz = "UTC"),
+      id = as.character(wb_pool$uid),
+      guid = wb_pool$id,
+      username = wb_pool$username,
+      email = sprintf("%s@example.com", wb_pool$username),
       stringsAsFactors = FALSE
     )
   })
@@ -1252,6 +1283,41 @@ write_sample_parquet_internal <- function(
     partitioning = partition_col,
     hive_style = TRUE
   )
+}
+
+#' Write sample data into Chronicle's raw (non-hive) directory structure
+#'
+#' Raw data is partitioned as `<frequency>/v2/<metric>/YYYY/MM/DD/`, unlike the
+#' hive-style `date=` partitioning used by curated datasets.
+#'
+#' @noRd
+write_sample_raw_parquet_internal <- function(
+  data,
+  base_path,
+  metric,
+  frequency = "daily"
+) {
+  for (d in unique(data$date)) {
+    date_obj <- as.Date(d, origin = "1970-01-01")
+
+    metric_path <- file.path(
+      base_path,
+      frequency,
+      "v2",
+      metric,
+      format(date_obj, "%Y"),
+      format(date_obj, "%m"),
+      format(date_obj, "%d")
+    )
+    dir.create(metric_path, recursive = TRUE, showWarnings = FALSE)
+
+    arrow::write_parquet(
+      data[data$date == d, ],
+      file.path(metric_path, "data.parquet")
+    )
+  }
+
+  invisible(base_path)
 }
 
 #' @noRd
@@ -1323,6 +1389,20 @@ create_sample_chronicle_data_internal <- function(base_path) {
     sample_wb_session_duration_internal(),
     base_path,
     "workbench/session_duration"
+  )
+
+  # Raw daily users back the GUID -> username lookups used to label content
+  # owners, visitors and session users; see chronicle_user_lookup().
+  write_sample_raw_parquet_internal(
+    sample_raw_connect_users_internal(),
+    base_path,
+    "connect_users"
+  )
+
+  write_sample_raw_parquet_internal(
+    sample_raw_workbench_users_internal(),
+    base_path,
+    "pwb_users"
   )
 
   base_path

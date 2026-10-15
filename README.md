@@ -1,7 +1,7 @@
 # Chronicle Reports
 
 > [!NOTE]
-> For data collected by Chronicle `v2026.1.0` or earlier, use `v0.2.2` of these reports. 
+> For data collected by Chronicle `v2026.1.0` or earlier, use `v0.2.2` of these reports.
 > To install using pak: `pak::pak("posit-dev/chronicle-reports@v0.2.2")`.
 
 Chronicle Reports is an R package that provides pre-built Shiny dashboards and data access tools for analyzing usage data from Posit Chronicle. Chronicle helps organizations understand their use of Posit Connect and Posit Workbench through comprehensive metrics on users, content, and activity patterns. See the [Chronicle announcement](https://posit.co/blog/chronicle-product-announcement-aug-2025/) for more details.
@@ -47,7 +47,7 @@ pak::pak("posit-dev/chronicle-reports@dev")
 
 ### Prerequisites
 
-**R Version**: Requires R >= 4.1.0. The package supports the latest release version of R, as well as the previous four minor release versions. For example, if the latest release R version is 4.5, then versions 4.5, 4.4, 4.3, 4.2, and 4.1 are supported.
+**R Version**: Requires R >= 4.2.0.
 
 **Package Manager (optional)**: If using Posit Package Manager, [obtain an appropriate URL](https://docs.posit.co/rspm/user/get-repo-url.html) and [configure your R environment](https://docs.posit.co/rspm/user/configure-r.html) for optimized package installation:
 

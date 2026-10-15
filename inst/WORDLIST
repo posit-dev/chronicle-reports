@@ -3,10 +3,13 @@ aut
 bsicons
 bslib
 BugReports
+Config
 Connect's
 connectapi
 cph
 cre
+curation
+deduplicates
 dev
 devtools
 dplyr
@@ -35,6 +38,7 @@ programmatically
 rlang
 ROR
 Roxygen
+roxygen
 RoxygenNote
 shinycssloaders
 shinytest

@@ -294,20 +294,30 @@ test_that("chronicle_data can be used with dplyr operations", {
   expect_true(result$max_active <= result$avg_users) # Max active should be <= avg named users
 })
 
-test_that("chronicle_data handles non-existent metric gracefully", {
+test_that("chronicle_data returns NULL with a message for missing datasets", {
   base_path <- create_sample_chronicle_data()
   on.exit(unlink(base_path, recursive = TRUE))
 
-  # Try to load a metric that doesn't exist
-  # Arrow's open_dataset doesn't error immediately (lazy evaluation)
-  # But trying to collect should fail with IOError about missing directory
-  expect_error(
-    {
-      data <- chronicle_data("fake/metric", base_path)
-      dplyr::collect(data)
-    },
-    regexp = "(IOError|does not exist|no such file)"
+  # Loading a metric whose curated directory doesn't exist should not raise
+  # Arrow's opaque IOError. Instead it returns NULL with a message that
+  # classifies the problem as "not curated yet" and names the metric.
+  expect_message(
+    data <- chronicle_data("fake/metric", base_path),
+    regexp = "'fake/metric' not found.*not been curated yet"
   )
+  expect_null(data)
+})
+
+test_that("chronicle_data returns NULL when the base path itself is missing", {
+  # A new install where the agent hasn't produced anything yet
+  expect_message(
+    data <- chronicle_data(
+      "connect/user_totals",
+      file.path(tempdir(), "does-not-exist")
+    ),
+    regexp = "not been curated yet"
+  )
+  expect_null(data)
 })
 
 test_that("chronicle_data preserves data integrity", {

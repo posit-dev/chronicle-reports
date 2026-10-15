@@ -89,6 +89,35 @@ chronicle_list_dirs <- function(path) {
   }
 }
 
+#' Check whether a Chronicle dataset directory exists
+#'
+#' Works with both local filesystem paths and S3 URIs. On S3 a "directory"
+#' exists when any objects are stored under the prefix. If the S3 existence
+#' check itself fails (e.g., a credentials problem), returns TRUE so that
+#' [arrow::open_dataset()] surfaces the real error instead of the path being
+#' misclassified as missing.
+#'
+#' @param path Directory path (local or s3://)
+#'
+#' @return TRUE if the path exists, FALSE otherwise
+#'
+#' @keywords internal
+#' @noRd
+chronicle_dataset_exists <- function(path) {
+  if (!startsWith(path, "s3://")) {
+    return(dir.exists(path))
+  }
+
+  tryCatch(
+    {
+      fs <- chronicle_fs(path)
+      info <- fs$GetFileInfo("")[[1]]
+      info$type != arrow::FileType$NotFound
+    },
+    error = function(e) TRUE
+  )
+}
+
 #' Load raw Chronicle data (Advanced)
 #'
 #' Loads raw Chronicle metric data. **Most users should use [chronicle_data()]
@@ -172,7 +201,11 @@ chronicle_raw_data <- function(
 #' @param metric Name of the curated metric to retrieve (e.g., "connect/user_totals")
 #' @param base_path Base path to Chronicle data directory
 #'
-#' @return Arrow dataset object
+#' @return Arrow dataset object, or `NULL` (with a message) when the curated
+#'   dataset directory does not exist yet -- for example on a new install
+#'   where the Chronicle Agent has not completed its first
+#'   collection and curation cycle, or when data for that product is not
+#'   being collected.
 #' @export
 #'
 #' @examples
@@ -200,6 +233,19 @@ chronicle_data <- function(
   base_path = Sys.getenv("CHRONICLE_BASE_PATH", APP_CONFIG$DEFAULT_BASE_PATH)
 ) {
   path <- chronicle_path(base_path, metric, "curated")
+
+  if (!chronicle_dataset_exists(path)) {
+    message(
+      "Chronicle dataset '",
+      metric,
+      "' not found at ",
+      path,
+      " -- the dataset has not been curated yet. Confirm that Chronicle ",
+      "data collection is enabled for this product, that at least 30 hours ",
+      "have passed since collection began, and that base_path is correct."
+    )
+    return(NULL)
+  }
 
   arrow::open_dataset(
     chronicle_fs(path),
