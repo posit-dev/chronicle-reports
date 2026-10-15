@@ -477,17 +477,17 @@
         "RemoteHost": "api.github.com",
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
-        "RemoteRef": "dev",
-        "RemoteSha": "33964b2ec1903e4e90aff2bad08c2b4a115050ee",
+        "RemoteRef": "main",
+        "RemoteSha": "2b97cf58c04d88d1ab4851db02c5726a4ff12161",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
-        "GithubRef": "dev",
-        "GithubSHA1": "33964b2ec1903e4e90aff2bad08c2b4a115050ee",
+        "GithubRef": "main",
+        "GithubSHA1": "2b97cf58c04d88d1ab4851db02c5726a4ff12161",
         "NeedsCompilation": "no",
-        "Packaged": "2026-10-15 14:50:52 UTC; root",
+        "Packaged": "2026-10-15 16:50:11 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-10-15 14:50:52 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-10-15 16:50:11 UTC; unix"
       }
     },
     "cli": {
@@ -2087,10 +2087,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "e9c3ffbb0c022ef0a311ad17bc56bcc5cd93811d",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-10-15 14:50:06 UTC; root",
+        "Packaged": "2026-10-15 16:49:24 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-10-15 14:50:07 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-10-15 16:49:25 UTC; unix"
       }
     },
     "tidyr": {
@@ -2460,7 +2460,7 @@
       "checksum": "38ad153e495fa8b7fac6859ee22a8a48"
     },
     "renv.lock": {
-      "checksum": "384c2cc28ada302d984e1521e42cdac8"
+      "checksum": "3d6ee4d6e90b0cd5edd55f80ae838ce6"
     }
   },
   "users": null
