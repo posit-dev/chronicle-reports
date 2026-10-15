@@ -478,16 +478,16 @@
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
         "RemoteRef": "dev",
-        "RemoteSha": "2f884b0cb34a2df62663ccab5aa8a1c05e46ea0a",
+        "RemoteSha": "33964b2ec1903e4e90aff2bad08c2b4a115050ee",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
         "GithubRef": "dev",
-        "GithubSHA1": "2f884b0cb34a2df62663ccab5aa8a1c05e46ea0a",
+        "GithubSHA1": "33964b2ec1903e4e90aff2bad08c2b4a115050ee",
         "NeedsCompilation": "no",
-        "Packaged": "2026-10-14 20:31:20 UTC; root",
+        "Packaged": "2026-10-15 14:50:52 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-10-14 20:31:21 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-10-15 14:50:52 UTC; unix"
       }
     },
     "cli": {
@@ -638,7 +638,7 @@
         "Package": "curl",
         "Type": "Package",
         "Title": "A Modern and Flexible Web Client for R",
-        "Version": "8.0.0",
+        "Version": "8.1.0",
         "Authors@R": "c(\n    person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\",\n      comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Hadley\", \"Wickham\", role = \"ctb\"),\n    person(\"Posit Software, PBC\", role = \"cph\"))",
         "Description": "Bindings to 'libcurl' <https://curl.se/libcurl/> for performing fully\n    configurable HTTP/FTP requests where responses can be processed in memory, on\n    disk, or streaming via the callback or connection interfaces. Some knowledge\n    of 'libcurl' is recommended; for a more-user-friendly web client see the \n    'httr2' package which builds on this package with http specific tools and logic.",
         "License": "MIT + file LICENSE",
@@ -652,12 +652,12 @@
         "Language": "en-US",
         "Config/roxygen2/version": "8.0.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-08-25 12:49:41 UTC; jeroen",
+        "Packaged": "2026-10-14 10:10:35 UTC; jeroen",
         "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Hadley Wickham [ctb],\n  Posit Software, PBC [cph]",
         "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-08-25 16:40:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-08-26 04:21:28 UTC; unix"
+        "Date/Publication": "2026-10-14 12:12:13 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-10-15 04:05:14 UTC; unix"
       }
     },
     "data.table": {
@@ -2087,10 +2087,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "e9c3ffbb0c022ef0a311ad17bc56bcc5cd93811d",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-10-14 20:30:34 UTC; root",
+        "Packaged": "2026-10-15 14:50:06 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-10-14 20:30:35 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-10-15 14:50:07 UTC; unix"
       }
     },
     "tidyr": {
@@ -2457,10 +2457,10 @@
   },
   "files": {
     "app.R": {
-      "checksum": "3c6285b5b01d006de788e19127b0a2e4"
+      "checksum": "55347911d999088d9965bfdcb6b9b021"
     },
     "renv.lock": {
-      "checksum": "27363b9ca49d79a97603fe2cf48704cd"
+      "checksum": "384c2cc28ada302d984e1521e42cdac8"
     }
   },
   "users": null
