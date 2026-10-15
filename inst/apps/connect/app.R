@@ -58,12 +58,14 @@ initial_date_start <- function(min_date) {
 # "(Not Set)" or "(anonymous)". The daily layer keys on GUID and so retains
 # every account.
 #
+# `id_col` names the column holding the user GUID.
+#
 # Only the newest date partition is read, which is enough to name every
 # account the product currently knows about. Returns a two-column data frame
 # (id, username), or NULL when no daily data is readable -- for instance once
 # DailyRetainDays has pruned it -- in which case callers should fall back to
 # the curated user list.
-daily_user_lookup <- function(metric, base_path) {
+daily_user_lookup <- function(metric, base_path, id_col) {
   ds <- tryCatch(
     chronicle_raw_data(metric, base_path, frequency = "daily"),
     error = function(e) NULL
@@ -94,17 +96,18 @@ daily_user_lookup <- function(metric, base_path) {
         .data$Month == latest$Month,
         .data$Day == latest$Day
       ) |>
-      dplyr::select(dplyr::any_of(c("id", "username", "timestamp"))) |>
+      dplyr::select(dplyr::any_of(c(id_col, "username", "timestamp"))) |>
       dplyr::collect(),
     error = function(e) NULL
   )
   if (
     is.null(df) ||
       nrow(df) == 0 ||
-      !all(c("id", "username") %in% names(df))
+      !all(c(id_col, "username") %in% names(df))
   ) {
     return(NULL)
   }
+  df$id <- as.character(df[[id_col]])
 
   # The daily layer holds one row per (host, environment, GUID) for every
   # observed state change, so collapse to the most recent row per GUID.
@@ -2213,7 +2216,7 @@ server <- function(input, output, session) {
     shiny::req(should_load_user_list())
 
     lookup <- tryCatch(
-      daily_user_lookup("connect_users", base_path),
+      daily_user_lookup("connect_users", base_path, id_col = "id"),
       error = function(e) {
         message("Error loading daily user lookup: ", e$message)
         NULL
