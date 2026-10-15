@@ -884,3 +884,34 @@ test_that("Workbench: sessions downloads keep headers when range has no rows", {
     }
   )
 })
+
+# ============================================================
+# User lookups and anonymous hits
+# ============================================================
+
+test_that("Workbench: daily user lookup names every session user", {
+  base_path <- create_sample_chronicle_data()
+  on.exit(unlink(base_path, recursive = TRUE))
+  env <- source_app_env("workbench", base_path)
+
+  session_guids <- c(
+    chronicle_data("workbench/session_duration", base_path) |>
+      dplyr::distinct(user_guid) |>
+      dplyr::collect() |>
+      dplyr::pull(user_guid),
+    chronicle_data("workbench/session_start_totals_by_user", base_path) |>
+      dplyr::distinct(user_guid) |>
+      dplyr::collect() |>
+      dplyr::pull(user_guid)
+  )
+
+  # Raw pwb_users keeps the Unix uid in `id`, so the lookup keys on `guid`
+  names_by_guid <- env$username_lookup(
+    env$daily_user_lookup("pwb_users", base_path, id_col = "guid")
+  )
+  expect_true(all(session_guids %in% names_by_guid$user_guid))
+
+  # Keying on `id` would name no session user
+  by_uid <- env$username_lookup(env$daily_user_lookup("pwb_users", base_path))
+  expect_false(any(session_guids %in% by_uid$user_guid))
+})

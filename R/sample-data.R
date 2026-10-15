@@ -889,6 +889,7 @@ generate_workbench_user_pool <- function() {
   ))
   data.frame(
     id = sprintf("wb-user-guid-%03d", seq_len(n_users)),
+    uid = 1000L + seq_len(n_users),
     username = usernames,
     stringsAsFactors = FALSE
   )
@@ -1255,7 +1256,8 @@ sample_raw_workbench_users_internal <- function() {
     data.frame(
       date = date,
       timestamp = as.POSIXct(paste(date, "08:00:00"), tz = "UTC"),
-      id = wb_pool$id,
+      id = as.character(wb_pool$uid),
+      guid = wb_pool$id,
       username = wb_pool$username,
       email = sprintf("%s@example.com", wb_pool$username),
       stringsAsFactors = FALSE
