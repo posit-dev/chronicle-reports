@@ -65,7 +65,7 @@ initial_date_start <- function(min_date) {
 # (id, username), or NULL when no daily data is readable -- for instance once
 # DailyRetainDays has pruned it -- in which case callers should fall back to
 # the curated user list.
-daily_user_lookup <- function(metric, base_path, id_col = "id") {
+daily_user_lookup <- function(metric, base_path, id_col) {
   ds <- tryCatch(
     chronicle_raw_data(metric, base_path, frequency = "daily"),
     error = function(e) NULL
@@ -2216,7 +2216,7 @@ server <- function(input, output, session) {
     shiny::req(should_load_user_list())
 
     lookup <- tryCatch(
-      daily_user_lookup("connect_users", base_path),
+      daily_user_lookup("connect_users", base_path, id_col = "id"),
       error = function(e) {
         message("Error loading daily user lookup: ", e$message)
         NULL

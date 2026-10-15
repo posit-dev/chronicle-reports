@@ -912,6 +912,8 @@ test_that("Workbench: daily user lookup names every session user", {
   expect_true(all(session_guids %in% names_by_guid$user_guid))
 
   # Keying on `id` would name no session user
-  by_uid <- env$username_lookup(env$daily_user_lookup("pwb_users", base_path))
+  by_uid <- env$username_lookup(
+    env$daily_user_lookup("pwb_users", base_path, id_col = "id")
+  )
   expect_false(any(session_guids %in% by_uid$user_guid))
 })

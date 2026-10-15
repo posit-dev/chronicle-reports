@@ -65,7 +65,7 @@ initial_date_start <- function(min_date) {
 # (id, username), or NULL when no daily data is readable -- for instance once
 # DailyRetainDays has pruned it -- in which case callers should fall back to
 # the curated user list.
-daily_user_lookup <- function(metric, base_path, id_col = "id") {
+daily_user_lookup <- function(metric, base_path, id_col) {
   ds <- tryCatch(
     chronicle_raw_data(metric, base_path, frequency = "daily"),
     error = function(e) NULL
