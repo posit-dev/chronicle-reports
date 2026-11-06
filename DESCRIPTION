@@ -26,6 +26,7 @@ Imports:
     DT,
     ggplot2,
     glue,
+    jsonlite,
     lubridate,
     plotly,
     rlang,

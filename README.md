@@ -126,11 +126,11 @@ When unset all available data is loaded by default.
 
 ## Available Reports
 
-Chronicle Reports includes two comprehensive dashboards. List available reports at any time:
+Chronicle Reports includes two comprehensive dashboards and a usage report. List available reports at any time:
 
 ```r
 chronicle.reports::chronicle_list_apps()
-# Returns: c("connect", "workbench")
+# Returns: c("connect", "usage", "workbench")
 ```
 
 ### Connect Dashboard
@@ -168,6 +168,31 @@ A multi-page dashboard for Posit Workbench user analytics:
 Run it: `chronicle_run_app("workbench")`
 
 <img width="2005" height="1236" alt="Workbench Dashboard displaying user analytics and activity trends" src="https://github.com/user-attachments/assets/072e6dd7-f2a4-444f-ac2b-87f9382a3709" />
+
+### Usage Report
+
+Monthly usage for the last 12 months. Every product ID found in the data is shown at once as its own series: one line per product ID on the active-user charts, and one stacked panel per product ID on the charts that are split by content type or IDE. The product ID ties the usage back to the license it was collected for. Every figure is a calendar-month count:
+
+- **Active users**: distinct users who hit Connect content (authenticated visitors only) or started a Workbench session
+- **Content hits**: Connect hits, split into authenticated and anonymous, or grouped by content type
+- **Content deployments**: Connect deployments by content type, either every deployment (including redeploys) or the number of unique content items deployed
+- **Sessions started**: Workbench sessions by IDE
+
+Run it: `chronicle_run_app("usage")`
+
+The **Download data (JSON)** button saves a small file of the monthly counts behind the charts. It holds only aggregates keyed by month and product ID (plus content type and IDE where charted), with no user or content identifiers. The report can be rebuilt from that file alone:
+
+```r
+# Build the monthly tables from Chronicle data and export them
+tables <- chronicle.reports::chronicle_usage_data("/path/to/chronicle/data")
+chronicle.reports::chronicle_usage_to_json(tables, "chronicle-usage.json")
+
+# Rebuild the report from an exported file
+Sys.setenv(CHRONICLE_USAGE_FILE = "chronicle-usage.json")
+chronicle.reports::chronicle_run_app("usage")
+```
+
+The current month is still in progress, so it is marked with an asterisk and will usually look lower than a complete month.
 
 
 ## Publishing to Posit Connect
@@ -236,7 +261,7 @@ The deployed content must be able to read the Chronicle data files on the Connec
 
 ## Sample Data
 
-Use `chronicle_sample_data()` to explore Chronicle Reports without access to real Chronicle data. This function creates a temporary directory with minimal sample metrics for both Connect and Workbench.
+Use `chronicle_sample_data()` to explore Chronicle Reports without access to real Chronicle data. This function creates a temporary directory with about six months of sample metrics for both Connect and Workbench, including product IDs, content types and deployments. Generating it takes a few seconds, and it is cached for the rest of the R session.
 
 Sample data includes realistic user roles (viewers, publishers, administrators), environments (Production, Development, Staging), and usage data.
 

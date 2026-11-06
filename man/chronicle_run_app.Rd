@@ -14,6 +14,7 @@ chronicle_run_app(
 \itemize{
 \item \code{"connect"} - Comprehensive Connect Dashboard
 \item \code{"workbench"} - Comprehensive Workbench Dashboard
+\item \code{"usage"} - Monthly usage report by product ID
 }
 Use \code{\link[=chronicle_list_apps]{chronicle_list_apps()}} to see all available apps.}
 

@@ -3,30 +3,71 @@
 # Package-level environment to cache sample data path
 .chronicle_sample_env <- new.env(parent = emptyenv())
 
+# Days of history in the sample data, ending yesterday: about six months, so
+# monthly views have several months to show.
+SAMPLE_DAYS <- 180L
+
+# Sample periods longer than this stage their users' arrival. Shorter ones
+# (used by the tests) have everyone present from the start.
+SAMPLE_SHORT_DAYS <- 30L
+
+# Fraction of a long sample period over which new users arrive.
+SAMPLE_USER_RAMP <- 0.5
+
+# Sample product IDs, which tie usage back to a license. Connect renews onto a
+# new license part way through the period, so exactly one Connect product ID is
+# in use on any given day. Workbench keeps one license throughout.
+SAMPLE_PRODUCT_IDS <- list(
+  connect = c("connect-license-a", "connect-license-b"),
+  workbench = "workbench-license"
+)
+
+# Fraction of the period that passes before Connect moves to its second license.
+SAMPLE_LICENSE_SWITCH <- 0.55
+
+# Content types in the sample data, keyed by the broad type the pool is drawn
+# from. Each type has a few real Connect `app_mode` values, assigned by content id.
+SAMPLE_APP_MODES <- list(
+  shiny = c("shiny", "shiny", "shiny", "shiny", "shiny", "python-shiny"),
+  rmarkdown = c("rmd-static", "rmd-static", "rmd-static", "rmd-static", "jupyter-static"),
+  quarto = c("quarto-static", "quarto-static", "quarto-static", "quarto-shiny")
+)
+
 #' Get path to sample Chronicle data
 #'
 #' This function creates a sample Chronicle data directory for
 #' exploring package functionality without needing access to real Chronicle
 #' data. The sample data is created once per R session and cached.
 #'
-#' The sample data includes:
+#' The sample data covers about six months, ending yesterday, and includes:
 #' \itemize{
-#'   \item Connect user totals (30 days of data ending yesterday)
+#'   \item Connect user totals (daily)
 #'   \item Connect user list (26 sample users)
 #'   \item Connect content list (150 sample content items)
-#'   \item Connect content totals (30 days by type and environment)
-#'   \item Connect content hits totals (30 days of hit counts per content item)
-#'   \item Connect content hits by user (30 days of per-user hit data)
-#'   \item Workbench user totals (30 days of data ending yesterday)
+#'   \item Connect content totals (daily, by content type and environment)
+#'   \item Connect content hits totals (daily hit counts per content item)
+#'   \item Connect content hits by user (daily per-user hit data, including
+#'     anonymous hits)
+#'   \item Workbench user totals (daily)
 #'   \item Workbench user list (21 sample users)
-#'   \item Workbench session start totals (30 days by environment and session type)
-#'   \item Workbench session start totals by user (30 days, 12 sample users)
-#'   \item Raw Connect users data (30 days, 15 users per snapshot)
+#'   \item Workbench session start totals (daily, by environment and session type)
+#'   \item Workbench session start totals by user (12 sample users)
+#'   \item Raw Connect users data (daily, 26 users per snapshot)
+#'   \item Raw Connect content publish events (about 380 deployments, including
+#'     redeploys) and weekly content snapshots, which give each content item
+#'     its type
 #' }
+#'
+#' Every dataset has a `product_id`. Connect moves from one product ID to a
+#' second part way through the period, as when a license is renewed, so exactly
+#' one Connect product ID is in use on any given day. Workbench uses one
+#' product ID throughout. Hits and content carry a content type (`app_mode`,
+#' such as `shiny`, `quarto-static` or `rmd-static`).
 #'
 #' All sample data uses realistic weekday/weekend patterns and maintains
 #' referential integrity across datasets. Content items are created gradually
-#' over the 30-day period and persist once created.
+#' over the period and persist once created. Viewers and Workbench users start
+#' using the products one after another, so activity grows over the period.
 #'
 #' @param refresh Logical. If TRUE, regenerate sample data even if cached.
 #'   Default is FALSE. When FALSE, the function reuses existing valid data for
@@ -160,7 +201,7 @@ validate_sample_data_structure <- function(path) {
 
 #' Generate a date sequence for sample data
 #' @noRd
-generate_sample_date_sequence <- function(n_days = 30) {
+generate_sample_date_sequence <- function(n_days = SAMPLE_DAYS) {
   end_date <- Sys.Date() - 1 # Yesterday
   start_date <- end_date - (n_days - 1)
   seq(from = start_date, to = end_date, by = "day")
@@ -176,7 +217,7 @@ calculate_weekday_factor <- function(date, weekend_reduction = 0.35) {
 
 #' Generate stable user pool
 #' @noRd
-generate_user_pool <- function(n_users = 26) {
+generate_user_pool <- function(n_users = 26, n_days = SAMPLE_SHORT_DAYS) {
   set.seed(42) # Reproducible users
 
   # Generate fake names using charlatan
@@ -221,6 +262,16 @@ generate_user_pool <- function(n_users = 26) {
     ifelse(roles == "publisher", 0.95, 0.40)
   )
 
+  created_day <- sample(1:5, n_users, replace = TRUE) # Created within first 5 days
+  if (n_days > SAMPLE_SHORT_DAYS) {
+    # Admins and publishers exist from the start, since they own the content.
+    # Viewers then arrive steadily, so activity grows over the period.
+    viewers <- which(roles == "viewer")
+    ramp <- round(n_days * SAMPLE_USER_RAMP)
+    created_day[roles != "viewer"] <- 1
+    created_day[viewers] <- 1 + floor((seq_along(viewers) - 1) / length(viewers) * ramp)
+  }
+
   data.frame(
     user_id = 1:n_users,
     user_guid = sprintf("user-guid-%03d", 1:n_users),
@@ -230,7 +281,7 @@ generate_user_pool <- function(n_users = 26) {
     last_name = sapply(names_list, function(x) x$last),
     user_role = roles,
     environment = envs,
-    created_day = sample(1:5, n_users, replace = TRUE), # Created within first 5 days
+    created_day = created_day,
     is_active_baseline = is_active_baseline,
     stringsAsFactors = FALSE
   )
@@ -238,7 +289,7 @@ generate_user_pool <- function(n_users = 26) {
 
 #' Generate stable content pool
 #' @noRd
-generate_content_pool <- function(n_content = 150, n_days = 30, user_pool) {
+generate_content_pool <- function(n_content = 150, n_days = SAMPLE_SHORT_DAYS, user_pool) {
   set.seed(100) # Reproducible content
 
   # Type distribution: 60% shiny, 25% rmarkdown, 15% quarto
@@ -382,12 +433,23 @@ generate_content_pool <- function(n_content = 150, n_days = 30, user_pool) {
     prob = c(0.6, 0.3, 0.1)
   )
 
+  # The Connect content type (app_mode) is a refinement of the broad type
+  app_modes <- vapply(
+    seq_len(n_content),
+    function(i) {
+      modes <- SAMPLE_APP_MODES[[types[i]]]
+      modes[(i %% length(modes)) + 1]
+    },
+    character(1)
+  )
+
   data.frame(
     content_id = 1:n_content,
     content_guid = sprintf("content-guid-%03d", 1:n_content),
     name = content_names,
     title = content_titles,
     type = types,
+    app_mode = app_modes,
     environment = envs,
     owner_guid = owner_guids,
     creation_day = creation_days,
@@ -418,6 +480,8 @@ sample_active_users <- function(
   # Sample active users
   active <- runif(nrow(user_pool)) <
     (user_pool$is_active_baseline * final_rate * 2)
+  # Nobody is active before their account exists
+  active <- active & user_pool$created_day <= day_num
   user_pool$user_guid[active]
 }
 
@@ -446,8 +510,8 @@ sample_active_content <- function(content_pool, day_num, weekday_factor) {
 }
 
 #' @noRd
-sample_connect_user_totals_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
+sample_connect_user_totals_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
 
   # Calculate daily metrics
   daily_data <- lapply(seq_along(dates), function(i) {
@@ -497,11 +561,11 @@ sample_connect_user_totals_internal <- function() {
 }
 
 #' @noRd
-sample_connect_user_list_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
+sample_connect_user_list_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
   last_date <- max(dates)
   first_date <- min(dates)
-  user_pool <- generate_user_pool(26)
+  user_pool <- generate_user_pool(26, n_days)
 
   # Calculate last active times relative to last_date
   # Some active today, some in past few days, some weeks ago
@@ -544,21 +608,130 @@ sample_connect_user_list_internal <- function() {
   )
 }
 
+#' Day (1-based) on which the sample Connect moves to its second license
 #' @noRd
-sample_connect_content_list_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
+sample_license_switch_day <- function(n_days) {
+  as.integer(round(n_days * SAMPLE_LICENSE_SWITCH))
+}
+
+#' The product ID in use on each date
+#' @noRd
+sample_product_id <- function(product, dates, n_days) {
+  ids <- SAMPLE_PRODUCT_IDS[[product]]
+  if (length(ids) == 1) {
+    return(rep(ids, length(dates)))
+  }
+  first_date <- min(generate_sample_date_sequence(n_days))
+  switch_date <- first_date + sample_license_switch_day(n_days) - 1
+  ifelse(as.Date(dates) < switch_date, ids[1], ids[2])
+}
+
+#' Add the product_id column, first, as every Chronicle dataset has it
+#' @noRd
+add_sample_product_id <- function(data, product, n_days) {
+  data$product_id <- sample_product_id(product, data$date, n_days)
+  data[, c("product_id", setdiff(names(data), "product_id")), drop = FALSE]
+}
+
+#' Connect publish events: each content item is deployed when it is created, and
+#' is then redeployed from time to time, popular content more often. Redeploys
+#' can land on the same day, so deployments can exceed the content items deployed.
+#' @noRd
+sample_connect_deployments_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
+  user_pool <- generate_user_pool(26, n_days)
+  content_pool <- generate_content_pool(150, n_days, user_pool)
+  weekday_factor <- calculate_weekday_factor(dates)
+  redeploys_per_month <- c(high = 1, medium = 0.5, low = 0.2)
+
+  set.seed(700)
+  events <- lapply(seq_len(nrow(content_pool)), function(i) {
+    item <- content_pool[i, ]
+    days <- item$creation_day
+    later <- seq_len(n_days - item$creation_day) + item$creation_day
+    n_redeploys <- stats::rpois(
+      1,
+      redeploys_per_month[[item$popularity_tier]] * length(later) / 30
+    )
+    if (n_redeploys > 0) {
+      picked <- sample.int(
+        length(later),
+        n_redeploys,
+        replace = TRUE,
+        prob = weekday_factor[later]
+      )
+      days <- c(days, later[picked])
+    }
+    data.frame(
+      day = days,
+      content_guid = item$content_guid,
+      user_guid = item$owner_guid,
+      stringsAsFactors = FALSE
+    )
+  })
+  events <- do.call(rbind, events)
+
+  events$date <- dates[events$day]
+  events$timestamp <- as.POSIXct(events$date, tz = "UTC") +
+    sample(3600 * 8:17, nrow(events), replace = TRUE) +
+    sample(0:3599, nrow(events), replace = TRUE)
+  events <- events[order(events$timestamp), ]
+  events$bundle_id <- sprintf("bundle-%05d", seq_len(nrow(events)))
+  rownames(events) <- NULL
+
+  events[, c("timestamp", "content_guid", "user_guid", "bundle_id", "date")]
+}
+
+#' Connect content snapshots, which give each content item its type. A snapshot
+#' is kept weekly, and on the day before the license changes so that every
+#' license's content is described, rather than daily to keep the sample small.
+#' @noRd
+sample_connect_contents_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
+  user_pool <- generate_user_pool(26, n_days)
+  content_pool <- generate_content_pool(150, n_days, user_pool)
+
+  snapshot_days <- unique(c(
+    seq(1, n_days, by = 7),
+    sample_license_switch_day(n_days) - 1,
+    n_days
+  ))
+  snapshot_days <- sort(snapshot_days[snapshot_days >= 1])
+
+  snapshots <- lapply(snapshot_days, function(day) {
+    items <- content_pool[content_pool$creation_day <= day, ]
+    data.frame(
+      timestamp = as.POSIXct(dates[day], tz = "UTC") + 8 * 3600,
+      guid = items$content_guid,
+      app_mode = items$app_mode,
+      owner_guid = items$owner_guid,
+      created_time = as.POSIXct(dates[items$creation_day], tz = "UTC") + 9 * 3600,
+      date = dates[day],
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, snapshots)
+}
+
+#' @noRd
+sample_connect_content_list_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
   last_date <- max(dates)
   first_date <- min(dates)
-  user_pool <- generate_user_pool(26)
-  content_pool <- generate_content_pool(150, 30, user_pool)
+  user_pool <- generate_user_pool(26, n_days)
+  content_pool <- generate_content_pool(150, n_days, user_pool)
 
   # Convert creation_day to actual date
   created_dates <- first_date + (content_pool$creation_day - 1)
 
-  # Last deployed is between creation and last_date
+  # Last deployed comes from the deployment events, so the two datasets agree
+  deployments <- sample_connect_deployments_internal(n_days)
+  last_deployed_dates <- as.Date(tapply(
+    deployments$date,
+    factor(deployments$content_guid, levels = content_pool$content_guid),
+    max
+  ), origin = "1970-01-01")
   set.seed(600)
-  days_since_deploy <- sample(0:10, nrow(content_pool), replace = TRUE)
-  last_deployed_dates <- pmin(last_date, created_dates + days_since_deploy)
 
   data.frame(
     environment = content_pool$environment,
@@ -569,8 +742,8 @@ sample_connect_content_list_internal <- function() {
       sample(3600 * 8:18, nrow(content_pool), replace = TRUE),
     last_deployed_time = as.POSIXct(last_deployed_dates, tz = "UTC") +
       sample(3600 * 8:18, nrow(content_pool), replace = TRUE),
-    type = content_pool$type,
-    description = paste("Sample", content_pool$type, "content"),
+    type = content_pool$app_mode,
+    description = paste("Sample", content_pool$app_mode, "content"),
     access_type = content_pool$access_type,
     locked = sample(
       c(FALSE, TRUE),
@@ -654,10 +827,10 @@ sample_connect_content_list_internal <- function() {
 }
 
 #' @noRd
-sample_connect_content_totals_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
-  user_pool <- generate_user_pool(26)
-  content_pool <- generate_content_pool(150, 30, user_pool)
+sample_connect_content_totals_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
+  user_pool <- generate_user_pool(26, n_days)
+  content_pool <- generate_content_pool(150, n_days, user_pool)
 
   # Generate daily totals for each type/environment combo
   daily_totals <- lapply(seq_along(dates), function(i) {
@@ -670,10 +843,11 @@ sample_connect_content_totals_internal <- function() {
     }
 
     agg <- aggregate(
-      content_id ~ type + environment,
+      content_id ~ app_mode + environment,
       data = available,
       FUN = length
     )
+    names(agg)[names(agg) == "app_mode"] <- "type"
     names(agg)[3] <- "count"
     agg$date <- dates[i]
 
@@ -684,10 +858,10 @@ sample_connect_content_totals_internal <- function() {
 }
 
 #' @noRd
-sample_connect_content_hits_totals_by_user_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
-  user_pool <- generate_user_pool(26)
-  content_pool <- generate_content_pool(150, 30, user_pool)
+sample_connect_content_hits_totals_by_user_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
+  user_pool <- generate_user_pool(26, n_days)
+  content_pool <- generate_content_pool(150, n_days, user_pool)
 
   # Generate hits for each day
   daily_hits <- lapply(seq_along(dates), function(i) {
@@ -781,24 +955,24 @@ sample_connect_content_hits_totals_by_user_internal <- function() {
   result <- do.call(rbind, Filter(Negate(is.null), daily_hits))
 
   # Add environment from content_pool
-  result$environment <- content_pool$environment[match(
-    result$content_guid,
-    content_pool$content_guid
-  )]
+  content_row <- match(result$content_guid, content_pool$content_guid)
+  result$environment <- content_pool$environment[content_row]
+  result$app_mode <- content_pool$app_mode[content_row]
 
   result[, c(
     "environment",
     "content_guid",
     "user_guid",
     "hits",
+    "app_mode",
     "date"
   )]
 }
 
 #' @noRd
-sample_connect_content_hits_totals_internal <- function() {
+sample_connect_content_hits_totals_internal <- function(n_days = SAMPLE_DAYS) {
   # Generate by-user data first, then aggregate
-  by_user <- sample_connect_content_hits_totals_by_user_internal()
+  by_user <- sample_connect_content_hits_totals_by_user_internal(n_days)
 
   # Aggregate by environment, content_guid, date
   # Split into groups and aggregate
@@ -816,6 +990,7 @@ sample_connect_content_hits_totals_internal <- function() {
       unique_users = as.integer(length(unique(g$user_guid[
         !is.na(g$user_guid)
       ]))),
+      app_mode = g$app_mode[1],
       date = g$date[1],
       stringsAsFactors = FALSE
     )
@@ -825,8 +1000,8 @@ sample_connect_content_hits_totals_internal <- function() {
 }
 
 #' @noRd
-sample_workbench_user_totals_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
+sample_workbench_user_totals_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
 
   daily_data <- lapply(seq_along(dates), function(i) {
     date <- dates[i]
@@ -896,8 +1071,8 @@ generate_workbench_user_pool <- function() {
 }
 
 #' @noRd
-sample_workbench_user_list_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
+sample_workbench_user_list_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
   last_date <- max(dates)
   first_date <- min(dates)
   n_users <- 21
@@ -995,17 +1170,17 @@ derive_wb_session_starts_internal <- function(master, by_user = FALSE) {
 }
 
 #' @noRd
-sample_wb_session_starts_internal <- function() {
+sample_wb_session_starts_internal <- function(n_days = SAMPLE_DAYS) {
   derive_wb_session_starts_internal(
-    sample_wb_sessions_master_internal(),
+    sample_wb_sessions_master_internal(n_days),
     by_user = FALSE
   )
 }
 
 #' @noRd
-sample_wb_session_starts_user_internal <- function() {
+sample_wb_session_starts_user_internal <- function(n_days = SAMPLE_DAYS) {
   derive_wb_session_starts_internal(
-    sample_wb_sessions_master_internal(),
+    sample_wb_sessions_master_internal(n_days),
     by_user = TRUE
   )
 }
@@ -1020,8 +1195,8 @@ sample_wb_session_starts_user_internal <- function() {
 #' habitually uses one or two session types and works mostly in a primary
 #' environment, with occasional sessions in the other environments.
 #' @noRd
-sample_wb_sessions_master_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
+sample_wb_sessions_master_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
   session_types <- c("RStudio Pro", "JupyterLab", "VS Code", "Positron")
   environments <- c("Production", "Development", "Staging")
   env_hosts <- c(
@@ -1063,11 +1238,22 @@ sample_wb_sessions_master_internal <- function() {
     "Positron" = 2600
   )
 
+  # On long sample periods, users start using Workbench one after another so
+  # activity grows over the period; short periods have everyone from day one.
+  start_day <- rep(1L, n_users)
+  if (n_days > SAMPLE_SHORT_DAYS) {
+    ramp <- round(n_days * SAMPLE_USER_RAMP)
+    start_day <- 1L + as.integer(floor((seq_len(n_users) - 1) / n_users * ramp))
+  }
+
   rows <- list()
   for (di in seq_along(dates)) {
     date <- dates[di]
     weekday_factor <- calculate_weekday_factor(date)
     for (u in seq_len(n_users)) {
+      if (di < start_day[u]) {
+        next
+      }
       n_sessions <- as.integer(round(runif(1, 0, 6) * weekday_factor))
       if (n_sessions == 0L) {
         next
@@ -1187,8 +1373,8 @@ sample_wb_sessions_master_internal <- function() {
 }
 
 #' @noRd
-sample_wb_session_duration_internal <- function() {
-  master <- sample_wb_sessions_master_internal()
+sample_wb_session_duration_internal <- function(n_days = SAMPLE_DAYS) {
+  master <- sample_wb_sessions_master_internal(n_days)
   # Only sessions that have ended appear in the duration dataset; still-running
   # sessions have no end time, duration, or exit outcome yet.
   master <- master[master$ended, , drop = FALSE]
@@ -1209,9 +1395,9 @@ sample_wb_session_duration_internal <- function() {
 }
 
 #' @noRd
-sample_raw_connect_users_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
-  user_pool <- generate_user_pool(26)
+sample_raw_connect_users_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
+  user_pool <- generate_user_pool(26, n_days)
 
   # A scrape returns every user the product knows about, so each daily snapshot
   # covers the whole pool. Anything less leaves GUIDs that the content and hit
@@ -1246,8 +1432,8 @@ sample_raw_connect_users_internal <- function() {
 }
 
 #' @noRd
-sample_raw_workbench_users_internal <- function() {
-  dates <- generate_sample_date_sequence(30)
+sample_raw_workbench_users_internal <- function(n_days = SAMPLE_DAYS) {
+  dates <- generate_sample_date_sequence(n_days)
   wb_pool <- generate_workbench_user_pool()
 
   # As with Connect, every user appears in every snapshot so that session
@@ -1321,72 +1507,79 @@ write_sample_raw_parquet_internal <- function(
 }
 
 #' @noRd
-create_sample_chronicle_data_internal <- function(base_path) {
+create_sample_chronicle_data_internal <- function(
+  base_path,
+  n_days = SAMPLE_DAYS
+) {
   dir.create(base_path, recursive = TRUE, showWarnings = FALSE)
+
+  # Every dataset carries a product_id, so each product's data is added with its own
+  connect <- function(data) add_sample_product_id(data, "connect", n_days)
+  workbench <- function(data) add_sample_product_id(data, "workbench", n_days)
 
   # Create curated data
   write_sample_parquet_internal(
-    sample_connect_user_totals_internal(),
+    connect(sample_connect_user_totals_internal(n_days)),
     base_path,
     "connect/user_totals"
   )
 
   write_sample_parquet_internal(
-    sample_connect_user_list_internal(),
+    connect(sample_connect_user_list_internal(n_days)),
     base_path,
     "connect/user_list"
   )
 
   write_sample_parquet_internal(
-    sample_connect_content_totals_internal(),
+    connect(sample_connect_content_totals_internal(n_days)),
     base_path,
     "connect/content_totals"
   )
 
   write_sample_parquet_internal(
-    sample_connect_content_list_internal(),
+    connect(sample_connect_content_list_internal(n_days)),
     base_path,
     "connect/content_list"
   )
 
   write_sample_parquet_internal(
-    sample_connect_content_hits_totals_internal(),
+    connect(sample_connect_content_hits_totals_internal(n_days)),
     base_path,
     "connect/content_hits_totals"
   )
 
   write_sample_parquet_internal(
-    sample_connect_content_hits_totals_by_user_internal(),
+    connect(sample_connect_content_hits_totals_by_user_internal(n_days)),
     base_path,
     "connect/content_hits_totals_by_user"
   )
 
   write_sample_parquet_internal(
-    sample_workbench_user_totals_internal(),
+    workbench(sample_workbench_user_totals_internal(n_days)),
     base_path,
     "workbench/user_totals"
   )
 
   write_sample_parquet_internal(
-    sample_workbench_user_list_internal(),
+    workbench(sample_workbench_user_list_internal(n_days)),
     base_path,
     "workbench/user_list"
   )
 
   write_sample_parquet_internal(
-    sample_wb_session_starts_internal(),
+    workbench(sample_wb_session_starts_internal(n_days)),
     base_path,
     "workbench/session_start_totals"
   )
 
   write_sample_parquet_internal(
-    sample_wb_session_starts_user_internal(),
+    workbench(sample_wb_session_starts_user_internal(n_days)),
     base_path,
     "workbench/session_start_totals_by_user"
   )
 
   write_sample_parquet_internal(
-    sample_wb_session_duration_internal(),
+    workbench(sample_wb_session_duration_internal(n_days)),
     base_path,
     "workbench/session_duration"
   )
@@ -1394,13 +1587,26 @@ create_sample_chronicle_data_internal <- function(base_path) {
   # Raw daily users back the GUID -> username lookups used to label content
   # owners, visitors and session users; see chronicle_user_lookup().
   write_sample_raw_parquet_internal(
-    sample_raw_connect_users_internal(),
+    connect(sample_raw_connect_users_internal(n_days)),
     base_path,
     "connect_users"
   )
 
+  # Publish events and content snapshots back the deployment counts
   write_sample_raw_parquet_internal(
-    sample_raw_workbench_users_internal(),
+    connect(sample_connect_deployments_internal(n_days)),
+    base_path,
+    "connect_content_published"
+  )
+
+  write_sample_raw_parquet_internal(
+    connect(sample_connect_contents_internal(n_days)),
+    base_path,
+    "connect_contents"
+  )
+
+  write_sample_raw_parquet_internal(
+    workbench(sample_raw_workbench_users_internal(n_days)),
     base_path,
     "pwb_users"
   )

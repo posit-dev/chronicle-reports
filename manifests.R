@@ -9,7 +9,7 @@ deps <- read.dcf("DESCRIPTION", fields = "Depends")[[1]]
 r_dep <- trimws(grep("^R\\b", strsplit(deps, ",")[[1]], value = TRUE))
 r_requires <- gsub("R\\s*\\((.*)\\)", "\\1", r_dep) |> trimws()
 
-app_dirs <- c("inst/apps/connect", "inst/apps/workbench")
+app_dirs <- c("inst/apps/connect", "inst/apps/workbench", "inst/apps/usage")
 
 for (app_dir in app_dirs) {
   message("Processing: ", app_dir)
