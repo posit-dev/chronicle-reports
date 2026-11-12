@@ -265,3 +265,39 @@ test_that("a report rebuilt from an export flags the export's month, not today's
   )
   expect_equal(env$usage_as_of(list()), Sys.Date())
 })
+
+test_that("groups beyond the palette are folded into Other", {
+  env <- source_usage_app()
+  n <- length(env$SERIES_COLORS) + 3
+  months <- as.Date("2026-11-01")
+  data <- dplyr::tibble(
+    month = months,
+    product_id = rep(c("p1", "p2"), each = n),
+    app_mode = rep(sprintf("type%02d", seq_len(n)), 2),
+    hits = rep(seq_len(n), 2)
+  )
+
+  out <- env$usage_series(data, "hits", months, group = "app_mode")
+
+  groups <- unique(out$app_mode)
+  expect_length(groups, length(env$SERIES_COLORS))
+  expect_true("Other" %in% groups)
+  # the largest types survive and the smallest are folded, in every panel
+  expect_true(sprintf("type%02d", n) %in% groups)
+  expect_false("type01" %in% groups)
+  expect_equal(sum(out$value), sum(data$hits))
+  expect_false(anyDuplicated(env$usage_colors(groups)) > 0)
+})
+
+test_that("groups within the palette are left alone", {
+  env <- source_usage_app()
+  months <- as.Date("2026-11-01")
+  data <- dplyr::tibble(
+    month = months, product_id = "p1",
+    app_mode = c("shiny", "quarto"), hits = c(1, 2)
+  )
+
+  out <- env$usage_series(data, "hits", months, group = "app_mode")
+
+  expect_setequal(out$app_mode, c("shiny", "quarto"))
+})

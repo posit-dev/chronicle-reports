@@ -31,6 +31,9 @@ SERIES_COLORS <- c(
   "#8fb0cf", "#a9c58b", "#c795a9", "#b5b5b6"
 )
 
+# Name of the series that holds the groups folded away to limit the colors
+USAGE_OTHER_GROUP <- "Other"
+
 # Product id the data layer gives usage recorded without one
 # (USAGE_UNSPECIFIED_PRODUCT in R/usage_data.R, which is not exported)
 UNSPECIFIED_PRODUCT <- "(unspecified)"
@@ -72,11 +75,27 @@ usage_window_months <- function(tables) {
   seq(window[1], window[2], by = "month")
 }
 
+# Keep the `max_groups - 1` groups with the largest total `value` and fold the
+# rest into "Other", so that no two series in a chart share a color. Groups are
+# ranked across all product ids, so every panel folds the same way.
+usage_fold_groups <- function(data, value, group, max_groups = length(SERIES_COLORS)) {
+  totals <- tapply(data[[value]], data[[group]], sum)
+  if (length(totals) <= max_groups) {
+    return(data)
+  }
+  keep <- names(sort(totals, decreasing = TRUE))[seq_len(max_groups - 1)]
+  data[[group]] <- ifelse(data[[group]] %in% keep, data[[group]], USAGE_OTHER_GROUP)
+  data
+}
+
 # Sum `value` per month and product id (and per `group`, if given), with a zero
 # for every month, so that empty months still appear on the chart. Every product
 # id gets every group, so that each product's panel has the same series.
 usage_series <- function(data, value, months, group = NULL) {
   by <- c("month", "product_id", group)
+  if (!is.null(group) && nrow(data) > 0) {
+    data <- usage_fold_groups(data, value, group)
+  }
 
   totals <- data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(by))) |>
