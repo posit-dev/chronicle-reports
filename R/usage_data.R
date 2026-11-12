@@ -193,7 +193,12 @@ usage_read_connect_deployments <- function(base_path, window) {
   } else {
     types |>
       usage_with_defaults(list(product_id = "")) |>
-      dplyr::filter(.data$Year >= !!year_since, .data$timestamp >= !!since) |>
+      dplyr::filter(
+        .data$Year >= !!year_since,
+        .data$timestamp >= !!since,
+        # Only read snapshot rows for content that was published in the window
+        .data$guid %in% !!unique(published$content_guid)
+      ) |>
       dplyr::select("timestamp", "product_id", "guid", "app_mode") |>
       dplyr::collect() |>
       dplyr::group_by(.data$product_id, .data$guid) |>
