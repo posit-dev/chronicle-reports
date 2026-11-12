@@ -35,7 +35,7 @@ SERIES_COLORS <- c(
 # (USAGE_UNSPECIFIED_PRODUCT in R/usage_data.R, which is not exported)
 UNSPECIFIED_PRODUCT <- "(unspecified)"
 
-NO_DATA_MESSAGE <-"No data in the last 12 months."
+NO_DATA_MESSAGE <- "No data in the last 12 months."
 
 # Height of one product's panel in a stacked-bar chart, in pixels
 PANEL_HEIGHT <- 220
