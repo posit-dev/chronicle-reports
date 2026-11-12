@@ -54,3 +54,21 @@ test_that("an empty report round-trips", {
   chronicle_usage_to_json(tables, file)
   expect_equal(chronicle_usage_from_json(file), tables)
 })
+
+test_that("the as-of date survives a round trip, whatever day it is read", {
+  tables <- fixture_tables()
+  file <- withr::local_tempfile(fileext = ".json")
+  chronicle_usage_to_json(tables, file)
+
+  expect_equal(attr(chronicle_usage_from_json(file), "as_of"), USAGE_TEST_TODAY)
+})
+
+test_that("an export without an as-of date falls back to its generation date", {
+  file <- withr::local_tempfile(fileext = ".json")
+  writeLines(
+    '{"schema_version": 1, "generated_at": "2026-10-31T12:00:00Z", "tables": {}}',
+    file
+  )
+
+  expect_equal(attr(chronicle_usage_from_json(file), "as_of"), as.Date("2026-10-31"))
+})

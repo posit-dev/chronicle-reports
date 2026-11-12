@@ -102,7 +102,14 @@ usage_has_data <- function(series) {
   nrow(series) > 0 && any(series$value > 0)
 }
 
-# Axis labels, flagging the current month because it is still in progress.
+# The date the report's data runs up to. A report rebuilt from an export uses
+# the export's date, not the viewer's clock.
+usage_as_of <- function(tables) {
+  attr(tables, "as_of") %||% Sys.Date()
+}
+
+# Axis labels, flagging the month containing `today` because it is still in
+# progress.
 usage_month_labels <- function(months, today = Sys.Date()) {
   labels <- format(months, "%b %Y")
   partial <- months == as.Date(format(today, "%Y-%m-01"))
@@ -137,8 +144,8 @@ usage_axis_layout <- function(p, labels, y_title) {
 }
 
 # One line per product id.
-usage_line_chart <- function(series, months, y_title = NULL) {
-  series$label <- usage_month_labels(series$month)
+usage_line_chart <- function(series, months, y_title = NULL, today = Sys.Date()) {
+  series$label <- usage_month_labels(series$month, today)
 
   plotly::plot_ly(
     series,
@@ -150,7 +157,7 @@ usage_line_chart <- function(series, months, y_title = NULL) {
     mode = "lines+markers",
     hovertemplate = "%{x}: %{y:,}<extra>%{fullData.name}</extra>"
   ) |>
-    usage_axis_layout(usage_month_labels(months), y_title %||% "")
+    usage_axis_layout(usage_month_labels(months, today), y_title %||% "")
 }
 
 # Y-axis title of one product's panel: the product id, then `y_title`. When no
@@ -166,8 +173,8 @@ usage_panel_y_title <- function(product_id, product_ids, y_title = NULL) {
 }
 
 # One panel per product id, each a stacked bar chart split by `group`.
-usage_stacked_chart <- function(series, months, group, y_title = NULL) {
-  series$label <- usage_month_labels(series$month)
+usage_stacked_chart <- function(series, months, group, y_title = NULL, today = Sys.Date()) {
+  series$label <- usage_month_labels(series$month, today)
   colors <- usage_colors(series[[group]])
   product_ids <- sort(unique(series$product_id))
 
@@ -185,7 +192,7 @@ usage_stacked_chart <- function(series, months, group, y_title = NULL) {
       hovertemplate = "%{x}: %{y:,}<extra>%{fullData.name}</extra>"
     ) |>
       usage_axis_layout(
-        usage_month_labels(months),
+        usage_month_labels(months, today),
         usage_panel_y_title(product_ids[i], product_ids, y_title)
       )
   })
@@ -284,6 +291,7 @@ ui <- bslib::page_fluid(
 server <- function(input, output, session) {
   tables <- reactive(load_usage_tables())
   months <- reactive(usage_window_months(tables()))
+  today <- reactive(usage_as_of(tables()))
 
   # Define a chart and its sized container. `series_fn` returns the chart data,
   # and `chart_fn(series)` draws it. Both are re-run when their inputs change.
@@ -311,14 +319,14 @@ server <- function(input, output, session) {
   define_chart(
     "connect_active_users",
     active_users_series("connect"),
-    function(series) usage_line_chart(series, months(), "Active users"),
+    function(series) usage_line_chart(series, months(), "Active users", today()),
     stacked = FALSE
   )
 
   define_chart(
     "workbench_active_users",
     active_users_series("workbench"),
-    function(series) usage_line_chart(series, months(), "Active users"),
+    function(series) usage_line_chart(series, months(), "Active users", today()),
     stacked = FALSE
   )
 
@@ -330,7 +338,7 @@ server <- function(input, output, session) {
       data$authenticated <- ifelse(data$authenticated, "Authenticated", "Anonymous")
       usage_series(data, "hits", months(), group = hits_group())
     },
-    function(series) usage_stacked_chart(series, months(), hits_group(), "Hits"),
+    function(series) usage_stacked_chart(series, months(), hits_group(), "Hits", today()),
     stacked = TRUE
   )
 
@@ -342,7 +350,7 @@ server <- function(input, output, session) {
     },
     function(series) {
       y_title <- if (deployments_metric() == "deployments") "Deployments" else "Content items"
-      usage_stacked_chart(series, months(), "app_mode", y_title)
+      usage_stacked_chart(series, months(), "app_mode", y_title, today())
     },
     stacked = TRUE
   )
@@ -350,7 +358,7 @@ server <- function(input, output, session) {
   define_chart(
     "sessions",
     function() usage_series(tables()$sessions, "sessions", months(), group = "session_type"),
-    function(series) usage_stacked_chart(series, months(), "session_type", "Sessions started"),
+    function(series) usage_stacked_chart(series, months(), "session_type", "Sessions started", today()),
     stacked = TRUE
   )
 

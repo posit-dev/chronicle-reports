@@ -24,7 +24,8 @@ A list of four tibbles: \code{active_users} (\code{month}, \code{product},
 \code{authenticated}, \code{hits}), \code{content_deployments} (\code{month}, \code{product_id},
 \code{app_mode}, \code{deployments}, \code{unique_content}) and \code{sessions} (\code{month},
 \code{product_id}, \code{session_type}, \code{sessions}). \code{month} is the first day of the
-month. The reporting window is stored in the \code{"window"} attribute.
+month. The reporting window is stored in the \code{"window"} attribute and the
+date it was built for in the \code{"as_of"} attribute.
 A dataset that is not available yields an empty table.
 }
 \description{

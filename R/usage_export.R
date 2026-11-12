@@ -32,6 +32,9 @@ chronicle_usage_to_json <- function(tables, path) {
   export <- list(
     schema_version = USAGE_EXPORT_SCHEMA_VERSION,
     generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    # The date the last month is counted up to, so a later reader can tell
+    # whether that month was still in progress
+    as_of = format(if (is.null(attr(tables, "as_of"))) Sys.Date() else attr(tables, "as_of"), "%Y-%m-%d"),
     first_month = if (!is.null(window)) format(window[1], "%Y-%m"),
     last_month = if (!is.null(window)) format(window[2], "%Y-%m"),
     tables = rows
@@ -56,7 +59,8 @@ chronicle_usage_to_json <- function(tables, path) {
 #'
 #' @param path Path to the JSON file.
 #'
-#' @return A list of tables, as returned by [chronicle_usage_data()].
+#' @return A list of tables, as returned by [chronicle_usage_data()], with the
+#'   `"as_of"` attribute restored from the file.
 #' @export
 #'
 #' @examples
@@ -81,6 +85,10 @@ chronicle_usage_from_json <- function(path) {
     as.Date(paste0(c(parsed$first_month, parsed$last_month), "-01"))
   }
   tables <- usage_empty_tables(window)
+  as_of <- if (is.null(parsed$as_of)) substr(parsed$generated_at, 1, 10) else parsed$as_of
+  if (length(as_of) == 1 && !is.na(as_of) && nzchar(as_of)) {
+    attr(tables, "as_of") <- as.Date(as_of)
+  }
 
   for (name in USAGE_TABLE_NAMES) {
     rows <- parsed$tables[[name]]

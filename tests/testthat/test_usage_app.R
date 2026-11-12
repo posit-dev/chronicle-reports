@@ -250,3 +250,18 @@ test_that("an empty report shows a message, not an error", {
     })
   })
 })
+
+test_that("a report rebuilt from an export flags the export's month, not today's", {
+  env <- source_usage_app()
+  tables <- usage_export_file()$tables
+
+  as_of <- env$usage_as_of(tables)
+
+  expect_equal(as_of, attr(tables, "as_of"))
+  months <- as.Date(c("2026-10-01", "2026-11-01"))
+  expect_equal(
+    env$usage_month_labels(months, today = as.Date("2026-10-20")),
+    c("Oct 2026*", "Nov 2026")
+  )
+  expect_equal(env$usage_as_of(list()), Sys.Date())
+})

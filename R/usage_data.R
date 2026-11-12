@@ -294,7 +294,8 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #'   `authenticated`, `hits`), `content_deployments` (`month`, `product_id`,
 #'   `app_mode`, `deployments`, `unique_content`) and `sessions` (`month`,
 #'   `product_id`, `session_type`, `sessions`). `month` is the first day of the
-#'   month. The reporting window is stored in the `"window"` attribute.
+#'   month. The reporting window is stored in the `"window"` attribute and the
+#'   date it was built for in the `"as_of"` attribute.
 #'   A dataset that is not available yields an empty table.
 #' @export
 #'
@@ -325,5 +326,6 @@ chronicle_usage_data <- function(
       dplyr::arrange(dplyr::across(dplyr::everything()))
   })
   attr(tables, "window") <- window
+  attr(tables, "as_of") <- as.Date(today)
   tables
 }

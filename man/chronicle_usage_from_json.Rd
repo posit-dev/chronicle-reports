@@ -10,7 +10,8 @@ chronicle_usage_from_json(path)
 \item{path}{Path to the JSON file.}
 }
 \value{
-A list of tables, as returned by \code{\link[=chronicle_usage_data]{chronicle_usage_data()}}.
+A list of tables, as returned by \code{\link[=chronicle_usage_data]{chronicle_usage_data()}}, with the
+\code{"as_of"} attribute restored from the file.
 }
 \description{
 Reads a file written by \code{\link[=chronicle_usage_to_json]{chronicle_usage_to_json()}} and returns the same
