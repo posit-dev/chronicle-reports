@@ -193,7 +193,13 @@ validate_sample_data_structure <- function(path) {
     dir.exists(file.path(curated_path, m))
   }))
 
-  has_metric
+  if (!has_metric) {
+    return(FALSE)
+  }
+
+  # Samples from before product ids and deployments were added lack the raw
+  # publish events, so regenerate them
+  dir.exists(file.path(path, "daily", "v2", "connect_content_published"))
 }
 
 # Internal helper functions for creating sample data

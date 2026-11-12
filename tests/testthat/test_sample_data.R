@@ -144,3 +144,12 @@ test_that("a short span is still available for fast tests", {
   expect_equal(length(unique(hits$date)), 30)
   expect_true("product_id" %in% names(hits))
 })
+
+test_that("a sample without publish events is regenerated, not reused", {
+  path <- withr::local_tempdir()
+  dir.create(file.path(path, "curated", "v2", "connect"), recursive = TRUE)
+  expect_false(validate_sample_data_structure(path))
+
+  dir.create(file.path(path, "daily", "v2", "connect_content_published"), recursive = TRUE)
+  expect_true(validate_sample_data_structure(path))
+})
