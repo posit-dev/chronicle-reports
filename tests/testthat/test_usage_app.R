@@ -112,6 +112,33 @@ test_that("stacked charts get taller with more product ids", {
   expect_equal(env$usage_panel_height(four), 4 * env$PANEL_HEIGHT)
 })
 
+test_that("the y-axis title names the product id, except when there are none", {
+  env <- source_usage_app()
+  title <- env$usage_panel_y_title
+
+  # no product ids at all: just the metric
+  expect_equal(title("(unspecified)", "(unspecified)", "Deployments"), "Deployments")
+  expect_equal(title("(unspecified)", "(unspecified)"), "")
+
+  # real ids: each panel is labelled, including "(unspecified)" next to them
+  expect_equal(title("p1", "p1", "Deployments"), "p1<br>Deployments")
+  ids <- c("(unspecified)", "p1")
+  expect_equal(title("(unspecified)", ids, "Deployments"), "(unspecified)<br>Deployments")
+  expect_equal(title("p1", ids, "Deployments"), "p1<br>Deployments")
+})
+
+test_that("a stacked chart without product ids has a plain y-axis title", {
+  env <- source_usage_app()
+  months <- as.Date(c("2026-10-01", "2026-11-01"))
+  data <- dplyr::tibble(
+    month = months[1], product_id = "(unspecified)", app_mode = "shiny", deployments = 3
+  )
+  series <- env$usage_series(data, "deployments", months, group = "app_mode")
+  chart <- plotly::plotly_build(env$usage_stacked_chart(series, months, "app_mode", "Deployments"))
+  title <- chart$x$layout$yaxis$title
+  expect_equal(if (is.list(title)) title$text else title, "Deployments")
+})
+
 test_that("charts build for several product ids", {
   env <- source_usage_app()
   tables <- usage_export_file()$tables

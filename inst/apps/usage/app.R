@@ -31,7 +31,11 @@ SERIES_COLORS <- c(
   "#8fb0cf", "#a9c58b", "#c795a9", "#b5b5b6"
 )
 
-NO_DATA_MESSAGE <- "No data in the last 12 months."
+# Product id the data layer gives usage recorded without one
+# (USAGE_UNSPECIFIED_PRODUCT in R/usage_data.R, which is not exported)
+UNSPECIFIED_PRODUCT <- "(unspecified)"
+
+NO_DATA_MESSAGE <-"No data in the last 12 months."
 
 # Height of one product's panel in a stacked-bar chart, in pixels
 PANEL_HEIGHT <- 220
@@ -149,6 +153,18 @@ usage_line_chart <- function(series, months, y_title = NULL) {
     usage_axis_layout(usage_month_labels(months), y_title %||% "")
 }
 
+# Y-axis title of one product's panel: the product id, then `y_title`. When no
+# product has an id (every id is the "(unspecified)" placeholder) there is
+# nothing to tell panels apart by, so the title is just `y_title`. Alongside
+# real product ids, "(unspecified)" is shown like any other.
+usage_panel_y_title <- function(product_id, product_ids, y_title = NULL) {
+  y_title <- y_title %||% ""
+  if (identical(as.character(product_ids), UNSPECIFIED_PRODUCT)) {
+    return(y_title)
+  }
+  paste0(product_id, "<br>", y_title)
+}
+
 # One panel per product id, each a stacked bar chart split by `group`.
 usage_stacked_chart <- function(series, months, group, y_title = NULL) {
   series$label <- usage_month_labels(series$month)
@@ -170,7 +186,7 @@ usage_stacked_chart <- function(series, months, group, y_title = NULL) {
     ) |>
       usage_axis_layout(
         usage_month_labels(months),
-        paste0(product_ids[i], "<br>", y_title %||% "")
+        usage_panel_y_title(product_ids[i], product_ids, y_title)
       )
   })
 
