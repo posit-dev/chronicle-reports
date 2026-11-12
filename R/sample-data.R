@@ -519,13 +519,22 @@ sample_active_content <- function(content_pool, day_num, weekday_factor) {
 sample_connect_user_totals_internal <- function(n_days = SAMPLE_DAYS) {
   dates <- generate_sample_date_sequence(n_days)
 
+  # In a long sample, viewers join over time (see generate_user_pool()), so the
+  # user counts follow the pool to stay consistent with user_list and hits
+  user_pool <- if (n_days > SAMPLE_SHORT_DAYS) generate_user_pool(26, n_days)
+
   # Calculate daily metrics
   daily_data <- lapply(seq_along(dates), function(i) {
     date <- dates[i]
     weekday_factor <- calculate_weekday_factor(date)
 
-    # Named users: gradual growth from 24 to 26
-    named_users <- min(24 + floor(i / 15), 26)
+    if (is.null(user_pool)) {
+      # Named users: gradual growth from 24 to 26
+      named_users <- min(24 + floor(i / 15), 26)
+    } else {
+      existing <- user_pool[user_pool$created_day <= i, ]
+      named_users <- nrow(existing)
+    }
 
     # Active users (1 day): 40-60% of named, affected by weekday
     base_active_rate <- 0.50
@@ -538,14 +547,20 @@ sample_connect_user_totals_internal <- function(n_days = SAMPLE_DAYS) {
     active_users_30days <- round(named_users * runif(1, 0.70, 0.85))
     active_users_30days <- max(active_users_1day, active_users_30days)
 
-    # Administrators: ~10-15% of named users
-    administrators <- max(2, min(4, round(named_users * 0.12)))
+    if (is.null(user_pool)) {
+      # Administrators: ~10-15% of named users
+      administrators <- max(2, min(4, round(named_users * 0.12)))
 
-    # Publishers: ~20-25% of named users
-    publishers <- max(5, min(8, round(named_users * 0.25)))
+      # Publishers: ~20-25% of named users
+      publishers <- max(5, min(8, round(named_users * 0.25)))
 
-    # Viewers: remaining users after administrators and publishers
-    viewers <- named_users - administrators - publishers
+      # Viewers: remaining users after administrators and publishers
+      viewers <- named_users - administrators - publishers
+    } else {
+      administrators <- sum(existing$user_role == "administrator")
+      publishers <- sum(existing$user_role == "publisher")
+      viewers <- sum(existing$user_role == "viewer")
+    }
 
     # Licensed user seats: typically >= named_users (some buffer)
     licensed_user_seats <- named_users + sample(0:5, 1)

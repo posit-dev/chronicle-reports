@@ -153,3 +153,12 @@ test_that("a sample without publish events is regenerated, not reused", {
   dir.create(file.path(path, "daily", "v2", "connect_content_published"), recursive = TRUE)
   expect_true(validate_sample_data_structure(path))
 })
+
+test_that("long-sample Connect user totals follow the viewer ramp", {
+  totals <- sample_connect_user_totals_internal(SAMPLE_DAYS)
+
+  expect_lt(totals$named_users[1], totals$named_users[nrow(totals)])
+  expect_equal(totals$named_users, totals$administrators + totals$publishers + totals$viewers)
+  expect_equal(totals$named_users[nrow(totals)], 26L)
+  expect_true(all(diff(totals$viewers) >= 0))
+})
