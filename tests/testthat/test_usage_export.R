@@ -24,7 +24,10 @@ test_that("export carries a schema version and the month range", {
   expect_match(parsed$generated_at, "^\\d{4}-\\d{2}-\\d{2}T")
   expect_equal(parsed$first_month, "2025-12") # window bounds, not data bounds
   expect_equal(parsed$last_month, "2026-11")
-  expect_true(all(c("active_users", "content_hits", "content_deployments", "sessions") %in% names(parsed$tables)))
+  expect_true(all(
+    c("active_users", "content_hits", "content_deployments", "sessions") %in%
+      names(parsed$tables)
+  ))
 })
 
 test_that("export contains only aggregates, with no identifiers", {
@@ -33,7 +36,10 @@ test_that("export contains only aggregates, with no identifiers", {
   chronicle_usage_to_json(tables, file)
 
   text <- paste(readLines(file, warn = FALSE), collapse = "\n")
-  expect_false(grepl("user_guid|content_guid|username|email|host|environment", text))
+  expect_false(grepl(
+    "user_guid|content_guid|username|email|host|environment",
+    text
+  ))
   for (guid in c("u1", "u2", "c1", "c2", "w1")) {
     expect_false(grepl(sprintf("\"%s\"", guid), text, fixed = TRUE))
   }
@@ -48,7 +54,10 @@ test_that("importing rejects an unknown schema version", {
 
 test_that("an empty report round-trips", {
   empty <- withr::local_tempdir()
-  tables <- suppressMessages(chronicle_usage_data(empty, today = USAGE_TEST_TODAY))
+  tables <- suppressMessages(chronicle_usage_data(
+    empty,
+    today = USAGE_TEST_TODAY
+  ))
   file <- withr::local_tempfile(fileext = ".json")
 
   chronicle_usage_to_json(tables, file)
@@ -70,7 +79,10 @@ test_that("an export without an as-of date falls back to its generation date", {
     file
   )
 
-  expect_equal(attr(chronicle_usage_from_json(file), "as_of"), as.Date("2026-10-31"))
+  expect_equal(
+    attr(chronicle_usage_from_json(file), "as_of"),
+    as.Date("2026-10-31")
+  )
 })
 
 test_that("an export from before a column existed loads with defaults", {
@@ -86,7 +98,10 @@ test_that("an export from before a column existed loads with defaults", {
 
   restored <- chronicle_usage_from_json(file)
 
-  expect_equal(names(restored$content_deployments), names(tables$content_deployments))
+  expect_equal(
+    names(restored$content_deployments),
+    names(tables$content_deployments)
+  )
   expect_true(all(restored$content_deployments$unique_content == 0))
   expect_true(all(restored$content_hits$app_mode == "unknown"))
   expect_true(all(restored$sessions$product_id == "(unspecified)"))

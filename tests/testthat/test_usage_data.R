@@ -35,7 +35,9 @@ test_that("Connect active users are distinct per month and exclude anonymous", {
   au <- usage_fixture_tables()$active_users
   connect <- au[au$product == "connect", ]
 
-  oct <- connect[connect$month == month_of("2026-10") & connect$product_id == "p1", ]
+  oct <- connect[
+    connect$month == month_of("2026-10") & connect$product_id == "p1",
+  ]
   expect_equal(oct$users, 2L) # u1 on two days counts once; NA and "" excluded
 
   nov <- connect[connect$month == month_of("2026-11"), ]
@@ -117,11 +119,21 @@ test_that("an empty product_id is labelled rather than dropped", {
     hits = 3L,
     app_mode = "shiny"
   )
-  unlink(file.path(path, "curated/v2/connect/content_hits_totals_by_user"), recursive = TRUE)
-  write_sample_parquet_internal(hits, path, "connect/content_hits_totals_by_user")
+  unlink(
+    file.path(path, "curated/v2/connect/content_hits_totals_by_user"),
+    recursive = TRUE
+  )
+  write_sample_parquet_internal(
+    hits,
+    path,
+    "connect/content_hits_totals_by_user"
+  )
 
   tables <- chronicle_usage_data(path, today = USAGE_TEST_TODAY)
-  expect_equal(unique(tables$content_hits$product_id), USAGE_UNSPECIFIED_PRODUCT)
+  expect_equal(
+    unique(tables$content_hits$product_id),
+    USAGE_UNSPECIFIED_PRODUCT
+  )
 })
 
 test_that("missing datasets give empty tables with the right columns", {
@@ -133,5 +145,8 @@ test_that("missing datasets give empty tables with the right columns", {
   for (tbl in tables) {
     expect_equal(nrow(tbl), 0L)
   }
-  expect_named(tables$content_hits, c("month", "product_id", "app_mode", "authenticated", "hits"))
+  expect_named(
+    tables$content_hits,
+    c("month", "product_id", "app_mode", "authenticated", "hits")
+  )
 })

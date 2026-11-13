@@ -120,16 +120,26 @@ usage_read_connect_hits <- function(base_path, window) {
   empty <- usage_empty_tables()
   ds <- chronicle_data("connect/content_hits_totals_by_user", base_path)
   if (is.null(ds)) {
-    return(list(active_users = empty$active_users, content_hits = empty$content_hits))
+    return(list(
+      active_users = empty$active_users,
+      content_hits = empty$content_hits
+    ))
   }
 
   ds <- ds |>
     usage_with_defaults(list(product_id = "", app_mode = "")) |>
     dplyr::filter(.data$date >= !!window[1]) |>
-    dplyr::mutate(authenticated = !is.na(.data$user_guid) & .data$user_guid != "")
+    dplyr::mutate(
+      authenticated = !is.na(.data$user_guid) & .data$user_guid != ""
+    )
 
   hits <- ds |>
-    dplyr::group_by(.data$date, .data$product_id, .data$app_mode, .data$authenticated) |>
+    dplyr::group_by(
+      .data$date,
+      .data$product_id,
+      .data$app_mode,
+      .data$authenticated
+    ) |>
     dplyr::summarise(hits = sum(.data$hits, na.rm = TRUE)) |>
     dplyr::collect()
 
@@ -144,7 +154,12 @@ usage_read_connect_hits <- function(base_path, window) {
       product_id = usage_label_product(.data$product_id),
       app_mode = usage_label_app_mode(.data$app_mode)
     ) |>
-    dplyr::group_by(.data$month, .data$product_id, .data$app_mode, .data$authenticated) |>
+    dplyr::group_by(
+      .data$month,
+      .data$product_id,
+      .data$app_mode,
+      .data$authenticated
+    ) |>
     dplyr::summarise(hits = as.numeric(sum(.data$hits)), .groups = "drop")
 
   list(
@@ -189,7 +204,11 @@ usage_read_connect_deployments <- function(base_path, window) {
   # that is in no snapshot (for example, since deleted) has an unknown type.
   types <- usage_open_raw("connect_contents", base_path)
   latest <- if (is.null(types)) {
-    dplyr::tibble(product_id = character(), content_guid = character(), app_mode = character())
+    dplyr::tibble(
+      product_id = character(),
+      content_guid = character(),
+      app_mode = character()
+    )
   } else {
     types |>
       usage_with_defaults(list(product_id = "")) |>
@@ -257,7 +276,10 @@ usage_read_workbench_sessions <- function(base_path, window) {
       session_type = usage_label_app_mode(.data$session_type)
     ) |>
     dplyr::group_by(.data$month, .data$product_id, .data$session_type) |>
-    dplyr::summarise(sessions = as.numeric(sum(.data$sessions)), .groups = "drop")
+    dplyr::summarise(
+      sessions = as.numeric(sum(.data$sessions)),
+      .groups = "drop"
+    )
 
   list(
     active_users = usage_monthly_users(users, "workbench"),
@@ -320,7 +342,10 @@ chronicle_usage_data <- function(
   workbench <- usage_read_workbench_sessions(base_path, window)
 
   tables <- list(
-    active_users = dplyr::bind_rows(connect$active_users, workbench$active_users),
+    active_users = dplyr::bind_rows(
+      connect$active_users,
+      workbench$active_users
+    ),
     content_hits = connect$content_hits,
     content_deployments = usage_read_connect_deployments(base_path, window),
     sessions = workbench$sessions

@@ -27,8 +27,14 @@ BRAND_COLORS <- list(
 
 # Series colors for stacked charts: brand colors first, then lighter tints
 SERIES_COLORS <- c(
-  "#447099", "#72994E", "#9A4665", "#7a7a7b",
-  "#8fb0cf", "#a9c58b", "#c795a9", "#b5b5b6"
+  "#447099",
+  "#72994E",
+  "#9A4665",
+  "#7a7a7b",
+  "#8fb0cf",
+  "#a9c58b",
+  "#c795a9",
+  "#b5b5b6"
 )
 
 # Name of the series that holds the groups folded away to limit the colors
@@ -78,13 +84,22 @@ usage_window_months <- function(tables) {
 # Keep the `max_groups - 1` groups with the largest total `value` and fold the
 # rest into "Other", so that no two series in a chart share a color. Groups are
 # ranked across all product ids, so every panel folds the same way.
-usage_fold_groups <- function(data, value, group, max_groups = length(SERIES_COLORS)) {
+usage_fold_groups <- function(
+  data,
+  value,
+  group,
+  max_groups = length(SERIES_COLORS)
+) {
   totals <- tapply(data[[value]], data[[group]], sum)
   if (length(totals) <= max_groups) {
     return(data)
   }
   keep <- names(sort(totals, decreasing = TRUE))[seq_len(max_groups - 1)]
-  data[[group]] <- ifelse(data[[group]] %in% keep, data[[group]], USAGE_OTHER_GROUP)
+  data[[group]] <- ifelse(
+    data[[group]] %in% keep,
+    data[[group]],
+    USAGE_OTHER_GROUP
+  )
   data
 }
 
@@ -155,7 +170,12 @@ usage_panel_height <- function(series, minimum = 340) {
 usage_axis_layout <- function(p, labels, y_title) {
   plotly::layout(
     p,
-    xaxis = list(title = "", categoryorder = "array", categoryarray = labels, fixedrange = TRUE),
+    xaxis = list(
+      title = "",
+      categoryorder = "array",
+      categoryarray = labels,
+      fixedrange = TRUE
+    ),
     yaxis = list(title = y_title, rangemode = "tozero", fixedrange = TRUE),
     legend = list(orientation = "h", y = -0.15)
   ) |>
@@ -163,7 +183,12 @@ usage_axis_layout <- function(p, labels, y_title) {
 }
 
 # One line per product id.
-usage_line_chart <- function(series, months, y_title = NULL, today = Sys.Date()) {
+usage_line_chart <- function(
+  series,
+  months,
+  y_title = NULL,
+  today = Sys.Date()
+) {
   series$label <- usage_month_labels(series$month, today)
 
   plotly::plot_ly(
@@ -192,7 +217,13 @@ usage_panel_y_title <- function(product_id, product_ids, y_title = NULL) {
 }
 
 # One panel per product id, each a stacked bar chart split by `group`.
-usage_stacked_chart <- function(series, months, group, y_title = NULL, today = Sys.Date()) {
+usage_stacked_chart <- function(
+  series,
+  months,
+  group,
+  y_title = NULL,
+  today = Sys.Date()
+) {
   series$label <- usage_month_labels(series$month, today)
   colors <- usage_colors(series[[group]])
   product_ids <- sort(unique(series$product_id))
@@ -216,8 +247,17 @@ usage_stacked_chart <- function(series, months, group, y_title = NULL, today = S
       )
   })
 
-  plotly::subplot(panels, nrows = length(panels), shareX = TRUE, titleY = TRUE, margin = 0.04) |>
-    plotly::layout(barmode = "stack", legend = list(orientation = "h", y = -0.15))
+  plotly::subplot(
+    panels,
+    nrows = length(panels),
+    shareX = TRUE,
+    titleY = TRUE,
+    margin = 0.04
+  ) |>
+    plotly::layout(
+      barmode = "stack",
+      legend = list(orientation = "h", y = -0.15)
+    )
 }
 
 # ==============================================
@@ -257,7 +297,11 @@ ui <- bslib::page_fluid(
       )
     ),
     div(
-      downloadButton("download_data", "Download data (JSON)", class = "btn-outline-primary"),
+      downloadButton(
+        "download_data",
+        "Download data (JSON)",
+        class = "btn-outline-primary"
+      ),
       p(
         class = "text-muted small mt-1 mb-0",
         "Monthly counts only, with no user or content details."
@@ -274,7 +318,10 @@ ui <- bslib::page_fluid(
       controls = radioButtons(
         "hits_group",
         NULL,
-        choices = c("Authenticated vs anonymous" = "authenticated", "Content type" = "app_mode"),
+        choices = c(
+          "Authenticated vs anonymous" = "authenticated",
+          "Content type" = "app_mode"
+        ),
         inline = TRUE
       )
     )
@@ -338,14 +385,18 @@ server <- function(input, output, session) {
   define_chart(
     "connect_active_users",
     active_users_series("connect"),
-    function(series) usage_line_chart(series, months(), "Active users", today()),
+    function(series) {
+      usage_line_chart(series, months(), "Active users", today())
+    },
     stacked = FALSE
   )
 
   define_chart(
     "workbench_active_users",
     active_users_series("workbench"),
-    function(series) usage_line_chart(series, months(), "Active users", today()),
+    function(series) {
+      usage_line_chart(series, months(), "Active users", today())
+    },
     stacked = FALSE
   )
 
@@ -354,10 +405,16 @@ server <- function(input, output, session) {
     "content_hits",
     function() {
       data <- tables()$content_hits
-      data$authenticated <- ifelse(data$authenticated, "Authenticated", "Anonymous")
+      data$authenticated <- ifelse(
+        data$authenticated,
+        "Authenticated",
+        "Anonymous"
+      )
       usage_series(data, "hits", months(), group = hits_group())
     },
-    function(series) usage_stacked_chart(series, months(), hits_group(), "Hits", today()),
+    function(series) {
+      usage_stacked_chart(series, months(), hits_group(), "Hits", today())
+    },
     stacked = TRUE
   )
 
@@ -365,10 +422,19 @@ server <- function(input, output, session) {
   define_chart(
     "content_deployments",
     function() {
-      usage_series(tables()$content_deployments, deployments_metric(), months(), group = "app_mode")
+      usage_series(
+        tables()$content_deployments,
+        deployments_metric(),
+        months(),
+        group = "app_mode"
+      )
     },
     function(series) {
-      y_title <- if (deployments_metric() == "deployments") "Deployments" else "Content items"
+      y_title <- if (deployments_metric() == "deployments") {
+        "Deployments"
+      } else {
+        "Content items"
+      }
       usage_stacked_chart(series, months(), "app_mode", y_title, today())
     },
     stacked = TRUE
@@ -376,14 +442,31 @@ server <- function(input, output, session) {
 
   define_chart(
     "sessions",
-    function() usage_series(tables()$sessions, "sessions", months(), group = "session_type"),
-    function(series) usage_stacked_chart(series, months(), "session_type", "Sessions started", today()),
+    function() {
+      usage_series(
+        tables()$sessions,
+        "sessions",
+        months(),
+        group = "session_type"
+      )
+    },
+    function(series) {
+      usage_stacked_chart(
+        series,
+        months(),
+        "session_type",
+        "Sessions started",
+        today()
+      )
+    },
     stacked = TRUE
   )
 
   # The export is the same list of tables the charts draw from.
   output$download_data <- downloadHandler(
-    filename = function() paste0("chronicle-usage-", format(Sys.Date(), "%Y-%m-%d"), ".json"),
+    filename = function() {
+      paste0("chronicle-usage-", format(Sys.Date(), "%Y-%m-%d"), ".json")
+    },
     content = function(file) chronicle_usage_to_json(tables(), file),
     contentType = "application/json"
   )

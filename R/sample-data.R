@@ -29,7 +29,13 @@ SAMPLE_LICENSE_SWITCH <- 0.55
 # from. Each type has a few real Connect `app_mode` values, assigned by content id.
 SAMPLE_APP_MODES <- list(
   shiny = c("shiny", "shiny", "shiny", "shiny", "shiny", "python-shiny"),
-  rmarkdown = c("rmd-static", "rmd-static", "rmd-static", "rmd-static", "jupyter-static"),
+  rmarkdown = c(
+    "rmd-static",
+    "rmd-static",
+    "rmd-static",
+    "rmd-static",
+    "jupyter-static"
+  ),
   quarto = c("quarto-static", "quarto-static", "quarto-static", "quarto-shiny")
 )
 
@@ -275,7 +281,8 @@ generate_user_pool <- function(n_users = 26, n_days = SAMPLE_SHORT_DAYS) {
     viewers <- which(roles == "viewer")
     ramp <- round(n_days * SAMPLE_USER_RAMP)
     created_day[roles != "viewer"] <- 1
-    created_day[viewers] <- 1 + floor((seq_along(viewers) - 1) / length(viewers) * ramp)
+    created_day[viewers] <- 1 +
+      floor((seq_along(viewers) - 1) / length(viewers) * ramp)
   }
 
   data.frame(
@@ -295,7 +302,11 @@ generate_user_pool <- function(n_users = 26, n_days = SAMPLE_SHORT_DAYS) {
 
 #' Generate stable content pool
 #' @noRd
-generate_content_pool <- function(n_content = 150, n_days = SAMPLE_SHORT_DAYS, user_pool) {
+generate_content_pool <- function(
+  n_content = 150,
+  n_days = SAMPLE_SHORT_DAYS,
+  user_pool
+) {
   set.seed(100) # Reproducible content
 
   # Type distribution: 60% shiny, 25% rmarkdown, 15% quarto
@@ -726,7 +737,8 @@ sample_connect_contents_internal <- function(n_days = SAMPLE_DAYS) {
       guid = items$content_guid,
       app_mode = items$app_mode,
       owner_guid = items$owner_guid,
-      created_time = as.POSIXct(dates[items$creation_day], tz = "UTC") + 9 * 3600,
+      created_time = as.POSIXct(dates[items$creation_day], tz = "UTC") +
+        9 * 3600,
       date = dates[day],
       stringsAsFactors = FALSE
     )
@@ -747,11 +759,14 @@ sample_connect_content_list_internal <- function(n_days = SAMPLE_DAYS) {
 
   # Last deployed comes from the deployment events, so the two datasets agree
   deployments <- sample_connect_deployments_internal(n_days)
-  last_deployed_dates <- as.Date(tapply(
-    deployments$date,
-    factor(deployments$content_guid, levels = content_pool$content_guid),
-    max
-  ), origin = "1970-01-01")
+  last_deployed_dates <- as.Date(
+    tapply(
+      deployments$date,
+      factor(deployments$content_guid, levels = content_pool$content_guid),
+      max
+    ),
+    origin = "1970-01-01"
+  )
   set.seed(600)
 
   data.frame(
@@ -879,7 +894,9 @@ sample_connect_content_totals_internal <- function(n_days = SAMPLE_DAYS) {
 }
 
 #' @noRd
-sample_connect_content_hits_totals_by_user_internal <- function(n_days = SAMPLE_DAYS) {
+sample_connect_content_hits_totals_by_user_internal <- function(
+  n_days = SAMPLE_DAYS
+) {
   dates <- generate_sample_date_sequence(n_days)
   user_pool <- generate_user_pool(26, n_days)
   content_pool <- generate_content_pool(150, n_days, user_pool)

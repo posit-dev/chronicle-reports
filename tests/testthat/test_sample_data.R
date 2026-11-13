@@ -36,12 +36,18 @@ test_that("every dataset has a populated product_id", {
   for (metric in curated) {
     data <- collect_curated(metric)
     expect_true("product_id" %in% names(data), info = metric)
-    expect_false(any(is.na(data$product_id) | data$product_id == ""), info = metric)
+    expect_false(
+      any(is.na(data$product_id) | data$product_id == ""),
+      info = metric
+    )
   }
   for (metric in raw) {
     data <- collect_raw(metric)
     expect_true("product_id" %in% names(data), info = metric)
-    expect_false(any(is.na(data$product_id) | data$product_id == ""), info = metric)
+    expect_false(
+      any(is.na(data$product_id) | data$product_id == ""),
+      info = metric
+    )
   }
 })
 
@@ -49,13 +55,19 @@ test_that("Connect moves between two product IDs and Workbench keeps one", {
   connect <- collect_curated("connect/user_totals")
   workbench <- collect_curated("workbench/user_totals")
 
-  expect_equal(sort(unique(connect$product_id)), c("connect-license-a", "connect-license-b"))
+  expect_equal(
+    sort(unique(connect$product_id)),
+    c("connect-license-a", "connect-license-b")
+  )
   expect_equal(unique(workbench$product_id), "workbench-license")
 
   # one Connect product ID is in use on any day, and the second follows the first
   expect_equal(nrow(connect), length(unique(connect$date)))
   by_date <- connect[order(connect$date), ]
-  expect_equal(rle(by_date$product_id)$values, c("connect-license-a", "connect-license-b"))
+  expect_equal(
+    rle(by_date$product_id)$values,
+    c("connect-license-a", "connect-license-b")
+  )
 })
 
 test_that("content hits carry a content type that matches the content list", {
@@ -88,12 +100,17 @@ test_that("the sample has deployments, including redeploys", {
   contents <- collect_raw("connect_contents")
 
   expect_gt(nrow(published), length(unique(published$content_guid)))
-  expect_true(all(c("timestamp", "content_guid", "user_guid", "bundle_id") %in% names(published)))
+  expect_true(all(
+    c("timestamp", "content_guid", "user_guid", "bundle_id") %in%
+      names(published)
+  ))
   expect_equal(anyDuplicated(published$bundle_id), 0L)
 
   # every deployed item has a type in a snapshot of its own license
   described <- unique(paste(contents$product_id, contents$guid))
-  expect_true(all(paste(published$product_id, published$content_guid) %in% described))
+  expect_true(all(
+    paste(published$product_id, published$content_guid) %in% described
+  ))
   expect_false(any(is.na(contents$app_mode) | contents$app_mode == ""))
 })
 
@@ -101,8 +118,15 @@ test_that("content last_deployed_time agrees with the deployment events", {
   published <- collect_raw("connect_content_published")
   content <- collect_curated("connect/content_list")
 
-  latest <- tapply(as.numeric(as.Date(published$timestamp)), published$content_guid, max)
-  listed <- stats::setNames(as.numeric(as.Date(content$last_deployed_time)), content$id)
+  latest <- tapply(
+    as.numeric(as.Date(published$timestamp)),
+    published$content_guid,
+    max
+  )
+  listed <- stats::setNames(
+    as.numeric(as.Date(content$last_deployed_time)),
+    content$id
+  )
 
   expect_equal(unname(listed[names(latest)]), as.vector(latest))
 })
@@ -112,7 +136,11 @@ test_that("activity grows over the period", {
   users <- tables$active_users
 
   for (product in c("connect", "workbench")) {
-    by_month <- tapply(users$users[users$product == product], users$month[users$product == product], max)
+    by_month <- tapply(
+      users$users[users$product == product],
+      users$month[users$product == product],
+      max
+    )
     expect_lt(by_month[[1]], by_month[[length(by_month) - 1]], label = product)
   }
 })
@@ -140,7 +168,10 @@ test_that("a short span is still available for fast tests", {
   path <- create_sample_chronicle_data()
   on.exit(unlink(path, recursive = TRUE))
 
-  hits <- dplyr::collect(chronicle_data("connect/content_hits_totals_by_user", path))
+  hits <- dplyr::collect(chronicle_data(
+    "connect/content_hits_totals_by_user",
+    path
+  ))
   expect_equal(length(unique(hits$date)), 30)
   expect_true("product_id" %in% names(hits))
 })
@@ -150,7 +181,10 @@ test_that("a sample without publish events is regenerated, not reused", {
   dir.create(file.path(path, "curated", "v2", "connect"), recursive = TRUE)
   expect_false(validate_sample_data_structure(path))
 
-  dir.create(file.path(path, "daily", "v2", "connect_content_published"), recursive = TRUE)
+  dir.create(
+    file.path(path, "daily", "v2", "connect_content_published"),
+    recursive = TRUE
+  )
   expect_true(validate_sample_data_structure(path))
 })
 
@@ -158,7 +192,10 @@ test_that("long-sample Connect user totals follow the viewer ramp", {
   totals <- sample_connect_user_totals_internal(SAMPLE_DAYS)
 
   expect_lt(totals$named_users[1], totals$named_users[nrow(totals)])
-  expect_equal(totals$named_users, totals$administrators + totals$publishers + totals$viewers)
+  expect_equal(
+    totals$named_users,
+    totals$administrators + totals$publishers + totals$viewers
+  )
   expect_equal(totals$named_users[nrow(totals)], 26L)
   expect_true(all(diff(totals$viewers) >= 0))
 })

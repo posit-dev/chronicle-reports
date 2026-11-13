@@ -5,7 +5,12 @@
 
 source_usage_app <- function() {
   env <- new.env(parent = globalenv())
-  app_file <- system.file("apps", "usage", "app.R", package = "chronicle.reports")
+  app_file <- system.file(
+    "apps",
+    "usage",
+    "app.R",
+    package = "chronicle.reports"
+  )
   withr::with_envvar(
     c(CHRONICLE_BASE_PATH = withr::local_tempdir(), CHRONICLE_USAGE_FILE = ""),
     source(app_file, local = env)
@@ -77,7 +82,11 @@ test_that("usage_series gives every product id every group", {
 test_that("usage_series copes with no rows", {
   env <- source_usage_app()
   months <- as.Date(c("2026-10-01", "2026-11-01"))
-  data <- dplyr::tibble(month = as.Date(character()), product_id = character(), users = numeric())
+  data <- dplyr::tibble(
+    month = as.Date(character()),
+    product_id = character(),
+    users = numeric()
+  )
 
   out <- env$usage_series(data, "users", months)
   expect_false(env$usage_has_data(out))
@@ -117,13 +126,19 @@ test_that("the y-axis title names the product id, except when there are none", {
   title <- env$usage_panel_y_title
 
   # no product ids at all: just the metric
-  expect_equal(title("(unspecified)", "(unspecified)", "Deployments"), "Deployments")
+  expect_equal(
+    title("(unspecified)", "(unspecified)", "Deployments"),
+    "Deployments"
+  )
   expect_equal(title("(unspecified)", "(unspecified)"), "")
 
   # real ids: each panel is labelled, including "(unspecified)" next to them
   expect_equal(title("p1", "p1", "Deployments"), "p1<br>Deployments")
   ids <- c("(unspecified)", "p1")
-  expect_equal(title("(unspecified)", ids, "Deployments"), "(unspecified)<br>Deployments")
+  expect_equal(
+    title("(unspecified)", ids, "Deployments"),
+    "(unspecified)<br>Deployments"
+  )
   expect_equal(title("p1", ids, "Deployments"), "p1<br>Deployments")
 })
 
@@ -131,10 +146,18 @@ test_that("a stacked chart without product ids has a plain y-axis title", {
   env <- source_usage_app()
   months <- as.Date(c("2026-10-01", "2026-11-01"))
   data <- dplyr::tibble(
-    month = months[1], product_id = "(unspecified)", app_mode = "shiny", deployments = 3
+    month = months[1],
+    product_id = "(unspecified)",
+    app_mode = "shiny",
+    deployments = 3
   )
   series <- env$usage_series(data, "deployments", months, group = "app_mode")
-  chart <- plotly::plotly_build(env$usage_stacked_chart(series, months, "app_mode", "Deployments"))
+  chart <- plotly::plotly_build(env$usage_stacked_chart(
+    series,
+    months,
+    "app_mode",
+    "Deployments"
+  ))
   title <- chart$x$layout$yaxis$title
   expect_equal(if (is.list(title)) title$text else title, "Deployments")
 })
@@ -144,15 +167,33 @@ test_that("charts build for several product ids", {
   tables <- usage_export_file()$tables
   months <- env$usage_window_months(tables)
 
-  line <- env$usage_series(tables$active_users[tables$active_users$product == "connect", ], "users", months)
+  line <- env$usage_series(
+    tables$active_users[tables$active_users$product == "connect", ],
+    "users",
+    months
+  )
   expect_s3_class(env$usage_line_chart(line, months, "Active users"), "plotly")
 
-  stacked <- env$usage_series(tables$content_hits, "hits", months, group = "app_mode")
-  chart <- plotly::plotly_build(env$usage_stacked_chart(stacked, months, "app_mode", "Hits"))
+  stacked <- env$usage_series(
+    tables$content_hits,
+    "hits",
+    months,
+    group = "app_mode"
+  )
+  chart <- plotly::plotly_build(env$usage_stacked_chart(
+    stacked,
+    months,
+    "app_mode",
+    "Hits"
+  ))
   # one trace per product id and content type
   expect_equal(length(chart$x$data), 2 * 2)
   # only the first panel contributes to the legend
-  shown <- vapply(chart$x$data, function(trace) isTRUE(trace$showlegend), logical(1))
+  shown <- vapply(
+    chart$x$data,
+    function(trace) isTRUE(trace$showlegend),
+    logical(1)
+  )
   expect_equal(sum(shown), 2L)
 })
 
@@ -207,16 +248,25 @@ test_that("the server renders every chart with several product ids", {
 
   withr::with_envvar(c(CHRONICLE_USAGE_FILE = exported$file), {
     shiny::testServer(env$server, {
-      session$setInputs(hits_group = "authenticated", deployments_metric = "deployments")
+      session$setInputs(
+        hits_group = "authenticated",
+        deployments_metric = "deployments"
+      )
       for (id in c(
-        "connect_active_users", "workbench_active_users", "content_hits",
-        "content_deployments", "sessions"
+        "connect_active_users",
+        "workbench_active_users",
+        "content_hits",
+        "content_deployments",
+        "sessions"
       )) {
         expect_no_error(output[[id]])
         expect_no_error(output[[paste0(id, "_plot")]])
       }
 
-      session$setInputs(hits_group = "app_mode", deployments_metric = "unique_content")
+      session$setInputs(
+        hits_group = "app_mode",
+        deployments_metric = "unique_content"
+      )
       expect_no_error(output$content_hits)
       expect_no_error(output$content_deployments)
     })
@@ -242,13 +292,25 @@ test_that("an empty report shows a message, not an error", {
   env <- source_usage_app()
   empty <- withr::local_tempdir()
 
-  withr::with_envvar(c(CHRONICLE_BASE_PATH = empty, CHRONICLE_USAGE_FILE = ""), {
-    shiny::testServer(env$server, {
-      session$setInputs(hits_group = "authenticated", deployments_metric = "deployments")
-      expect_error(suppressMessages(output$content_hits), class = "shiny.silent.error")
-      expect_error(suppressMessages(output$sessions), class = "shiny.silent.error")
-    })
-  })
+  withr::with_envvar(
+    c(CHRONICLE_BASE_PATH = empty, CHRONICLE_USAGE_FILE = ""),
+    {
+      shiny::testServer(env$server, {
+        session$setInputs(
+          hits_group = "authenticated",
+          deployments_metric = "deployments"
+        )
+        expect_error(
+          suppressMessages(output$content_hits),
+          class = "shiny.silent.error"
+        )
+        expect_error(
+          suppressMessages(output$sessions),
+          class = "shiny.silent.error"
+        )
+      })
+    }
+  )
 })
 
 test_that("a report rebuilt from an export flags the export's month, not today's", {
@@ -293,8 +355,10 @@ test_that("groups within the palette are left alone", {
   env <- source_usage_app()
   months <- as.Date("2026-11-01")
   data <- dplyr::tibble(
-    month = months, product_id = "p1",
-    app_mode = c("shiny", "quarto"), hits = c(1, 2)
+    month = months,
+    product_id = "p1",
+    app_mode = c("shiny", "quarto"),
+    hits = c(1, 2)
   )
 
   out <- env$usage_series(data, "hits", months, group = "app_mode")
