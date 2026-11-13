@@ -72,3 +72,23 @@ test_that("an export without an as-of date falls back to its generation date", {
 
   expect_equal(attr(chronicle_usage_from_json(file), "as_of"), as.Date("2026-10-31"))
 })
+
+test_that("an export from before a column existed loads with defaults", {
+  tables <- fixture_tables()
+  file <- withr::local_tempfile(fileext = ".json")
+  chronicle_usage_to_json(tables, file)
+
+  parsed <- jsonlite::fromJSON(file, simplifyVector = TRUE)
+  parsed$tables$content_deployments$unique_content <- NULL
+  parsed$tables$content_hits$app_mode <- NULL
+  parsed$tables$sessions$product_id <- NULL
+  jsonlite::write_json(parsed, file, auto_unbox = TRUE, dataframe = "rows")
+
+  restored <- chronicle_usage_from_json(file)
+
+  expect_equal(names(restored$content_deployments), names(tables$content_deployments))
+  expect_true(all(restored$content_deployments$unique_content == 0))
+  expect_true(all(restored$content_hits$app_mode == "unknown"))
+  expect_true(all(restored$sessions$product_id == "(unspecified)"))
+  expect_equal(restored$active_users, tables$active_users)
+})

@@ -18,8 +18,17 @@ Reads a file written by \code{\link[=chronicle_usage_to_json]{chronicle_usage_to
 list of tables as \code{\link[=chronicle_usage_data]{chronicle_usage_data()}}, so the usage report can be
 rebuilt from the file alone.
 }
+\section{Stability}{
+
+This function is experimental. Columns that the file lacks, for example
+because it was written before they were added, are filled with defaults:
+zero for counts, \code{FALSE} for flags, and \code{"(unspecified)"} or
+\code{"unknown"} for text.
+}
+
 \examples{
 \dontrun{
 tables <- chronicle_usage_from_json("chronicle-usage.json")
 }
 }
+\keyword{internal}

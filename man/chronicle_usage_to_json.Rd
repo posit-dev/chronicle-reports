@@ -31,3 +31,4 @@ tables <- chronicle_usage_data("/var/lib/posit-chronicle/data")
 chronicle_usage_to_json(tables, "chronicle-usage.json")
 }
 }
+\keyword{internal}

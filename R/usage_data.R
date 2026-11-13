@@ -272,6 +272,10 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #' the usage back to the license it was collected for; usage recorded without a
 #' product id is reported under `"(unspecified)"`.
 #'
+#' @section Stability:
+#' This function is experimental. Tables and columns may be added or changed in
+#' later versions as new metrics are included in the usage report.
+#'
 #' The result is the single input the usage report needs, and can be written
 #' to a small file with [chronicle_usage_to_json()].
 #'
@@ -297,6 +301,7 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #'   month. The reporting window is stored in the `"window"` attribute and the
 #'   date it was built for in the `"as_of"` attribute.
 #'   A dataset that is not available yields an empty table.
+#' @keywords internal
 #' @export
 #'
 #' @examples

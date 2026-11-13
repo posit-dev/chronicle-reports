@@ -15,6 +15,7 @@ USAGE_EXPORT_SCHEMA_VERSION <- 1L
 #' @param path File to write.
 #'
 #' @return `path`, invisibly.
+#' @keywords internal
 #' @export
 #'
 #' @examples
@@ -57,10 +58,17 @@ chronicle_usage_to_json <- function(tables, path) {
 #' list of tables as [chronicle_usage_data()], so the usage report can be
 #' rebuilt from the file alone.
 #'
+#' @section Stability:
+#' This function is experimental. Columns that the file lacks, for example
+#' because it was written before they were added, are filled with defaults:
+#' zero for counts, `FALSE` for flags, and `"(unspecified)"` or
+#' `"unknown"` for text.
+#'
 #' @param path Path to the JSON file.
 #'
 #' @return A list of tables, as returned by [chronicle_usage_data()], with the
 #'   `"as_of"` attribute restored from the file.
+#' @keywords internal
 #' @export
 #'
 #' @examples
@@ -98,6 +106,10 @@ chronicle_usage_from_json <- function(path) {
     template <- tables[[name]]
     rows$month <- as.Date(paste0(rows$month, "-01"))
     for (col in setdiff(names(template), "month")) {
+      if (is.null(rows[[col]])) {
+        # An export from before this column existed
+        rows[[col]] <- usage_column_default(col, template[[col]], nrow(rows))
+      }
       coerce <- switch(
         class(template[[col]])[1],
         numeric = as.numeric,
@@ -109,4 +121,20 @@ chronicle_usage_from_json <- function(path) {
     tables[[name]] <- dplyr::as_tibble(rows[names(template)])
   }
   tables
+}
+
+#' Values for a column that an older export does not have
+#'
+#' Counts default to zero. Text defaults to the same placeholder the report uses
+#' for data recorded without a value.
+#' @noRd
+usage_column_default <- function(name, template, n) {
+  if (is.numeric(template)) {
+    return(rep(0, n))
+  }
+  if (is.logical(template)) {
+    return(rep(FALSE, n))
+  }
+  placeholder <- if (name == "product_id") USAGE_UNSPECIFIED_PRODUCT else USAGE_UNKNOWN_APP_MODE
+  rep(placeholder, n)
 }

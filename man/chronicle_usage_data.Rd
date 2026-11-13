@@ -34,7 +34,11 @@ curated and daily data. Every table is grouped by \code{product_id}, which ties
 the usage back to the license it was collected for; usage recorded without a
 product id is reported under \code{"(unspecified)"}.
 }
-\details{
+\section{Stability}{
+
+This function is experimental. Tables and columns may be added or changed in
+later versions as new metrics are included in the usage report.
+
 The result is the single input the usage report needs, and can be written
 to a small file with \code{\link[=chronicle_usage_to_json]{chronicle_usage_to_json()}}.
 
@@ -49,9 +53,11 @@ counts each time. \code{unique_content} counts each item once.
 \item \strong{Sessions}: started Workbench sessions by IDE (\code{session_type}).
 }
 }
+
 \examples{
 \dontrun{
 tables <- chronicle_usage_data("/var/lib/posit-chronicle/data")
 tables$active_users
 }
 }
+\keyword{internal}
