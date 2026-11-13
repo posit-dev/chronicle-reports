@@ -22,9 +22,13 @@ create_usage_fixture <- function(base_path = NULL) {
 
   hits <- data.frame(
     date = as.Date(c(
-      "2026-10-03", "2026-10-03", "2026-10-03",
-      "2026-10-20", "2026-10-20",
-      "2026-11-02", "2026-11-02",
+      "2026-10-03",
+      "2026-10-03",
+      "2026-10-03",
+      "2026-10-20",
+      "2026-10-20",
+      "2026-11-02",
+      "2026-11-02",
       "2024-01-01"
     )),
     product_id = c("p1", "p1", "p1", "p1", "p1", "p1", "p2", "p1"),
@@ -33,8 +37,14 @@ create_usage_fixture <- function(base_path = NULL) {
     user_guid = c("u1", "u2", NA, "u1", "", "u1", "u9", "u5"),
     hits = c(5L, 2L, 4L, 3L, 1L, 1L, 7L, 100L),
     app_mode = c(
-      "shiny", "shiny", "shiny", "quarto-static", "quarto-static", "shiny",
-      "shiny", "shiny"
+      "shiny",
+      "shiny",
+      "shiny",
+      "quarto-static",
+      "quarto-static",
+      "shiny",
+      "shiny",
+      "shiny"
     ),
     stringsAsFactors = FALSE
   )
@@ -46,7 +56,11 @@ create_usage_fixture <- function(base_path = NULL) {
 
   sessions <- data.frame(
     date = as.Date(c(
-      "2026-10-03", "2026-10-03", "2026-10-04", "2026-10-04", "2026-11-01"
+      "2026-10-03",
+      "2026-10-03",
+      "2026-10-04",
+      "2026-10-04",
+      "2026-11-01"
     )),
     product_id = "p1",
     environment = "prod",
@@ -64,8 +78,12 @@ create_usage_fixture <- function(base_path = NULL) {
   published <- data.frame(
     timestamp = as.POSIXct(
       c(
-        "2026-10-05 09:00:00", "2026-10-05 15:00:00", "2026-10-05 16:00:00",
-        "2026-10-25 12:00:00", "2026-11-03 12:00:00", "2024-01-01 12:00:00"
+        "2026-10-05 09:00:00",
+        "2026-10-05 15:00:00",
+        "2026-10-05 16:00:00",
+        "2026-10-25 12:00:00",
+        "2026-11-03 12:00:00",
+        "2024-01-01 12:00:00"
       ),
       tz = "UTC"
     ),
@@ -82,8 +100,10 @@ create_usage_fixture <- function(base_path = NULL) {
   contents <- data.frame(
     timestamp = as.POSIXct(
       c(
-        "2026-10-01 08:00:00", "2026-10-01 08:00:00",
-        "2026-11-05 08:00:00", "2026-11-05 08:00:00"
+        "2026-10-01 08:00:00",
+        "2026-10-01 08:00:00",
+        "2026-11-05 08:00:00",
+        "2026-11-05 08:00:00"
       ),
       tz = "UTC"
     ),

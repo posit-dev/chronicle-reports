@@ -21,13 +21,14 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Mark Tucker \email{mark.tucker@posit.co}
   \item Matt Urbina \email{matt.urbina@posit.co}
   \item Tim Margheim \email{tim.margheim@posit.co}
 }
 
 Other contributors:
 \itemize{
-  \item Posit Software, PBC (03wc8by49) [copyright holder, funder]
+  \item Posit Software, PBC (\href{https://ror.org/03wc8by49}{ROR}) [copyright holder, funder]
 }
 
 }
