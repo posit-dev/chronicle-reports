@@ -131,6 +131,14 @@ usage_series <- function(data, value, months, group = NULL) {
     dplyr::as_tibble()
 }
 
+# One product's daily server counts, sorted for drawing. `value` is the daily
+# maximum, so usage_has_data() works as it does for the monthly series.
+usage_servers_series <- function(data, product) {
+  data[data$product == product, ] |>
+    dplyr::mutate(value = .data$servers_max) |>
+    dplyr::arrange(.data$product_id, .data$date)
+}
+
 # TRUE when there is anything other than zeros to draw.
 usage_has_data <- function(series) {
   nrow(series) > 0 && any(series$value > 0)
@@ -260,16 +268,97 @@ usage_stacked_chart <- function(
     )
 }
 
+# One panel per product id: the daily range of servers running as a band, the
+# median as a line, and the distinct host names seen as a dashed line. Unlike
+# the monthly charts the x-axis is a real date axis.
+usage_servers_chart <- function(series, y_title = "Servers running") {
+  product_ids <- sort(unique(series$product_id))
+  band_color <- grDevices::adjustcolor(BRAND_COLORS$BLUE, alpha.f = 0.2)
+
+  panels <- lapply(seq_along(product_ids), function(i) {
+    panel <- series[series$product_id == product_ids[i], ]
+    panel$hover <- paste0(
+      format(panel$date, "%b %d, %Y"),
+      "<br>Min: ",
+      panel$servers_min,
+      "<br>Max: ",
+      panel$servers_max,
+      "<br>Median: ",
+      panel$servers_median,
+      "<br>Distinct hosts: ",
+      panel$hosts_seen
+    )
+
+    plotly::plot_ly(
+      panel,
+      x = ~date,
+      legendgroup = "band",
+      hoverinfo = "text",
+      text = ~hover
+    ) |>
+      plotly::add_lines(
+        y = ~servers_max,
+        name = "Min to max",
+        legendgroup = "band",
+        showlegend = FALSE,
+        line = list(color = "transparent", width = 0)
+      ) |>
+      plotly::add_lines(
+        y = ~servers_min,
+        name = "Min to max",
+        legendgroup = "band",
+        showlegend = i == 1,
+        fill = "tonexty",
+        fillcolor = band_color,
+        line = list(color = "transparent", width = 0)
+      ) |>
+      plotly::add_lines(
+        y = ~servers_median,
+        name = "Median",
+        legendgroup = "median",
+        showlegend = i == 1,
+        line = list(color = BRAND_COLORS$BLUE)
+      ) |>
+      plotly::add_lines(
+        y = ~hosts_seen,
+        name = "Distinct hosts",
+        legendgroup = "hosts",
+        showlegend = i == 1,
+        line = list(color = BRAND_COLORS$BURGUNDY, dash = "dash")
+      ) |>
+      plotly::layout(
+        xaxis = list(title = "", type = "date", fixedrange = TRUE),
+        yaxis = list(
+          title = usage_panel_y_title(product_ids[i], product_ids, y_title),
+          rangemode = "tozero",
+          fixedrange = TRUE
+        ),
+        legend = list(orientation = "h", y = -0.15)
+      ) |>
+      plotly::config(displayModeBar = FALSE)
+  })
+
+  plotly::subplot(
+    panels,
+    nrows = length(panels),
+    shareX = TRUE,
+    titleY = TRUE,
+    margin = 0.04
+  ) |>
+    plotly::layout(legend = list(orientation = "h", y = -0.15))
+}
+
 # ==============================================
 # UI
 # ==============================================
 
 # A chart in a card. The plot is rendered through a UI output so that the
 # height can follow the number of product ids.
-chart_card <- function(title, output_id, controls = NULL) {
+chart_card <- function(title, output_id, controls = NULL, caption = NULL) {
   bslib::card(
     bslib::card_header(title),
     controls,
+    if (!is.null(caption)) p(class = "text-muted small mb-0", caption),
     shinycssloaders::withSpinner(
       uiOutput(paste0(output_id, "_plot")),
       color = BRAND_COLORS$BLUE
@@ -278,6 +367,12 @@ chart_card <- function(title, output_id, controls = NULL) {
     fill = FALSE
   )
 }
+
+SERVERS_CAPTION <- paste(
+  "Band = lowest to highest number of servers reporting in any 5-minute",
+  "window that day. Dashed = distinct host names seen that day.",
+  "The current day is not included."
+)
 
 # The container for a plot, `height` pixels tall
 plot_container <- function(output_id, height) {
@@ -342,11 +437,27 @@ ui <- bslib::page_fluid(
       )
     )
   ),
+  bslib::layout_columns(
+    col_widths = 6,
+    chart_card(
+      "Servers running",
+      "connect_servers",
+      caption = SERVERS_CAPTION
+    )
+  ),
   h4("Posit Workbench"),
   bslib::layout_columns(
     col_widths = c(6, 6),
     chart_card("Active users", "workbench_active_users"),
     chart_card("Sessions started", "sessions")
+  ),
+  bslib::layout_columns(
+    col_widths = 6,
+    chart_card(
+      "Servers running",
+      "workbench_servers",
+      caption = SERVERS_CAPTION
+    )
   )
 )
 
@@ -461,6 +572,18 @@ server <- function(input, output, session) {
     },
     stacked = TRUE
   )
+
+  for (product in c("connect", "workbench")) {
+    local({
+      product <- product
+      define_chart(
+        paste0(product, "_servers"),
+        function() usage_servers_series(tables()$servers, product),
+        usage_servers_chart,
+        stacked = TRUE
+      )
+    })
+  }
 
   # The export is the same list of tables the charts draw from.
   output$download_data <- downloadHandler(
