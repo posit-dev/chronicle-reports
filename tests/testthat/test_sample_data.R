@@ -148,9 +148,11 @@ test_that("activity grows over the period", {
 test_that("the usage report has data in every table across several months", {
   tables <- chronicle_usage_data(sample_path)
 
-  for (name in names(tables)) {
+  for (name in setdiff(names(tables), "servers")) {
     expect_gte(length(unique(tables[[name]]$month)), 6, label = name)
   }
+  # servers are daily, with no month column
+  expect_gte(length(unique(tables$servers$date)), 180)
   expect_equal(
     sort(unique(tables$content_hits$product_id)),
     c("connect-license-a", "connect-license-b")
@@ -179,6 +181,12 @@ test_that("a short span is still available for fast tests", {
 test_that("a sample without publish events is regenerated, not reused", {
   path <- withr::local_tempdir()
   dir.create(file.path(path, "curated", "v2", "connect"), recursive = TRUE)
+  for (product in c("connect", "workbench")) {
+    dir.create(
+      file.path(path, "curated", "v2", product, "heartbeats"),
+      recursive = TRUE
+    )
+  }
   expect_false(validate_sample_data_structure(path))
 
   dir.create(
@@ -186,6 +194,47 @@ test_that("a sample without publish events is regenerated, not reused", {
     recursive = TRUE
   )
   expect_true(validate_sample_data_structure(path))
+})
+
+test_that("a sample without heartbeats is regenerated, not reused", {
+  path <- withr::local_tempdir()
+  dir.create(file.path(path, "curated", "v2", "connect"), recursive = TRUE)
+  dir.create(
+    file.path(path, "daily", "v2", "connect_content_published"),
+    recursive = TRUE
+  )
+  expect_false(validate_sample_data_structure(path))
+})
+
+test_that("the sample has heartbeats for both products", {
+  for (product in c("connect", "workbench")) {
+    beats <- collect_curated(paste0(product, "/heartbeats"))
+
+    expect_setequal(
+      names(beats),
+      c("date", "timestamp", "host_name", "product_id", "environment")
+    )
+    expect_gt(nrow(beats), 0)
+    expect_false(any(is.na(beats$host_name) | beats$host_name == ""))
+    expect_equal(length(unique(beats$date)), 180)
+  }
+})
+
+test_that("the sample servers show an outage, an extra host and a churn day", {
+  servers <- chronicle_usage_data(sample_path)$servers
+
+  expect_gt(nrow(servers), 0)
+  for (p in c("connect", "workbench")) {
+    s <- servers[servers$product == p, ]
+    # the outage is on a day of the license in use at the end of the sample
+    current <- s[s$product_id == s$product_id[which.max(s$date)], ]
+    expect_true(any(s$hosts_seen > s$servers_max), label = p)
+    expect_true(
+      any(current$servers_min == 0 & current$servers_max > 0),
+      label = p
+    )
+    expect_true(any(s$servers_max > stats::median(s$servers_median)), label = p)
+  }
 })
 
 test_that("long-sample Connect user totals follow the viewer ramp", {
