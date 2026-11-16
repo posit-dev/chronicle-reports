@@ -226,8 +226,12 @@ test_that("the sample servers show an outage, an extra host and a churn day", {
   expect_gt(nrow(servers), 0)
   for (p in c("connect", "workbench")) {
     s <- servers[servers$product == p, ]
-    # the outage is on a day of the license in use at the end of the sample
-    current <- s[s$product_id == s$product_id[which.max(s$date)], ]
+    # the outage is on a day of the license in use at the end of the sample:
+    # the only product ID with a server running on the last day
+    last_day <- s[s$date == max(s$date), ]
+    current_id <- last_day$product_id[last_day$servers_max > 0]
+    expect_length(current_id, 1)
+    current <- s[s$product_id == current_id, ]
     expect_true(any(s$hosts_seen > s$servers_max), label = p)
     expect_true(
       any(current$servers_min == 0 & current$servers_max > 0),
