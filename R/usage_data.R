@@ -334,7 +334,7 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #' @return A list of five tibbles: `active_users` (`month`, `product`,
 #'   `product_id`, `users`), `content_hits` (`month`, `product_id`, `app_mode`,
 #'   `authenticated`, `hits`), `content_deployments` (`month`, `product_id`,
-#'   `app_mode`, `deployments`, `unique_content`) and `sessions` (`month`,
+#'   `app_mode`, `deployments`, `unique_content`), `sessions` (`month`,
 #'   `product_id`, `session_type`, `sessions`) and `servers` (`date`, `product`,
 #'   `product_id`, `servers_min`, `servers_max`, `servers_median`,
 #'   `hosts_seen`). `month` is the first day of the month and `date` a day.
