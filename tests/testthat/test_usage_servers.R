@@ -48,15 +48,16 @@ test_that("two missed heartbeats dip", {
 })
 
 test_that("single startup heartbeat counts two windows", {
-  # p2 keeps beating, so p1's day runs on to the end of the day
+  # p1 has no rows after its second window, so only those two are counted
   hb <- rbind(
     beats("a", "2026-11-01 12:00:30", "2026-11-01 12:00:30"),
     beats("b", "2026-11-01 00:00:00", "2026-11-01 23:55:00", "p2")
   )
   out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-01"))
   out <- out[out$product_id == "p1", ]
+  expect_equal(out$servers_min, 1)
   expect_equal(out$servers_max, 1)
-  expect_equal(out$servers_median, 0)
+  expect_equal(out$servers_median, 1)
 })
 
 test_that("churn", {
@@ -174,16 +175,17 @@ test_that("zero fill stops at the latest window of the newest day", {
   expect_equal(out$servers_min, 1)
 })
 
-test_that("a product that goes quiet is zero-filled to the latest beat", {
+test_that("a product that stops reporting has no rows after its last beat", {
   hb <- rbind(
     beats("a", "2026-11-01 00:00:00", "2026-11-01 23:55:00", "p1"),
     beats("b", "2026-11-01 00:00:00", "2026-11-03 11:55:00", "p2")
   )
   out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-04"))
   p1 <- out[out$product_id == "p1", ]
-  expect_equal(p1$date, d(c("2026-11-01", "2026-11-02", "2026-11-03")))
-  expect_equal(p1$servers_max, c(1, 1, 0))
-  expect_equal(p1$servers_min, c(1, 0, 0))
+  # The last beat at 23:55 still counts in the 00:00 window of 11-02
+  expect_equal(p1$date, d(c("2026-11-01", "2026-11-02")))
+  expect_equal(p1$servers_max, c(1, 1))
+  expect_equal(p1$servers_min, c(1, 1))
   expect_equal(max(out$date), d("2026-11-03"))
 })
 
@@ -238,6 +240,7 @@ test_that("the chunked heartbeat read equals counting all heartbeats at once", {
   expect_equal(sum(february), 27)
   expect_true(all(p3$servers_max[february] == 0))
   expect_equal(min(chunked$date[chunked$product_id == "p2"]), d("2026-08-14"))
+  expect_equal(max(chunked$date[chunked$product_id == "p2"]), d("2026-10-20"))
 })
 
 test_that("column types do not depend on the number of windows", {
