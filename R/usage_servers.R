@@ -135,7 +135,10 @@ usage_server_counts <- function(
     dplyr::left_join(hosts, by = c("product_id", "date")) |>
     dplyr::mutate(
       hosts_seen = as.numeric(dplyr::coalesce(.data$hosts_seen, 0L)),
-      dplyr::across(c("servers_min", "servers_max"), as.numeric)
+      dplyr::across(
+        c("servers_min", "servers_max", "servers_median"),
+        as.numeric
+      )
     ) |>
     dplyr::arrange(.data$product_id, .data$date) |>
     dplyr::select(

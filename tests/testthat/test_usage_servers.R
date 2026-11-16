@@ -246,3 +246,26 @@ test_that("the chunked heartbeat read equals counting all heartbeats at once", {
   expect_true(all(p3$servers_max[february] == 0))
   expect_equal(min(chunked$date[chunked$product_id == "p2"]), d("2026-08-14"))
 })
+
+test_that("column types do not depend on the number of windows", {
+  classes <- function(x) vapply(x, function(col) class(col)[1], "")
+  empty <- usage_server_counts(
+    beats("a", "2026-11-01 00:00:00", "2026-11-01 00:00:00")[0, ],
+    d("2026-11-01"),
+    d("2026-11-01")
+  )
+  # 241 windows, an odd count
+  odd <- usage_server_counts(
+    beats("a", "2026-11-01 00:00:00", "2026-11-01 20:00:00"),
+    d("2026-11-01"),
+    d("2026-11-01")
+  )
+  multi <- usage_server_counts(
+    beats("a", "2026-11-01 00:00:00", "2026-11-02 23:55:00"),
+    d("2026-11-01"),
+    d("2026-11-02")
+  )
+  expect_identical(classes(odd), classes(empty))
+  expect_identical(classes(multi), classes(empty))
+  expect_type(odd$servers_median, "double")
+})
