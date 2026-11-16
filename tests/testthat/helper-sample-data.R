@@ -7,8 +7,10 @@
 #'
 #' @param base_path Base path where Chronicle data should be created.
 #'   If NULL, creates in a temporary directory.
+#' @param n_days Days of history. Tests default to 30, a shorter span than the
+#'   package's sample data, so they stay fast and their counts stay fixed.
 #' @return The base_path
-create_sample_chronicle_data <- function(base_path = NULL) {
+create_sample_chronicle_data <- function(base_path = NULL, n_days = 30L) {
   if (is.null(base_path)) {
     base_path <- file.path(
       tempdir(),
@@ -16,7 +18,7 @@ create_sample_chronicle_data <- function(base_path = NULL) {
     )
   }
 
-  create_sample_chronicle_data_internal(base_path)
+  create_sample_chronicle_data_internal(base_path, n_days = n_days)
   base_path
 }
 
@@ -41,9 +43,9 @@ write_raw_parquet_internal <- function(
 #' Create raw sample data for tests
 #'
 #' @param base_path Base path for Chronicle data
-create_raw_test_data <- function(base_path) {
+create_raw_test_data <- function(base_path, n_days = 30L) {
   write_raw_parquet_internal(
-    sample_raw_connect_users_internal(),
+    sample_raw_connect_users_internal(n_days),
     base_path,
     "connect_users",
     frequency = "daily"

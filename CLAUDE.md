@@ -25,6 +25,12 @@ All reports are now located in [inst/apps/](inst/apps/) and can be run using `ch
    - Tracks: licensed users, daily active users, session metrics
    - Entry point: `chronicle_run_app("workbench")`
 
+3. **Usage Report** ([inst/apps/usage/app.R](inst/apps/usage/app.R))
+   - Monthly usage per `product_id` over the last 12 months: active users, content hits, content deployments, sessions started
+   - Data comes from `chronicle_usage_data()` ([R/usage_data.R](R/usage_data.R)); the app only consumes the table list it returns
+   - Download button exports an aggregate-only JSON file ([R/usage_export.R](R/usage_export.R)); `CHRONICLE_USAGE_FILE` rebuilds the report from it
+   - Entry point: `chronicle_run_app("usage")`
+
 ### Key Files
 
 - [R/utils.R](R/utils.R) - Shared utility functions
@@ -60,7 +66,7 @@ Reports expect Chronicle data at a base path (default: `/var/lib/posit-chronicle
 ```r
 # List available apps
 chronicle_list_apps()
-# Returns: c("connect", "workbench")
+# Returns: c("connect", "usage", "workbench")
 
 # Run an app with local filesystem data
 chronicle_run_app("connect", base_path = "/path/to/chronicle/data")

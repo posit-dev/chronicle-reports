@@ -5,3 +5,6 @@ linters: linters_with_defaults(
     object_name_linter(styles = c("SNAKE_CASE", "snake_case")),
     indentation_linter = NULL
   )
+exclusions: list(
+    "tests/testthat" = list(object_usage_linter = Inf)
+  )

@@ -1,3 +1,8 @@
+# chronicle.reports (development version)
+
+* Added the `usage` report, which shows monthly active users, content hits, content deployments and sessions started for the last 12 months, with every product ID as its own series. A download button exports the monthly counts as a small JSON file with no user or content details. `chronicle_usage_data()`, `chronicle_usage_to_json()` and `chronicle_usage_from_json()` build the report's data and read and write that file.
+* `chronicle_sample_data()` now covers about six months, up from 30 days, and includes what the usage report needs: a `product_id` on every dataset (Connect moves between two product IDs part way through, as when a license is renewed), a content type (`app_mode`) on content hits, and raw Connect publish events and content snapshots for deployments. Sample content types now use Connect's `app_mode` values, such as `rmd-static` and `quarto-static`. Generating the sample takes a few seconds and about 10 MB.
+
 # chronicle.reports 1.1.0
 
 * chronicle.reports now requires R 4.2.0 or later.
