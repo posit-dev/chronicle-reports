@@ -396,7 +396,7 @@ ui <- bslib::page_fluid(
       ),
       p(
         class = "text-muted small mt-1 mb-0",
-        "Monthly counts only, with no user or content details."
+        "Monthly counts and daily server counts only, with no user or content details."
       )
     )
   ),
