@@ -201,3 +201,48 @@ test_that("heartbeats after last_date are not counted but show data is current",
   expect_equal(out$servers_max, c(1, 0))
   expect_equal(out$hosts_seen, c(1, 0))
 })
+
+test_that("the chunked heartbeat read equals counting all heartbeats at once", {
+  today <- d("2026-11-06")
+  window <- usage_window(12, today)
+  outage_start <- as.POSIXct("2026-10-31 23:45:00", tz = "UTC")
+  outage <- outage_start + 300 * 0:6
+  hb <- rbind(
+    # p1 runs throughout, with host churn and an outage across 10-31/11-01
+    beats("a", "2025-11-30 00:00:00", "2026-10-15 11:55:00", "p1"),
+    beats("b", "2026-10-15 12:00:00", "2026-11-06 06:00:00", "p1"),
+    beats("c", "2026-09-01 00:00:00", "2026-09-03 00:00:00", "p1"),
+    # p2 first appears mid-range and stops before the end
+    beats("x", "2026-08-14 13:00:00", "2026-10-20 08:00:00", "p2", by = 290),
+    # p3 is silent for all of February, then comes back
+    beats("y", "2025-12-10 00:00:00", "2026-01-31 23:55:00", "p3"),
+    beats("y", "2026-03-01 00:10:00", "2026-03-02 00:00:00", "p3")
+  )
+  hb <- hb[!hb$timestamp %in% outage, ]
+
+  path <- withr::local_tempdir()
+  write_usage_heartbeats(hb, path, "connect/heartbeats")
+  chunked <- usage_read_heartbeats("connect", path, window, today)
+
+  whole <- usage_server_counts(hb, window[1], today - 1) |>
+    dplyr::mutate(product = "connect", .after = "date")
+
+  expect_identical(as.data.frame(chunked), as.data.frame(whole))
+  expect_identical(
+    usage_heartbeat_chunks(window[1], today - 1)$from[1:2],
+    d(c("2025-12-01", "2026-01-01"))
+  )
+  # the outage across the chunk boundary shows on both days
+  p1 <- chunked[chunked$product_id == "p1", ]
+  expect_equal(
+    p1$servers_min[p1$date %in% d(c("2026-10-31", "2026-11-01"))],
+    c(0, 0)
+  )
+  # p3 is zero for February after 02-01 (its 00:00 window is still covered),
+  # p2 has no rows before it first appears
+  p3 <- chunked[chunked$product_id == "p3", ]
+  february <- p3$date >= d("2026-02-02") & p3$date <= d("2026-02-28")
+  expect_equal(sum(february), 27)
+  expect_true(all(p3$servers_max[february] == 0))
+  expect_equal(min(chunked$date[chunked$product_id == "p2"]), d("2026-08-14"))
+})
