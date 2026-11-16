@@ -382,8 +382,7 @@ test_that("usage_servers_series filters by product and adds value", {
     product_id = c("p2", "p1", "w1"),
     servers_min = c(1, 1, 2),
     servers_max = c(3, 2, 4),
-    servers_median = c(2, 1, 3),
-    hosts_seen = c(3, 2, 4)
+    servers_median = c(2, 1, 3)
   )
 
   out <- env$usage_servers_series(data, "connect")
@@ -393,7 +392,7 @@ test_that("usage_servers_series filters by product and adds value", {
   expect_true(env$usage_has_data(out))
 })
 
-test_that("usage_servers_chart draws a band, median and hosts line per id", {
+test_that("usage_servers_chart draws a band and a median line per id", {
   env <- source_usage_app()
   data <- dplyr::tibble(
     date = rep(as.Date(c("2026-11-01", "2026-11-02")), 2),
@@ -401,8 +400,7 @@ test_that("usage_servers_chart draws a band, median and hosts line per id", {
     product_id = rep(c("p1", "p2"), each = 2),
     servers_min = 1,
     servers_max = c(2, 3, 4, 5),
-    servers_median = c(1, 2, 3, 4),
-    hosts_seen = c(2, 3, 4, 5)
+    servers_median = c(1, 2, 3, 4)
   )
   series <- env$usage_servers_series(data, "connect")
 
@@ -410,8 +408,8 @@ test_that("usage_servers_chart draws a band, median and hosts line per id", {
   json <- as.character(jsonlite::toJSON(chart$x$data, auto_unbox = TRUE))
 
   expect_match(json, '"Median"', fixed = TRUE)
-  expect_match(json, '"Distinct hosts"', fixed = TRUE)
-  expect_match(json, '"dash":"dash"', fixed = TRUE)
+  expect_no_match(json, "Distinct hosts", fixed = TRUE)
+  expect_no_match(json, '"dash":"dash"', fixed = TRUE)
   expect_match(json, "Min", fixed = TRUE)
   expect_match(json, "Max", fixed = TRUE)
 })
@@ -424,8 +422,7 @@ test_that("usage_servers_chart marks the points of a short series", {
     product_id = c("p1", rep("p2", 5)),
     servers_min = 1,
     servers_max = 2,
-    servers_median = 1,
-    hosts_seen = 2
+    servers_median = 1
   )
   series <- env$usage_servers_series(data, "connect")
 
@@ -437,5 +434,4 @@ test_that("usage_servers_chart marks the points of a short series", {
 
   # p1 has a single day, which a line alone does not draw
   expect_equal(modes("Median"), c("lines+markers", "lines"))
-  expect_equal(modes("Distinct hosts"), c("lines+markers", "lines"))
 })

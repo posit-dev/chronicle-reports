@@ -43,8 +43,7 @@ test_that("returns the five tables with the documented columns", {
       "product_id",
       "servers_min",
       "servers_max",
-      "servers_median",
-      "hosts_seen"
+      "servers_median"
     )
   )
 })
@@ -168,14 +167,13 @@ test_that("missing datasets give empty tables with the right columns", {
     c("month", "product_id", "app_mode", "authenticated", "hits")
   )
   expect_s3_class(tables$servers$date, "Date")
-  expect_type(tables$servers$hosts_seen, "double")
 })
 
 test_that("servers has both products and numeric columns", {
   servers <- usage_fixture_tables()$servers
   expect_setequal(servers$product, c("connect", "workbench"))
   expect_false("host_name" %in% names(servers))
-  for (col in c("servers_min", "servers_max", "servers_median", "hosts_seen")) {
+  for (col in c("servers_min", "servers_max", "servers_median")) {
     expect_type(servers[[col]], "double")
   }
 })
@@ -195,7 +193,6 @@ test_that("servers values for the fixture", {
       servers$date == as.Date("2026-10-03"),
   ]
   expect_equal(nrow(day), 1L)
-  expect_equal(day$hosts_seen, 2)
   expect_equal(day$servers_max, 2)
 })
 

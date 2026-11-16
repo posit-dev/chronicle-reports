@@ -24,8 +24,8 @@ A list of five tibbles: \code{active_users} (\code{month}, \code{product},
 \code{authenticated}, \code{hits}), \code{content_deployments} (\code{month}, \code{product_id},
 \code{app_mode}, \code{deployments}, \code{unique_content}), \code{sessions} (\code{month},
 \code{product_id}, \code{session_type}, \code{sessions}) and \code{servers} (\code{date}, \code{product},
-\code{product_id}, \code{servers_min}, \code{servers_max}, \code{servers_median},
-\code{hosts_seen}). \code{month} is the first day of the month and \code{date} a day.
+\code{product_id}, \code{servers_min}, \code{servers_max}, \code{servers_median}).
+\code{month} is the first day of the month and \code{date} a day.
 The reporting window is stored in the \code{"window"} attribute and the date it
 was built for in the \code{"as_of"} attribute.
 A dataset that is not available yields an empty table.
@@ -57,11 +57,10 @@ counts each time. \code{unique_content} counts each item once.
 windows and a host is running in a window if it sent a heartbeat in that
 window or the previous one. \code{servers_min}, \code{servers_max} and
 \code{servers_median} are taken over up to 288 windows of the day (fewer on a
-product ID's first day and on the last day with heartbeats), and
-\code{hosts_seen} is the number of distinct host names with a heartbeat that
-day. Days run through the day before \code{today}, or through the last day with
-heartbeats if that is earlier; \code{date} is a UTC day. A product ID that stops
-reporting shows 0 from then on, up to the last day with heartbeats.
+product ID's first day and on the last day with heartbeats). Days run
+through the day before \code{today}, or through the last day with heartbeats if
+that is earlier; \code{date} is a UTC day. A product ID that stops reporting
+shows 0 from then on, up to the last day with heartbeats.
 }
 }
 

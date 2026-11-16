@@ -89,8 +89,7 @@ usage_empty_tables <- function(window = NULL) {
       product_id = character(),
       servers_min = numeric(),
       servers_max = numeric(),
-      servers_median = numeric(),
-      hosts_seen = numeric()
+      servers_median = numeric()
     )
   )
   attr(tables, "window") <- window
@@ -324,11 +323,10 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #'   windows and a host is running in a window if it sent a heartbeat in that
 #'   window or the previous one. `servers_min`, `servers_max` and
 #'   `servers_median` are taken over up to 288 windows of the day (fewer on a
-#'   product ID's first day and on the last day with heartbeats), and
-#'   `hosts_seen` is the number of distinct host names with a heartbeat that
-#'   day. Days run through the day before `today`, or through the last day with
-#'   heartbeats if that is earlier; `date` is a UTC day. A product ID that stops
-#'   reporting shows 0 from then on, up to the last day with heartbeats.
+#'   product ID's first day and on the last day with heartbeats). Days run
+#'   through the day before `today`, or through the last day with heartbeats if
+#'   that is earlier; `date` is a UTC day. A product ID that stops reporting
+#'   shows 0 from then on, up to the last day with heartbeats.
 #'
 #' @param base_path Base path to Chronicle data directory
 #' @param months Number of calendar months to include, ending with the month
@@ -340,8 +338,8 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #'   `authenticated`, `hits`), `content_deployments` (`month`, `product_id`,
 #'   `app_mode`, `deployments`, `unique_content`), `sessions` (`month`,
 #'   `product_id`, `session_type`, `sessions`) and `servers` (`date`, `product`,
-#'   `product_id`, `servers_min`, `servers_max`, `servers_median`,
-#'   `hosts_seen`). `month` is the first day of the month and `date` a day.
+#'   `product_id`, `servers_min`, `servers_max`, `servers_median`).
+#'   `month` is the first day of the month and `date` a day.
 #'   The reporting window is stored in the `"window"` attribute and the date it
 #'   was built for in the `"as_of"` attribute.
 #'   A dataset that is not available yields an empty table.
