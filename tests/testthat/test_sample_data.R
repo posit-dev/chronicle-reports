@@ -216,8 +216,32 @@ test_that("the sample has heartbeats for both products", {
     )
     expect_gt(nrow(beats), 0)
     expect_false(any(is.na(beats$host_name) | beats$host_name == ""))
-    expect_equal(length(unique(beats$date)), 180)
+    # Workbench has four days without any heartbeat
+    expect_equal(
+      length(unique(beats$date)),
+      if (product == "workbench") 176 else 180
+    )
   }
+})
+
+test_that("the sample Workbench servers have a four-day outage", {
+  servers <- chronicle_usage_data(sample_path)$servers
+  s <- servers[servers$product == "workbench", ]
+  last_day <- s[s$date == max(s$date), ]
+  current <- s[s$product_id == last_day$product_id[last_day$servers_max > 0], ]
+
+  # The days without a heartbeat are zero-filled. The last beat before the gap
+  # still covers the first window of its first day.
+  down <- current[current$servers_max == 0, ]
+  expect_equal(nrow(down), 3L)
+  expect_equal(as.numeric(diff(range(down$date))), 2)
+  beats <- collect_curated("workbench/heartbeats")
+  gap <- seq(min(down$date) - 1, by = "day", length.out = 4)
+  expect_false(any(gap %in% beats$date))
+  expect_equal(
+    current$servers_min[current$date %in% gap],
+    rep(0, 4)
+  )
 })
 
 test_that("the sample servers show an outage, an extra host and a churn day", {
