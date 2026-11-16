@@ -367,8 +367,8 @@ chart_card <- function(title, output_id, controls = NULL, caption = NULL) {
 SERVERS_CAPTION <- paste(
   "Band = lowest to highest number of servers reporting in any 5-minute",
   "window that day.",
-  "A product ID that stops reporting shows 0 from then on, up to the last",
-  "day with data. The last (as-of) day is not included."
+  "A product ID has points only from its first to its last heartbeat.",
+  "The last (as-of) day is not included."
 )
 
 # The container for a plot, `height` pixels tall

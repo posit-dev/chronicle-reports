@@ -325,8 +325,9 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #'   `servers_median` are taken over up to 288 windows of the day (fewer on a
 #'   product ID's first day and on the last day with heartbeats). Days run
 #'   through the day before `today`, or through the last day with heartbeats if
-#'   that is earlier; `date` is a UTC day. A product ID that stops reporting
-#'   shows 0 from then on, up to the last day with heartbeats.
+#'   that is earlier; `date` is a UTC day. A product ID has rows only from its
+#'   first to its last heartbeat, so one that stops reporting (an old license)
+#'   has none afterwards; a gap in between reads as 0.
 #'
 #' @param base_path Base path to Chronicle data directory
 #' @param months Number of calendar months to include, ending with the month

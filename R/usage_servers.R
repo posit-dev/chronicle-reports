@@ -27,11 +27,12 @@ usage_heartbeat_window <- function(timestamp) {
 #'   same bounds with each chunk of `heartbeats`. By default they are taken from
 #'   `heartbeats`.
 #' @return A tibble with `date`, `product_id`, `servers_min`, `servers_max`,
-#'   and `servers_median`. Each product_id is zero-filled from its
-#'   first heartbeat window up to the latest heartbeat window of any
-#'   product_id (or the end of `last_date`, if earlier), and has no rows outside
-#'   that span. A product_id that stops reporting therefore shows 0 from then
-#'   on, while days the data does not reach yet get no rows.
+#'   and `servers_median`. Each product_id is counted from its first heartbeat
+#'   window to the window after its last one, and has no rows outside that
+#'   span. Gaps inside the span are zero-filled outages. A product_id that
+#'   stops reporting has no rows after that, and days the data does not reach
+#'   yet get no rows. Nothing is counted past the latest heartbeat of any
+#'   product_id or past `last_date`.
 #' @noRd
 usage_server_counts <- function(
   heartbeats,
@@ -73,16 +74,22 @@ usage_server_counts <- function(
     return(empty)
   }
 
-  # Stop at the latest heartbeat of any product_id, so days the data does not
-  # reach yet are left out instead of reading as an outage
+  # Each product_id runs from its first heartbeat to the window after its last
+  # one (a host still counts as running there). Nothing is counted outside
+  # that span, so a retired product_id has no rows after it stopped. A gap
+  # inside the span is an outage and reads as 0. Nothing runs past the latest
+  # heartbeat of any product_id, or past `last_date`.
   first_window <- as.numeric(as.Date(first_date)) * USAGE_WINDOWS_PER_DAY
   last_window <- min(
     (as.numeric(as.Date(last_date)) + 1) * USAGE_WINDOWS_PER_DAY - 1,
     max(bounds$last)
   )
   starts <- bounds |>
-    dplyr::mutate(start = pmax(.data$first, first_window)) |>
-    dplyr::filter(.data$start <= last_window)
+    dplyr::mutate(
+      start = pmax(.data$first, first_window),
+      end = pmin(.data$last + 1, last_window)
+    ) |>
+    dplyr::filter(.data$start <= .data$end)
   if (nrow(starts) == 0) {
     return(empty)
   }
@@ -103,7 +110,7 @@ usage_server_counts <- function(
   series <- lapply(seq_len(nrow(starts)), function(i) {
     dplyr::tibble(
       product_id = starts$product_id[i],
-      window = seq(starts$start[i], last_window)
+      window = seq(starts$start[i], starts$end[i])
     )
   }) |>
     dplyr::bind_rows() |>
