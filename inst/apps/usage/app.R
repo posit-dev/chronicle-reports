@@ -288,6 +288,9 @@ usage_servers_chart <- function(series, y_title = "Servers running") {
       "<br>Distinct hosts: ",
       panel$hosts_seen
     )
+    # A line alone draws nothing for a single day, so mark short series
+    markers <- nrow(panel) < 3
+    mode <- if (markers) "lines+markers" else "lines"
 
     plotly::plot_ly(
       panel,
@@ -312,19 +315,25 @@ usage_servers_chart <- function(series, y_title = "Servers running") {
         fillcolor = band_color,
         line = list(color = "transparent", width = 0)
       ) |>
-      plotly::add_lines(
+      plotly::add_trace(
+        type = "scatter",
+        mode = mode,
         y = ~servers_median,
         name = "Median",
         legendgroup = "median",
         showlegend = i == 1,
-        line = list(color = BRAND_COLORS$BLUE)
+        line = list(color = BRAND_COLORS$BLUE),
+        marker = if (markers) list(color = BRAND_COLORS$BLUE)
       ) |>
-      plotly::add_lines(
+      plotly::add_trace(
+        type = "scatter",
+        mode = mode,
         y = ~hosts_seen,
         name = "Distinct hosts",
         legendgroup = "hosts",
         showlegend = i == 1,
-        line = list(color = BRAND_COLORS$BURGUNDY, dash = "dash")
+        line = list(color = BRAND_COLORS$BURGUNDY, dash = "dash"),
+        marker = if (markers) list(color = BRAND_COLORS$BURGUNDY)
       ) |>
       plotly::layout(
         xaxis = list(title = "", type = "date", fixedrange = TRUE),

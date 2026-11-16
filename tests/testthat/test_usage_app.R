@@ -415,3 +415,27 @@ test_that("usage_servers_chart draws a band, median and hosts line per id", {
   expect_match(json, "Min", fixed = TRUE)
   expect_match(json, "Max", fixed = TRUE)
 })
+
+test_that("usage_servers_chart marks the points of a short series", {
+  env <- source_usage_app()
+  data <- dplyr::tibble(
+    date = as.Date(c("2026-11-01", paste0("2026-11-0", 1:5))),
+    product = "connect",
+    product_id = c("p1", rep("p2", 5)),
+    servers_min = 1,
+    servers_max = 2,
+    servers_median = 1,
+    hosts_seen = 2
+  )
+  series <- env$usage_servers_series(data, "connect")
+
+  chart <- plotly::plotly_build(env$usage_servers_chart(series))
+  modes <- function(name) {
+    traces <- Filter(function(t) identical(t$name, name), chart$x$data)
+    vapply(traces, function(t) t$mode, "")
+  }
+
+  # p1 has a single day, which a line alone does not draw
+  expect_equal(modes("Median"), c("lines+markers", "lines"))
+  expect_equal(modes("Distinct hosts"), c("lines+markers", "lines"))
+})
