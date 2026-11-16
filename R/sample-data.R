@@ -1496,9 +1496,10 @@ sample_raw_workbench_users_internal <- function(n_days = SAMPLE_DAYS) {
 #' Sample heartbeats: every host reports every 5 minutes, with a little jitter.
 #'
 #' Each product runs a steady number of hosts, with one short outage (all hosts
-#' silent for half an hour), one extra host that is up for a few hours, and one
-#' churn day on which the hosts are replaced several times. The replacement hosts
-#' keep running afterwards. Days are counted back from the last day of the sample.
+#' silent for half an hour, which reads as 25 minutes of zero windows), one
+#' extra host that is up for a few hours, and one churn day on which the hosts
+#' are replaced several times. The replacement hosts keep running afterwards.
+#' Days are counted back from the last day of the sample.
 #' @noRd
 sample_heartbeats_internal <- function(
   product,
@@ -1525,7 +1526,8 @@ sample_heartbeats_internal <- function(
   generation <- ifelse(date > churn_day, length(churn_minutes), generation)
   generation <- ifelse(date < churn_day, 0L, generation)
 
-  # a short outage: no host reports for 30 minutes
+  # a short outage: no host reports for 30 minutes. The 9:55 heartbeats still
+  # cover the 10:00 window, so 25 minutes of windows read 0
   up <- !(date == outage_day & minute >= 10 * 60 & minute < 10 * 60 + 30)
 
   slots <- lapply(seq_len(n_hosts), function(i) {
