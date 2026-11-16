@@ -414,6 +414,30 @@ test_that("usage_servers_chart draws a band and a median line per id", {
   expect_match(json, "Max", fixed = TRUE)
 })
 
+test_that("usage_servers_chart spans the x_range it is given", {
+  env <- source_usage_app()
+  data <- dplyr::tibble(
+    date = as.Date(c("2026-06-01", "2026-06-02")),
+    product = "connect",
+    product_id = "p1",
+    servers_min = 1,
+    servers_max = 2,
+    servers_median = 1
+  )
+  series <- env$usage_servers_series(data, "connect")
+  chart <- plotly::plotly_build(
+    env$usage_servers_chart(
+      series,
+      x_range = as.Date(c("2025-12-01", "2026-11-05"))
+    )
+  )
+
+  expect_equal(
+    unlist(chart$x$layout$xaxis$range),
+    c("2025-12-01", "2026-11-05")
+  )
+})
+
 test_that("usage_servers_chart marks the points of a short series", {
   env <- source_usage_app()
   data <- dplyr::tibble(

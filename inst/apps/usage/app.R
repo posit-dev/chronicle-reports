@@ -270,7 +270,15 @@ usage_stacked_chart <- function(
 
 # One panel per product id: the daily range of servers running as a band, the
 # median as a line. Unlike the monthly charts the x-axis is a real date axis.
-usage_servers_chart <- function(series, y_title = "Servers running") {
+# `x_range` (two Dates) fixes the axis to the reporting window, so it spans the
+# same months as the other charts even where the series starts late or ends
+# early.
+usage_servers_chart <- function(
+  series,
+  y_title = "Servers running",
+  x_range = NULL
+) {
+  x_range <- if (!is.null(x_range)) as.character(as.Date(x_range))
   product_ids <- sort(unique(series$product_id))
   band_color <- grDevices::adjustcolor(BRAND_COLORS$BLUE, alpha.f = 0.2)
 
@@ -323,7 +331,12 @@ usage_servers_chart <- function(series, y_title = "Servers running") {
         marker = if (markers) list(color = BRAND_COLORS$BLUE)
       ) |>
       plotly::layout(
-        xaxis = list(title = "", type = "date", fixedrange = TRUE),
+        xaxis = list(
+          title = "",
+          type = "date",
+          range = x_range,
+          fixedrange = TRUE
+        ),
         yaxis = list(
           title = usage_panel_y_title(product_ids[i], product_ids, y_title),
           rangemode = "tozero",
@@ -576,7 +589,10 @@ server <- function(input, output, session) {
       define_chart(
         paste0(product, "_servers"),
         function() usage_servers_series(tables()$servers, product),
-        usage_servers_chart,
+        function(series) {
+          # first day of the window to the last day the chart can show
+          usage_servers_chart(series, x_range = c(months()[1], today() - 1))
+        },
         stacked = TRUE
       )
     })
