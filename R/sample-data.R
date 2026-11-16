@@ -1499,6 +1499,7 @@ sample_raw_workbench_users_internal <- function(n_days = SAMPLE_DAYS) {
 #' silent for half an hour, which reads as 25 minutes of zero windows), one
 #' extra host that is up for a few hours, and one churn day on which the hosts
 #' are replaced several times. The replacement hosts keep running afterwards.
+#' Workbench also has a four-day stretch with no heartbeats at all.
 #' Days are counted back from the last day of the sample.
 #' @noRd
 sample_heartbeats_internal <- function(
@@ -1529,6 +1530,15 @@ sample_heartbeats_internal <- function(
   # a short outage: no host reports for 30 minutes. The 9:55 heartbeats still
   # cover the 10:00 window, so 25 minutes of windows read 0
   up <- !(date == outage_day & minute >= 10 * 60 & minute < 10 * 60 + 30)
+
+  # Workbench only: four whole days without a heartbeat, ending 49 days before
+  # the end of the sample (after the license switch)
+  if (product == "workbench") {
+    long_start <- max(1L, n_days - 52L)
+    long_outage <- date >= dates[long_start] &
+      date <= dates[min(n_days, long_start + 3L)]
+    up <- up & !long_outage
+  }
 
   slots <- lapply(seq_len(n_hosts), function(i) {
     jitter <- (tick * 7L + i * 13L) %% 45L
