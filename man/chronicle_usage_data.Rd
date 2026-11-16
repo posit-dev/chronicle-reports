@@ -56,9 +56,12 @@ counts each time. \code{unique_content} counts each item once.
 \item \strong{Servers running}: daily, not monthly. Time is cut into 5-minute UTC
 windows and a host is running in a window if it sent a heartbeat in that
 window or the previous one. \code{servers_min}, \code{servers_max} and
-\code{servers_median} are taken over the day's 288 windows, and \code{hosts_seen} is
-the number of distinct host names with a heartbeat that day. The as-of day
-is excluded, and \code{date} is a UTC day.
+\code{servers_median} are taken over up to 288 windows of the day (fewer on a
+product ID's first day and on the last day with heartbeats), and
+\code{hosts_seen} is the number of distinct host names with a heartbeat that
+day. Days run through the day before \code{today}, or through the last day with
+heartbeats if that is earlier; \code{date} is a UTC day. A product ID that stops
+reporting shows 0 from then on, up to the last day with heartbeats.
 }
 }
 
