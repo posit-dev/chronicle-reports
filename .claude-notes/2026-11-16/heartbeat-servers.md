@@ -5,7 +5,7 @@ Daily chart per product (Connect, Workbench) and `product_id` of how many server
 ## Definition
 
 - Time is cut into 5-minute UTC windows. A host is running in a window if it sent a heartbeat in that window or the one before it (a single late heartbeat is not an outage).
-- Per day: `servers_min`, `servers_max`, `servers_median` over up to 288 windows of the UTC day (fewer on a product ID's first day and on the last day with heartbeats); `hosts_seen` is the distinct host names with a heartbeat that day (rises above `servers_max` when hosts are replaced).
+- Per day: `servers_min`, `servers_max`, `servers_median` over up to 288 windows of the UTC day (fewer on a product ID's first day and on the last day with heartbeats).
 - The as-of day is excluded: days run through today - 1, or through the latest heartbeat of any product_id if the data ends earlier (so lagging data does not read as an outage). The as-of day's heartbeats are read only to show the data reaches today - 1.
 - Gaps are zero-filled: each `product_id` is filled from its first heartbeat window up to the latest heartbeat window of any product_id, so an outage shows as 0. A product_id that stops reporting (e.g. an old Connect license) therefore shows zeros after it stops, up to the last day with data; days after the latest heartbeat get no rows at all.
 - Host names are used only to count. They never enter the usage JSON export (the `servers` rows carry counts only).

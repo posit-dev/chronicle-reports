@@ -232,7 +232,6 @@ test_that("the sample servers show an outage, an extra host and a churn day", {
     current_id <- last_day$product_id[last_day$servers_max > 0]
     expect_length(current_id, 1)
     current <- s[s$product_id == current_id, ]
-    expect_true(any(s$hosts_seen > s$servers_max), label = p)
     expect_true(
       any(current$servers_min == 0 & current$servers_max > 0),
       label = p

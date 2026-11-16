@@ -269,8 +269,7 @@ usage_stacked_chart <- function(
 }
 
 # One panel per product id: the daily range of servers running as a band, the
-# median as a line, and the distinct host names seen as a dashed line. Unlike
-# the monthly charts the x-axis is a real date axis.
+# median as a line. Unlike the monthly charts the x-axis is a real date axis.
 usage_servers_chart <- function(series, y_title = "Servers running") {
   product_ids <- sort(unique(series$product_id))
   band_color <- grDevices::adjustcolor(BRAND_COLORS$BLUE, alpha.f = 0.2)
@@ -284,9 +283,7 @@ usage_servers_chart <- function(series, y_title = "Servers running") {
       "<br>Max: ",
       panel$servers_max,
       "<br>Median: ",
-      panel$servers_median,
-      "<br>Distinct hosts: ",
-      panel$hosts_seen
+      panel$servers_median
     )
     # A line alone draws nothing for a single day, so mark short series
     markers <- nrow(panel) < 3
@@ -324,16 +321,6 @@ usage_servers_chart <- function(series, y_title = "Servers running") {
         showlegend = i == 1,
         line = list(color = BRAND_COLORS$BLUE),
         marker = if (markers) list(color = BRAND_COLORS$BLUE)
-      ) |>
-      plotly::add_trace(
-        type = "scatter",
-        mode = mode,
-        y = ~hosts_seen,
-        name = "Distinct hosts",
-        legendgroup = "hosts",
-        showlegend = i == 1,
-        line = list(color = BRAND_COLORS$BURGUNDY, dash = "dash"),
-        marker = if (markers) list(color = BRAND_COLORS$BURGUNDY)
       ) |>
       plotly::layout(
         xaxis = list(title = "", type = "date", fixedrange = TRUE),
@@ -379,7 +366,7 @@ chart_card <- function(title, output_id, controls = NULL, caption = NULL) {
 
 SERVERS_CAPTION <- paste(
   "Band = lowest to highest number of servers reporting in any 5-minute",
-  "window that day. Dashed = distinct host names seen that day.",
+  "window that day.",
   "A product ID that stops reporting shows 0 from then on, up to the last",
   "day with data. The last (as-of) day is not included."
 )

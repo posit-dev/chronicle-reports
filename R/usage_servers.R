@@ -14,7 +14,7 @@ usage_heartbeat_window <- function(timestamp) {
   floor(as.numeric(timestamp) / USAGE_HEARTBEAT_WINDOW_SECONDS)
 }
 
-#' Daily min, max and median of servers running, plus distinct hosts seen
+#' Daily min, max and median of servers running
 #'
 #' @param heartbeats Data frame with `timestamp` (POSIXct), `host_name` and
 #'   `product_id`. Rows before `first_date` may be included so the first window
@@ -27,7 +27,7 @@ usage_heartbeat_window <- function(timestamp) {
 #'   same bounds with each chunk of `heartbeats`. By default they are taken from
 #'   `heartbeats`.
 #' @return A tibble with `date`, `product_id`, `servers_min`, `servers_max`,
-#'   `servers_median` and `hosts_seen`. Each product_id is zero-filled from its
+#'   and `servers_median`. Each product_id is zero-filled from its
 #'   first heartbeat window up to the latest heartbeat window of any
 #'   product_id (or the end of `last_date`, if earlier), and has no rows outside
 #'   that span. A product_id that stops reporting therefore shows 0 from then
@@ -44,8 +44,7 @@ usage_server_counts <- function(
     product_id = character(),
     servers_min = numeric(),
     servers_max = numeric(),
-    servers_median = numeric(),
-    hosts_seen = numeric()
+    servers_median = numeric()
   )
 
   beats <- heartbeats |>
@@ -118,13 +117,6 @@ usage_server_counts <- function(
     return(empty)
   }
 
-  hosts <- beats |>
-    dplyr::mutate(date = window_date(.data$window)) |>
-    dplyr::summarise(
-      hosts_seen = dplyr::n_distinct(.data$host_name),
-      .by = c("product_id", "date")
-    )
-
   series |>
     dplyr::summarise(
       servers_min = min(.data$servers),
@@ -132,9 +124,7 @@ usage_server_counts <- function(
       servers_median = stats::median(.data$servers),
       .by = c("date", "product_id")
     ) |>
-    dplyr::left_join(hosts, by = c("product_id", "date")) |>
     dplyr::mutate(
-      hosts_seen = as.numeric(dplyr::coalesce(.data$hosts_seen, 0L)),
       dplyr::across(
         c("servers_min", "servers_max", "servers_median"),
         as.numeric
@@ -146,8 +136,7 @@ usage_server_counts <- function(
       "product_id",
       "servers_min",
       "servers_max",
-      "servers_median",
-      "hosts_seen"
+      "servers_median"
     )
 }
 
@@ -262,7 +251,6 @@ usage_read_heartbeats <- function(product, base_path, window, today) {
       "product_id",
       "servers_min",
       "servers_max",
-      "servers_median",
-      "hosts_seen"
+      "servers_median"
     )
 }

@@ -20,14 +20,12 @@ test_that("steady host", {
       "product_id",
       "servers_min",
       "servers_max",
-      "servers_median",
-      "hosts_seen"
+      "servers_median"
     )
   )
   expect_equal(out$servers_min, 1)
   expect_equal(out$servers_max, 1)
   expect_equal(out$servers_median, 1)
-  expect_equal(out$hosts_seen, 1)
 })
 
 test_that("late heartbeat does not dip", {
@@ -68,7 +66,6 @@ test_that("churn", {
   )
   out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-01"))
   expect_equal(out$servers_max, 2)
-  expect_equal(out$hosts_seen, 2)
   expect_equal(out$servers_median, 1)
 })
 
@@ -85,7 +82,6 @@ test_that("ignores missing host names", {
     beats("", "2026-11-01 00:00:00", "2026-11-01 23:55:00")
   )
   out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-01"))
-  expect_equal(out$hosts_seen, 1)
   expect_equal(out$servers_max, 1)
 })
 
@@ -121,7 +117,6 @@ test_that("zero fill", {
   expect_equal(mid$servers_min, 0)
   expect_equal(mid$servers_max, 0)
   expect_equal(mid$servers_median, 0)
-  expect_equal(mid$hosts_seen, 0)
 })
 
 test_that("no mid-day start penalty", {
@@ -158,8 +153,7 @@ test_that("empty input", {
       "product_id",
       "servers_min",
       "servers_max",
-      "servers_median",
-      "hosts_seen"
+      "servers_median"
     )
   )
 })
@@ -199,7 +193,6 @@ test_that("heartbeats after last_date are not counted but show data is current",
   out <- usage_server_counts(rbind(hb, later), d("2026-11-01"), d("2026-11-02"))
   expect_equal(out$date, d(c("2026-11-01", "2026-11-02")))
   expect_equal(out$servers_max, c(1, 0))
-  expect_equal(out$hosts_seen, c(1, 0))
 })
 
 test_that("the chunked heartbeat read equals counting all heartbeats at once", {
