@@ -6,12 +6,18 @@ usage_fixture_tables <- function() {
 
 month_of <- function(x) as.Date(paste0(x, "-01"))
 
-test_that("returns the four tables with the documented columns", {
+test_that("returns the five tables with the documented columns", {
   tables <- usage_fixture_tables()
 
   expect_named(
     tables,
-    c("active_users", "content_hits", "content_deployments", "sessions")
+    c(
+      "active_users",
+      "content_hits",
+      "content_deployments",
+      "sessions",
+      "servers"
+    )
   )
   expect_named(
     tables$active_users,
@@ -28,6 +34,18 @@ test_that("returns the four tables with the documented columns", {
   expect_named(
     tables$sessions,
     c("month", "product_id", "session_type", "sessions")
+  )
+  expect_named(
+    tables$servers,
+    c(
+      "date",
+      "product",
+      "product_id",
+      "servers_min",
+      "servers_max",
+      "servers_median",
+      "hosts_seen"
+    )
   )
 })
 
@@ -99,7 +117,7 @@ test_that("data outside the 12-month window is excluded", {
   tables <- usage_fixture_tables()
   first_month <- month_of("2025-12")
 
-  for (tbl in tables) {
+  for (tbl in tables[names(tables) != "servers"]) {
     expect_true(all(tbl$month >= first_month))
     expect_true(all(tbl$month <= month_of("2026-11")))
   }
@@ -149,4 +167,81 @@ test_that("missing datasets give empty tables with the right columns", {
     tables$content_hits,
     c("month", "product_id", "app_mode", "authenticated", "hits")
   )
+  expect_s3_class(tables$servers$date, "Date")
+  expect_type(tables$servers$hosts_seen, "double")
+})
+
+test_that("servers has both products and numeric columns", {
+  servers <- usage_fixture_tables()$servers
+  expect_setequal(servers$product, c("connect", "workbench"))
+  expect_false("host_name" %in% names(servers))
+  for (col in c("servers_min", "servers_max", "servers_median", "hosts_seen")) {
+    expect_type(servers[[col]], "double")
+  }
+})
+
+test_that("servers excludes the as-of day and rows before the window", {
+  servers <- usage_fixture_tables()$servers
+  expect_true(all(servers$date >= as.Date("2025-12-01")))
+  expect_true(all(servers$date < USAGE_TEST_TODAY))
+  expect_equal(max(servers$date), USAGE_TEST_TODAY - 1)
+})
+
+test_that("servers values for the fixture", {
+  servers <- usage_fixture_tables()$servers
+  day <- servers[
+    servers$product == "connect" &
+      servers$product_id == "p1" &
+      servers$date == as.Date("2026-10-03"),
+  ]
+  expect_equal(nrow(day), 1L)
+  expect_equal(day$hosts_seen, 2)
+  expect_equal(day$servers_max, 2)
+})
+
+test_that("a missing heartbeat dataset gives an empty servers table", {
+  path <- create_usage_fixture()
+  on.exit(unlink(path, recursive = TRUE))
+  unlink(file.path(path, "curated/v2/connect/heartbeats"), recursive = TRUE)
+  unlink(file.path(path, "curated/v2/workbench/heartbeats"), recursive = TRUE)
+  tables <- chronicle_usage_data(path, today = USAGE_TEST_TODAY)
+  expect_equal(nrow(tables$servers), 0L)
+  expect_equal(names(tables$servers), names(usage_empty_tables()$servers))
+})
+
+test_that("an existing heartbeat dataset with no rows in the window is empty", {
+  path <- create_usage_fixture()
+  on.exit(unlink(path, recursive = TRUE))
+  for (metric in c("connect/heartbeats", "workbench/heartbeats")) {
+    unlink(file.path(path, "curated/v2", metric), recursive = TRUE)
+    write_usage_heartbeats(
+      data.frame(
+        timestamp = as.POSIXct("2024-01-01 12:00:00", tz = "UTC"),
+        host_name = "h1",
+        product_id = "p1"
+      ),
+      path,
+      metric
+    )
+  }
+  tables <- chronicle_usage_data(path, today = USAGE_TEST_TODAY)
+  expect_equal(nrow(tables$servers), 0L)
+  expect_identical(
+    vapply(tables$servers, function(x) class(x)[1], ""),
+    vapply(usage_empty_tables()$servers, function(x) class(x)[1], "")
+  )
+})
+
+test_that("heartbeats without product_id are labelled (unspecified)", {
+  path <- create_usage_fixture()
+  on.exit(unlink(path, recursive = TRUE))
+  unlink(file.path(path, "curated/v2/connect/heartbeats"), recursive = TRUE)
+  beats <- data.frame(
+    timestamp = as.POSIXct("2026-10-10 12:00:00", tz = "UTC"),
+    host_name = "h1"
+  )
+  write_usage_heartbeats(beats, path, "connect/heartbeats")
+  tables <- chronicle_usage_data(path, today = USAGE_TEST_TODAY)
+  connect <- tables$servers[tables$servers$product == "connect", ]
+  expect_equal(unique(connect$product_id), USAGE_UNSPECIFIED_PRODUCT)
 })

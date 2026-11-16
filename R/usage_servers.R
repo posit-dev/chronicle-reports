@@ -93,12 +93,58 @@ usage_server_counts <- function(heartbeats, first_date, last_date) {
     ) |>
     dplyr::left_join(hosts, by = c("product_id", "date")) |>
     dplyr::mutate(
-      hosts_seen = dplyr::coalesce(.data$hosts_seen, 0L),
+      hosts_seen = as.numeric(dplyr::coalesce(.data$hosts_seen, 0L)),
       dplyr::across(c("servers_min", "servers_max"), as.numeric)
     ) |>
     dplyr::arrange(.data$product_id, .data$date) |>
     dplyr::select(
       "date",
+      "product_id",
+      "servers_min",
+      "servers_max",
+      "servers_median",
+      "hosts_seen"
+    )
+}
+
+#' Servers running per day for one product, from its curated heartbeats
+#'
+#' Reads heartbeats from one day before the window so the first window has its
+#' predecessor. The as-of day is excluded: days run from `window[1]` through
+#' `today - 1`.
+#'
+#' @param product `"connect"` or `"workbench"`.
+#' @param base_path Base path to Chronicle data directory.
+#' @param window Length-2 Date vector from `usage_window()`.
+#' @param today The as-of date.
+#' @return A tibble with the columns of `usage_empty_tables()$servers`.
+#' @noRd
+usage_read_heartbeats <- function(product, base_path, window, today) {
+  empty <- usage_empty_tables()$servers
+  ds <- chronicle_data(paste0(product, "/heartbeats"), base_path)
+  if (is.null(ds)) {
+    return(empty)
+  }
+
+  beats <- ds |>
+    usage_with_defaults(list(product_id = "")) |>
+    dplyr::filter(
+      .data$date >= !!(window[1] - 1),
+      .data$date < !!as.Date(today)
+    ) |>
+    dplyr::select("timestamp", "host_name", "product_id") |>
+    dplyr::collect() |>
+    dplyr::mutate(product_id = usage_label_product(.data$product_id))
+
+  usage_server_counts(
+    beats,
+    first_date = window[1],
+    last_date = as.Date(today) - 1
+  ) |>
+    dplyr::mutate(product = product) |>
+    dplyr::select(
+      "date",
+      "product",
       "product_id",
       "servers_min",
       "servers_max",
