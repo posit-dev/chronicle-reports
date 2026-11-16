@@ -15,11 +15,12 @@ chronicle_usage_to_json(tables, path)
 \code{path}, invisibly.
 }
 \description{
-Writes the monthly tables from \code{\link[=chronicle_usage_data]{chronicle_usage_data()}} to a small JSON
-file. The file holds only aggregate counts, keyed by month and \code{product_id}
-and, where the report groups them, \code{app_mode} and IDE. It contains no user,
-content, host or environment identifiers, so it can be shared without
-exposing anything beyond the product id.
+Writes the tables from \code{\link[=chronicle_usage_data]{chronicle_usage_data()}} to a small JSON file. The
+file holds only aggregate counts, keyed by month and \code{product_id} and, where
+the report groups them, \code{app_mode} and IDE. It also holds daily server
+counts keyed by date and \code{product_id}. It contains no user, content, host or
+environment identifiers, so it can be shared without exposing anything
+beyond the product id.
 }
 \details{
 The file has everything needed to rebuild the usage report. Read it back

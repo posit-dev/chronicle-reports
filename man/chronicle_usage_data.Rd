@@ -22,7 +22,7 @@ that contains \code{today}. The current month is therefore usually partial.}
 A list of five tibbles: \code{active_users} (\code{month}, \code{product},
 \code{product_id}, \code{users}), \code{content_hits} (\code{month}, \code{product_id}, \code{app_mode},
 \code{authenticated}, \code{hits}), \code{content_deployments} (\code{month}, \code{product_id},
-\code{app_mode}, \code{deployments}, \code{unique_content}) and \code{sessions} (\code{month},
+\code{app_mode}, \code{deployments}, \code{unique_content}), \code{sessions} (\code{month},
 \code{product_id}, \code{session_type}, \code{sessions}) and \code{servers} (\code{date}, \code{product},
 \code{product_id}, \code{servers_min}, \code{servers_max}, \code{servers_median},
 \code{hosts_seen}). \code{month} is the first day of the month and \code{date} a day.

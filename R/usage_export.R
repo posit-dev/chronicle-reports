@@ -2,11 +2,12 @@ USAGE_EXPORT_SCHEMA_VERSION <- 1L
 
 #' Export usage data to a portable JSON file
 #'
-#' Writes the monthly tables from [chronicle_usage_data()] to a small JSON
-#' file. The file holds only aggregate counts, keyed by month and `product_id`
-#' and, where the report groups them, `app_mode` and IDE. It contains no user,
-#' content, host or environment identifiers, so it can be shared without
-#' exposing anything beyond the product id.
+#' Writes the tables from [chronicle_usage_data()] to a small JSON file. The
+#' file holds only aggregate counts, keyed by month and `product_id` and, where
+#' the report groups them, `app_mode` and IDE. It also holds daily server
+#' counts keyed by date and `product_id`. It contains no user, content, host or
+#' environment identifiers, so it can be shared without exposing anything
+#' beyond the product id.
 #'
 #' The file has everything needed to rebuild the usage report. Read it back
 #' with [chronicle_usage_from_json()].
@@ -26,7 +27,12 @@ USAGE_EXPORT_SCHEMA_VERSION <- 1L
 chronicle_usage_to_json <- function(tables, path) {
   window <- attr(tables, "window")
   rows <- lapply(tables[USAGE_TABLE_NAMES], function(tbl) {
-    tbl$month <- format(tbl$month, "%Y-%m")
+    if ("month" %in% names(tbl)) {
+      tbl$month <- format(tbl$month, "%Y-%m")
+    }
+    if ("date" %in% names(tbl)) {
+      tbl$date <- format(tbl$date, "%Y-%m-%d")
+    }
     as.data.frame(tbl)
   })
 
@@ -113,8 +119,13 @@ chronicle_usage_from_json <- function(path) {
       next
     }
     template <- tables[[name]]
-    rows$month <- as.Date(paste0(rows$month, "-01"))
-    for (col in setdiff(names(template), "month")) {
+    if ("month" %in% names(template)) {
+      rows$month <- as.Date(paste0(rows$month, "-01"))
+    }
+    if ("date" %in% names(template)) {
+      rows$date <- as.Date(rows$date)
+    }
+    for (col in setdiff(names(template), c("month", "date"))) {
       if (is.null(rows[[col]])) {
         # An export from before this column existed
         rows[[col]] <- usage_column_default(col, template[[col]], nrow(rows))
