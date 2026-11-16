@@ -50,8 +50,13 @@ test_that("two missed heartbeats dip", {
 })
 
 test_that("single startup heartbeat counts two windows", {
-  hb <- beats("a", "2026-11-01 12:00:30", "2026-11-01 12:00:30")
+  # p2 keeps beating, so p1's day runs on to the end of the day
+  hb <- rbind(
+    beats("a", "2026-11-01 12:00:30", "2026-11-01 12:00:30"),
+    beats("b", "2026-11-01 00:00:00", "2026-11-01 23:55:00", "p2")
+  )
   out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-01"))
+  out <- out[out$product_id == "p1", ]
   expect_equal(out$servers_max, 1)
   expect_equal(out$servers_median, 0)
 })
@@ -157,4 +162,42 @@ test_that("empty input", {
       "hosts_seen"
     )
   )
+})
+
+test_that("days after the latest heartbeat get no rows", {
+  # The data lags: heartbeats end on 11-02 but the report runs through 11-03
+  hb <- beats("a", "2026-11-01 00:00:00", "2026-11-02 23:55:00")
+  out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-03"))
+  expect_equal(out$date, d(c("2026-11-01", "2026-11-02")))
+  expect_equal(out$servers_min, c(1, 1))
+})
+
+test_that("zero fill stops at the latest window of the newest day", {
+  # The last beat is at 20:00, so the day ends there instead of dipping to 0
+  hb <- beats("a", "2026-11-01 00:00:00", "2026-11-01 20:00:00")
+  out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-02"))
+  expect_equal(out$date, d("2026-11-01"))
+  expect_equal(out$servers_min, 1)
+})
+
+test_that("a product that goes quiet is zero-filled to the latest beat", {
+  hb <- rbind(
+    beats("a", "2026-11-01 00:00:00", "2026-11-01 23:55:00", "p1"),
+    beats("b", "2026-11-01 00:00:00", "2026-11-03 11:55:00", "p2")
+  )
+  out <- usage_server_counts(hb, d("2026-11-01"), d("2026-11-04"))
+  p1 <- out[out$product_id == "p1", ]
+  expect_equal(p1$date, d(c("2026-11-01", "2026-11-02", "2026-11-03")))
+  expect_equal(p1$servers_max, c(1, 1, 0))
+  expect_equal(p1$servers_min, c(1, 0, 0))
+  expect_equal(max(out$date), d("2026-11-03"))
+})
+
+test_that("heartbeats after last_date are not counted but show data is current", {
+  hb <- beats("a", "2026-11-01 00:00:00", "2026-11-01 20:00:00")
+  later <- beats("a", "2026-11-03 12:00:00", "2026-11-03 12:00:00")
+  out <- usage_server_counts(rbind(hb, later), d("2026-11-01"), d("2026-11-02"))
+  expect_equal(out$date, d(c("2026-11-01", "2026-11-02")))
+  expect_equal(out$servers_max, c(1, 0))
+  expect_equal(out$hosts_seen, c(1, 0))
 })

@@ -245,3 +245,24 @@ test_that("heartbeats without product_id are labelled (unspecified)", {
   connect <- tables$servers[tables$servers$product == "connect", ]
   expect_equal(unique(connect$product_id), USAGE_UNSPECIFIED_PRODUCT)
 })
+
+test_that("servers has no zero row for days the heartbeats do not reach", {
+  path <- create_usage_fixture()
+  on.exit(unlink(path, recursive = TRUE))
+  unlink(file.path(path, "curated/v2/connect/heartbeats"), recursive = TRUE)
+  # The heartbeats end a day before the last reported day (today - 1)
+  write_usage_heartbeats(
+    data.frame(
+      timestamp = as.POSIXct("2026-11-03 00:00:00", tz = "UTC") +
+        300 * 0:(2 * 288 - 1),
+      host_name = "h1",
+      product_id = "p1"
+    ),
+    path,
+    "connect/heartbeats"
+  )
+  tables <- chronicle_usage_data(path, today = USAGE_TEST_TODAY)
+  connect <- tables$servers[tables$servers$product == "connect", ]
+  expect_equal(connect$date, as.Date(c("2026-11-03", "2026-11-04")))
+  expect_equal(connect$servers_min, c(1, 1))
+})

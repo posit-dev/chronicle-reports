@@ -12,11 +12,15 @@ USAGE_WINDOWS_PER_DAY <- 86400 / USAGE_HEARTBEAT_WINDOW_SECONDS
 #'
 #' @param heartbeats Data frame with `timestamp` (POSIXct), `host_name` and
 #'   `product_id`. Rows before `first_date` may be included so the first window
-#'   has its predecessor; they produce no output rows.
+#'   has its predecessor; they produce no output rows. Rows after `last_date`
+#'   are not counted, but show that the data reaches `last_date`.
 #' @param first_date,last_date Inclusive Date bounds of the returned days.
 #' @return A tibble with `date`, `product_id`, `servers_min`, `servers_max`,
 #'   `servers_median` and `hosts_seen`. Each product_id is zero-filled from its
-#'   first heartbeat window onward and has no rows before it.
+#'   first heartbeat window up to the latest heartbeat window of any
+#'   product_id (or the end of `last_date`, if earlier), and has no rows outside
+#'   that span. A product_id that stops reporting therefore shows 0 from then
+#'   on, while days the data does not reach yet get no rows.
 #' @noRd
 usage_server_counts <- function(heartbeats, first_date, last_date) {
   empty <- dplyr::tibble(
@@ -28,10 +32,6 @@ usage_server_counts <- function(heartbeats, first_date, last_date) {
     hosts_seen = numeric()
   )
 
-  last_window <- (as.numeric(as.Date(last_date)) + 1) *
-    USAGE_WINDOWS_PER_DAY -
-    1
-
   beats <- heartbeats |>
     dplyr::filter(!is.na(.data$host_name), .data$host_name != "") |>
     dplyr::mutate(
@@ -39,8 +39,18 @@ usage_server_counts <- function(heartbeats, first_date, last_date) {
         as.numeric(.data$timestamp) / USAGE_HEARTBEAT_WINDOW_SECONDS
       )
     ) |>
-    dplyr::filter(.data$window <= last_window) |>
     dplyr::distinct(.data$product_id, .data$host_name, .data$window)
+  if (nrow(beats) == 0) {
+    return(empty)
+  }
+
+  # Stop at the latest heartbeat of any product_id, so days the data does not
+  # reach yet are left out instead of reading as an outage
+  last_window <- min(
+    (as.numeric(as.Date(last_date)) + 1) * USAGE_WINDOWS_PER_DAY - 1,
+    max(beats$window)
+  )
+  beats <- dplyr::filter(beats, .data$window <= last_window)
   if (nrow(beats) == 0) {
     return(empty)
   }
@@ -111,7 +121,8 @@ usage_server_counts <- function(heartbeats, first_date, last_date) {
 #'
 #' Reads heartbeats from one day before the window so the first window has its
 #' predecessor. The as-of day is excluded: days run from `window[1]` through
-#' `today - 1`.
+#' `today - 1`, or through the latest heartbeat if the data ends earlier. The
+#' as-of day's heartbeats are read only to show the data reaches `today - 1`.
 #'
 #' @param product `"connect"` or `"workbench"`.
 #' @param base_path Base path to Chronicle data directory.
@@ -130,7 +141,7 @@ usage_read_heartbeats <- function(product, base_path, window, today) {
     usage_with_defaults(list(product_id = "")) |>
     dplyr::filter(
       .data$date >= !!(window[1] - 1),
-      .data$date < !!as.Date(today)
+      .data$date <= !!as.Date(today)
     ) |>
     dplyr::select("timestamp", "host_name", "product_id") |>
     dplyr::collect() |>
