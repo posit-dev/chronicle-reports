@@ -531,7 +531,7 @@
     },
     "chronicle.reports": {
       "Package": "chronicle.reports",
-      "Version": "1.1.0",
+      "Version": "1.2.0",
       "Source": "GitHub",
       "Title": "Posit Chronicle Reports",
       "Authors@R": "c( person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")), person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")), person(\"Tim\", \"Margheim\", , \"tim.margheim@posit.co\", role = c(\"aut\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
@@ -577,7 +577,7 @@
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
       "RemoteRef": "dev",
-      "RemoteSha": "aa1e59fc6544885e00ff23b30d036037dacf845d",
+      "RemoteSha": "c5db9b86b42abeefb4f7b81ed5a14ed3b6df6edd",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Tim Margheim [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
@@ -1896,7 +1896,7 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "2.5.0",
+      "Version": "2.6.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Toolkit for Encryption, Signatures and Certificates Based on OpenSSL",

@@ -442,7 +442,7 @@
       "description": {
         "Package": "chronicle.reports",
         "Title": "Posit Chronicle Reports",
-        "Version": "1.1.0",
+        "Version": "1.2.0",
         "Authors@R": "c(\n    person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")),\n    person(\"Tim\", \"Margheim\", , \"tim.margheim@posit.co\", role = c(\"aut\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "Run reports for Posit Chronicle. You provide the\n    location of your Chronicle data and this package will generate reports\n    to help you analyze and visualize your data.",
         "License": "MIT + file LICENSE",
@@ -461,16 +461,16 @@
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
         "RemoteRef": "dev",
-        "RemoteSha": "aa1e59fc6544885e00ff23b30d036037dacf845d",
+        "RemoteSha": "c5db9b86b42abeefb4f7b81ed5a14ed3b6df6edd",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
         "GithubRef": "dev",
-        "GithubSHA1": "aa1e59fc6544885e00ff23b30d036037dacf845d",
+        "GithubSHA1": "c5db9b86b42abeefb4f7b81ed5a14ed3b6df6edd",
         "NeedsCompilation": "no",
-        "Packaged": "2026-11-16 15:27:31 UTC; root",
+        "Packaged": "2026-11-19 20:35:45 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-11-16 15:27:32 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-11-19 20:35:46 UTC; unix"
       }
     },
     "cli": {
@@ -1481,7 +1481,7 @@
         "Package": "openssl",
         "Type": "Package",
         "Title": "Toolkit for Encryption, Signatures and Certificates Based on\nOpenSSL",
-        "Version": "2.5.0",
+        "Version": "2.6.0",
         "Authors@R": "c(person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\",\n    comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Oliver\", \"Keyes\", role = \"ctb\"))",
         "Description": "Bindings to OpenSSL libssl and libcrypto, plus custom SSH key parsers.\n    Supports RSA, DSA and EC curves P-256, P-384, P-521, and curve25519. Cryptographic\n    signatures can either be created and verified manually or via x509 certificates. \n    AES can be used in cbc, ctr or gcm mode for symmetric encryption; RSA for asymmetric\n    (public key) encryption or EC for Diffie Hellman. High-level envelope functions \n    combine RSA and AES for encrypting arbitrary sized data. Other utilities include key\n    generators, hash functions (md5, sha1, sha256, etc), base64 encoder, a secure random\n    number generator, and 'bignum' math methods for manually performing crypto \n    calculations on large multibyte integers.",
         "License": "MIT + file LICENSE",
@@ -1494,12 +1494,12 @@
         "Encoding": "UTF-8",
         "Config/roxygen2/version": "8.0.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-11-01 10:34:10 UTC; jeroen",
+        "Packaged": "2026-11-16 17:49:35 UTC; jeroen",
         "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Oliver Keyes [ctb]",
         "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-11-02 17:20:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-11-03 04:19:18 UTC; unix"
+        "Date/Publication": "2026-11-17 07:50:17 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-11-18 04:11:28 UTC; unix"
       }
     },
     "otel": {
@@ -2069,10 +2069,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "e9c3ffbb0c022ef0a311ad17bc56bcc5cd93811d",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-11-16 15:26:59 UTC; root",
+        "Packaged": "2026-11-19 20:34:59 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-11-16 15:26:59 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-11-19 20:35:00 UTC; unix"
       }
     },
     "tidyr": {
@@ -2442,7 +2442,7 @@
       "checksum": "3566472c42067adcdc587b2b7c2ec549"
     },
     "renv.lock": {
-      "checksum": "fabaf4e996fda96f6b82d34f18287322"
+      "checksum": "5252bd82e15d4c8c60cee96588c29d5b"
     }
   },
   "users": null
