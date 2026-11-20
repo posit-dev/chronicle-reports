@@ -78,8 +78,9 @@ jobs:
           # Manifests and lockfiles are regenerated per branch by CI, so the two
           # branches always disagree on them. Keep dev's copies: they carry dev's
           # dependency updates and extension versions, and CI regenerates them
-          # again once this merges.
-          git checkout origin/dev -- 'inst/apps/*/manifest.json' 'inst/apps/*/renv.lock'
+          # again once this merges. Restoring index and working tree together also
+          # removes any of these files that dev has deleted.
+          git restore --source=origin/dev --staged --worktree -- 'inst/apps/*/manifest.json' 'inst/apps/*/renv.lock'
 
           unmerged="$(git diff --name-only --diff-filter=U)"
           if [[ -n "$unmerged" ]]; then
@@ -88,7 +89,12 @@ jobs:
           fi
 
           git commit -m "Merge main into dev"
-          git push --force origin "$BACK_MERGE_BRANCH"
+          # GitHub rejects a push that changes a workflow file unless the App has
+          # Workflows write access, which this token does not request.
+          if ! git push --force origin "$BACK_MERGE_BRANCH"; then
+            echo "::error::Could not push $BACK_MERGE_BRANCH. If the merge changes files under .github/workflows, merge main into dev by hand."
+            exit 1
+          fi
 
       - name: Open pull request
         if: steps.merge.outputs.needed == 'true'
