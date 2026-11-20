@@ -1,0 +1,119 @@
+name: Back-merge main into dev
+
+# CI commits regenerated manifests (and the gallery feed) back to `main` after a
+# release, so `main` ends up with commits `dev` does not have. Unless those are
+# merged back, the next `dev -> main` release PR conflicts on the generated
+# files. This opens the `main -> dev` PR so that step cannot be forgotten.
+
+on:
+  workflow_call:
+
+# All writes go through the GitHub App token, so the workflow token needs nothing more
+permissions:
+  contents: read
+
+env:
+  BACK_MERGE_BRANCH: back-merge/main-to-dev
+
+jobs:
+  back-merge:
+    runs-on: ubuntu-latest
+    # A release can trigger CI on main twice (the gallery feed commit is a push
+    # too); run those one at a time so they do not race on the branch.
+    concurrency:
+      group: back-merge-main-to-dev
+      cancel-in-progress: false
+    steps:
+      - name: Generate token for GitHub App
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.POSIT_CHRONICLE_APP_ID }}
+          private-key: ${{ secrets.POSIT_CHRONICLE_PEM }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - uses: actions/checkout@v6
+        with:
+          ref: dev
+          fetch-depth: 0
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Get GitHub App user id
+        id: app-user
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: echo "id=$(gh api '/users/${{ steps.generate-token.outputs.app-slug }}[bot]' --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - name: Merge main into a branch off dev
+        id: merge
+        run: |
+          git config user.name '${{ steps.generate-token.outputs.app-slug }}[bot]'
+          git config user.email '${{ steps.app-user.outputs.id }}+${{ steps.generate-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+
+          git fetch origin main dev
+
+          if git merge-base --is-ancestor origin/main origin/dev; then
+            echo "dev already contains main; nothing to merge back."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "needed=true" >> "$GITHUB_OUTPUT"
+
+          # An earlier run for the same release may already have pushed a branch
+          # that contains the current main; leave it (and its reviews) alone.
+          if git fetch origin "$BACK_MERGE_BRANCH" 2>/dev/null &&
+            git merge-base --is-ancestor origin/main FETCH_HEAD; then
+            echo "$BACK_MERGE_BRANCH already contains main."
+            exit 0
+          fi
+
+          git switch -C "$BACK_MERGE_BRANCH" origin/dev
+          git merge --no-ff --no-commit origin/main || true
+          if ! git rev-parse -q --verify MERGE_HEAD >/dev/null; then
+            echo "::error::Could not start the merge of main into dev."
+            exit 1
+          fi
+
+          # Manifests and lockfiles are regenerated per branch by CI, so the two
+          # branches always disagree on them. Keep dev's copies: they carry dev's
+          # dependency updates and extension versions, and CI regenerates them
+          # again once this merges. Restoring index and working tree together also
+          # removes any of these files that dev has deleted.
+          git restore --source=origin/dev --staged --worktree -- 'inst/apps/*/manifest.json' 'inst/apps/*/renv.lock'
+
+          unmerged="$(git diff --name-only --diff-filter=U)"
+          if [[ -n "$unmerged" ]]; then
+            echo "::error::main and dev conflict outside the generated manifests; merge main into dev by hand. Conflicting files: ${unmerged//$'\n'/, }"
+            exit 1
+          fi
+
+          git commit -m "Merge main into dev"
+          # GitHub rejects a push that changes a workflow file unless the App has
+          # Workflows write access, which this token does not request.
+          if ! git push --force origin "$BACK_MERGE_BRANCH"; then
+            echo "::error::Could not push $BACK_MERGE_BRANCH. If the merge changes files under .github/workflows, merge main into dev by hand."
+            exit 1
+          fi
+
+      - name: Open pull request
+        if: steps.merge.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          open="$(gh pr list --base dev --head "$BACK_MERGE_BRANCH" --state open --json number --jq 'length')"
+          if [[ "$open" != "0" ]]; then
+            echo "A back-merge pull request is already open."
+            exit 0
+          fi
+
+          gh pr create --base dev --head "$BACK_MERGE_BRANCH" \
+            --title "Merge main into dev" \
+            --body "$(cat <<'EOF'
+          Brings the commits CI pushed to `main` after the release (regenerated manifests, gallery feed) back into `dev`, so the next `dev -> main` release PR does not conflict.
+
+          The app manifests and lockfiles keep `dev`'s versions; CI regenerates them when this merges.
+
+          **Merge with "Create a merge commit", not squash.** A squash drops the link to `main` and the next release PR will conflict anyway.
+          EOF
+          )"
