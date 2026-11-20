@@ -22,7 +22,14 @@ pak::pak("posit-dev/chronicle-reports")
 sample_path <- chronicle.reports::chronicle_sample_data()
 
 # Run the Connect dashboard
+# Run the Connect dashboard
 chronicle.reports::chronicle_run_app("connect", base_path = sample_path)
+
+# Run the Workbench dashboard
+chronicle.reports::chronicle_run_app("workbench", base_path = sample_path)
+
+# Run the Posit Usage Report
+chronicle.reports::chronicle_run_app("usage", base_path = sample_path)
 ```
 
 ## Installation
