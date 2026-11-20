@@ -12,6 +12,13 @@ write_usage_raw <- function(data, base_path, metric) {
   write_sample_raw_parquet_internal(data, base_path, metric)
 }
 
+#' Write curated heartbeat rows, partitioned on the day of each timestamp
+write_usage_heartbeats <- function(data, base_path, metric) {
+  data$date <- as.Date(data$timestamp)
+  data$environment <- "prod"
+  write_sample_parquet_internal(data, base_path, metric)
+}
+
 #' Build a Chronicle data directory with just the datasets the usage report
 #' reads. Authenticated users are identified by `user_guid`; anonymous hits use
 #' either NA or an empty string.
@@ -113,6 +120,34 @@ create_usage_fixture <- function(base_path = NULL) {
     stringsAsFactors = FALSE
   )
   write_usage_raw(contents, base_path, "connect_contents")
+
+  write_usage_heartbeats(
+    data.frame(
+      timestamp = c(
+        as.POSIXct("2026-10-03 00:00:00", tz = "UTC") + 300 * 0:287,
+        as.POSIXct("2026-10-03 12:00:00", tz = "UTC"),
+        as.POSIXct("2024-01-01 12:00:00", tz = "UTC"),
+        as.POSIXct("2026-11-06 12:00:00", tz = "UTC")
+      ),
+      host_name = c(rep("h1", 288), "h2", "h1", "h1"),
+      product_id = "p1"
+    ),
+    base_path,
+    "connect/heartbeats"
+  )
+  write_usage_heartbeats(
+    data.frame(
+      timestamp = c(
+        as.POSIXct("2026-11-02 00:00:00", tz = "UTC") + 300 * 0:287,
+        as.POSIXct("2024-01-01 12:00:00", tz = "UTC"),
+        as.POSIXct("2026-11-06 12:00:00", tz = "UTC")
+      ),
+      host_name = "w1",
+      product_id = "p1"
+    ),
+    base_path,
+    "workbench/heartbeats"
+  )
 
   base_path
 }
