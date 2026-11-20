@@ -8,6 +8,7 @@
 #'   \itemize{
 #'     \item `"connect"` - Comprehensive Connect Dashboard
 #'     \item `"workbench"` - Comprehensive Workbench Dashboard
+#'     \item `"usage"` - Monthly usage report by product ID
 #'   }
 #'   Use [chronicle_list_apps()] to see all available apps.
 #' @param base_path The base path where Chronicle data files are stored.
