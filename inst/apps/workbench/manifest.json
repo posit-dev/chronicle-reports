@@ -141,15 +141,15 @@
       "description": {
         "Package": "S7",
         "Title": "An Object Oriented System Meant to Become a Successor to S3 and\nS4",
-        "Version": "0.2.2",
+        "Version": "1.0.0",
         "Authors@R": "c(\n    person(\"Object-Oriented Programming Working Group\", role = \"cph\"),\n    person(\"Davis\", \"Vaughan\", role = \"aut\"),\n    person(\"Jim\", \"Hester\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-2739-7082\")),\n    person(\"Tomasz\", \"Kalinowski\", role = \"aut\"),\n    person(\"Will\", \"Landau\", role = \"aut\"),\n    person(\"Michael\", \"Lawrence\", role = \"aut\"),\n    person(\"Martin\", \"Maechler\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-8685-9910\")),\n    person(\"Luke\", \"Tierney\", role = \"aut\"),\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0003-4757-117X\"))\n  )",
         "Description": "A new object oriented programming system designed to be a\n    successor to S3 and S4. It includes formal class, generic, and method\n    specification, and a limited form of multiple dispatch. It has been\n    designed and implemented collaboratively by the R Consortium\n    Object-Oriented Programming Working Group, which includes\n    representatives from R-Core, 'Bioconductor', 'Posit'/'tidyverse', and\n    the wider R community.",
         "License": "MIT + file LICENSE",
         "URL": "https://rconsortium.github.io/S7/,\nhttps://github.com/RConsortium/S7",
         "BugReports": "https://github.com/RConsortium/S7/issues",
-        "Depends": "R (>= 3.5.0)",
-        "Imports": "utils",
-        "Suggests": "bench, callr, covr, knitr, methods, rmarkdown, testthat (>=\n3.2.0), tibble",
+        "Depends": "R (>= 4.2.0)",
+        "Imports": "methods, utils",
+        "Suggests": "bench, callr, covr, knitr, lifecycle, rmarkdown, testthat (>=\n3.3.0), tibble, withr",
         "VignetteBuilder": "knitr",
         "Config/build/compilation-database": "true",
         "Config/Needs/website": "sloop",
@@ -157,14 +157,14 @@
         "Config/testthat/parallel": "TRUE",
         "Config/testthat/start-first": "external-generic",
         "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.3",
+        "Config/roxygen2/version": "8.1.1",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-04-20 21:37:20 UTC; hadleywickham",
+        "Packaged": "2026-11-16 14:24:07 UTC; hadleywickham",
         "Author": "Object-Oriented Programming Working Group [cph],\n  Davis Vaughan [aut],\n  Jim Hester [aut] (ORCID: <https://orcid.org/0000-0002-2739-7082>),\n  Tomasz Kalinowski [aut],\n  Will Landau [aut],\n  Michael Lawrence [aut],\n  Martin Maechler [aut] (ORCID: <https://orcid.org/0000-0002-8685-9910>),\n  Luke Tierney [aut],\n  Hadley Wickham [aut, cre] (ORCID:\n    <https://orcid.org/0000-0003-4757-117X>)",
         "Maintainer": "Hadley Wickham <hadley@posit.co>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-04-22 11:00:10 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-08-12 19:39:59 UTC; unix"
+        "Date/Publication": "2026-11-19 08:40:02 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-11-20 03:46:42 UTC; unix"
       }
     },
     "arrow": {
@@ -173,16 +173,17 @@
       "description": {
         "Package": "arrow",
         "Title": "Integration to 'Apache' 'Arrow'",
-        "Version": "25.0.1",
+        "Version": "26.0.1.1",
         "Authors@R": "c(\n    person(\"Neal\", \"Richardson\", email = \"neal.p.richardson@gmail.com\", role = c(\"aut\")),\n    person(\"Ian\", \"Cook\", email = \"ianmcook@gmail.com\", role = c(\"aut\")),\n    person(\"Nic\", \"Crane\", email = \"thisisnic@gmail.com\", role = c(\"aut\")),\n    person(\"Dewey\", \"Dunnington\", role = c(\"aut\"), email = \"dewey@fishandwhistle.net\", comment = c(ORCID = \"0000-0002-9415-4582\")),\n    person(\"Romain\", \"Fran\\u00e7ois\", role = c(\"aut\"), comment = c(ORCID = \"0000-0002-2444-4226\")),\n    person(\"Jonathan\", \"Keane\", email = \"jkeane@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Bryce\", \"Mecum\", email = \"brycemecum@gmail.com\", role = c(\"aut\")),\n    person(\"Drago\\u0219\", \"Moldovan-Gr\\u00fcnfeld\", email = \"dragos.mold@gmail.com\", role = c(\"aut\")),\n    person(\"Jeroen\", \"Ooms\", email = \"jeroen@berkeley.edu\", role = c(\"aut\")),\n    person(\"Jacob\", \"Wujciak-Jens\", email = \"jacob@wujciak.de\", role = c(\"aut\")),\n    person(\"Javier\", \"Luraschi\", email = \"javier@rstudio.com\", role = c(\"ctb\")),\n    person(\"Karl\", \"Dunkle Werner\", email = \"karldw@users.noreply.github.com\", role = c(\"ctb\"), comment = c(ORCID = \"0000-0003-0523-7309\")),\n    person(\"Jeffrey\", \"Wong\", email = \"jeffreyw@netflix.com\", role = c(\"ctb\")),\n    person(\"Apache Arrow\", email = \"dev@arrow.apache.org\", role = c(\"aut\", \"cph\"))\n  )",
         "Description": "'Apache' 'Arrow' <https://arrow.apache.org/> is a cross-language\n    development platform for in-memory data. It specifies a standardized\n    language-independent columnar memory format for flat and hierarchical data,\n    organized for efficient analytic operations on modern hardware. This\n    package provides an interface to the 'Arrow C++' library.",
         "Depends": "R (>= 4.2)",
         "License": "Apache License (>= 2.0)",
+        "Copyright": "See file inst/COPYRIGHTS",
         "URL": "https://github.com/apache/arrow/, https://arrow.apache.org/docs/r/",
         "BugReports": "https://github.com/apache/arrow/issues",
         "Encoding": "UTF-8",
         "Language": "en-US",
-        "SystemRequirements": "C++20; for AWS S3 support on Linux, libcurl and\nopenssl (optional); cmake >= 3.26 (build-time only, and only\nfor full source build)",
+        "SystemRequirements": "C++20; for AWS S3 support on Linux, libcurl and\nopenssl, and libxml2 for Azure (optional); cmake >= 3.26\n(build-time only, and only for full source build)",
         "Biarch": "true",
         "Imports": "assertthat, bit64 (>= 0.9-7), glue, methods, purrr, R6, rlang\n(>= 1.0.0), stats, tidyselect (>= 1.0.0), utils, vctrs",
         "Config/testthat/edition": "3",
@@ -192,12 +193,12 @@
         "Collate": "'arrowExports.R' 'enums.R' 'arrow-object.R' 'type.R'\n'array-data.R' 'arrow-datum.R' 'array.R' 'arrow-info.R'\n'arrow-package.R' 'arrow-tabular.R' 'buffer.R'\n'chunked-array.R' 'io.R' 'compression.R' 'scalar.R' 'compute.R'\n'config.R' 'csv.R' 'dataset.R' 'dataset-factory.R'\n'dataset-format.R' 'dataset-partition.R' 'dataset-scan.R'\n'dataset-write.R' 'dictionary.R' 'dplyr-across.R'\n'dplyr-arrange.R' 'dplyr-by.R' 'dplyr-collect.R'\n'dplyr-count.R' 'dplyr-datetime-helpers.R' 'dplyr-distinct.R'\n'dplyr-eval.R' 'dplyr-filter.R' 'dplyr-funcs-agg.R'\n'dplyr-funcs-augmented.R' 'dplyr-funcs-conditional.R'\n'dplyr-funcs-datetime.R' 'dplyr-funcs-doc.R'\n'dplyr-funcs-math.R' 'dplyr-funcs-simple.R'\n'dplyr-funcs-string.R' 'dplyr-funcs-type.R' 'expression.R'\n'dplyr-funcs.R' 'dplyr-glimpse.R' 'dplyr-group-by.R'\n'dplyr-join.R' 'dplyr-mutate.R' 'dplyr-select.R'\n'dplyr-slice.R' 'dplyr-summarize.R' 'dplyr-union.R'\n'record-batch.R' 'table.R' 'dplyr.R' 'duckdb.R' 'extension.R'\n'feather.R' 'field.R' 'filesystem.R' 'flight.R'\n'install-arrow.R' 'ipc-stream.R' 'json.R' 'memory-pool.R'\n'message.R' 'metadata.R' 'parquet.R' 'python.R'\n'query-engine.R' 'record-batch-reader.R'\n'record-batch-writer.R' 'reexports-tidyselect.R' 'schema.R'\n'udf.R' 'util.R'",
         "Config/roxygen2/version": "8.1.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-08-22 09:25:08 UTC; nic",
+        "Packaged": "2026-11-20 15:55:02 UTC; jkeane",
         "Author": "Neal Richardson [aut],\n  Ian Cook [aut],\n  Nic Crane [aut],\n  Dewey Dunnington [aut] (ORCID: <https://orcid.org/0000-0002-9415-4582>),\n  Romain François [aut] (ORCID: <https://orcid.org/0000-0002-2444-4226>),\n  Jonathan Keane [aut, cre],\n  Bryce Mecum [aut],\n  Dragoș Moldovan-Grünfeld [aut],\n  Jeroen Ooms [aut],\n  Jacob Wujciak-Jens [aut],\n  Javier Luraschi [ctb],\n  Karl Dunkle Werner [ctb] (ORCID:\n    <https://orcid.org/0000-0003-0523-7309>),\n  Jeffrey Wong [ctb],\n  Apache Arrow [aut, cph]",
         "Maintainer": "Jonathan Keane <jkeane@gmail.com>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-08-23 06:40:10 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-08-24 04:31:52 UTC; unix"
+        "Date/Publication": "2026-11-21 02:00:02 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-11-21 04:25:10 UTC; unix"
       }
     },
     "askpass": {
@@ -458,36 +459,35 @@
       "description": {
         "Package": "chronicle.reports",
         "Title": "Posit Chronicle Reports",
-        "Version": "1.1.0",
+        "Version": "1.2.0",
         "Authors@R": "c(\n    person(\"Mark\", \"Tucker\", , \"mark.tucker@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Matt\", \"Urbina\", , \"matt.urbina@posit.co\", role = c(\"aut\")),\n    person(\"Tim\", \"Margheim\", , \"tim.margheim@posit.co\", role = c(\"aut\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "Run reports for Posit Chronicle. You provide the\n    location of your Chronicle data and this package will generate reports\n    to help you analyze and visualize your data.",
         "License": "MIT + file LICENSE",
         "URL": "https://github.com/posit-dev/chronicle-reports",
         "BugReports": "https://github.com/posit-dev/chronicle-reports/issues",
         "Depends": "R (>= 4.2.0)",
-        "Imports": "arrow, bsicons, bslib, charlatan, connectapi, dplyr, DT,\nggplot2, glue, lubridate, plotly, rlang, shiny,\nshinycssloaders, tidyr, withr (>= 3.0.2)",
+        "Imports": "arrow, bsicons, bslib, charlatan, connectapi, dplyr, DT,\nggplot2, glue, jsonlite, lubridate, plotly, rlang, shiny,\nshinycssloaders, tidyr, withr (>= 3.0.2)",
         "Suggests": "devtools (>= 2.4.6), shinytest2, testthat (>= 3.0.0), tibble\n(>= 3.3.0)",
         "Encoding": "UTF-8",
         "Roxygen": "list(markdown = TRUE)",
         "Config/testthat/edition": "3",
         "Remotes": "r-lib/devtools, tidyverse/tibble, r-lib/withr",
-        "Config/roxygen2/version": "8.0.0",
-        "RoxygenNote": "7.3.2",
+        "Config/roxygen2/version": "8.1.1",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
         "RemoteRepo": "chronicle-reports",
         "RemoteUsername": "posit-dev",
-        "RemoteRef": "main",
-        "RemoteSha": "c9cba0ad45ea7bcb207e09d015385000458c23c9",
+        "RemoteRef": "dev",
+        "RemoteSha": "5f8222af04d738907de9b893ab8683f0a7aacd73",
         "GithubRepo": "chronicle-reports",
         "GithubUsername": "posit-dev",
-        "GithubRef": "main",
-        "GithubSHA1": "c9cba0ad45ea7bcb207e09d015385000458c23c9",
+        "GithubRef": "dev",
+        "GithubSHA1": "5f8222af04d738907de9b893ab8683f0a7aacd73",
         "NeedsCompilation": "no",
-        "Packaged": "2026-10-15 16:57:51 UTC; root",
+        "Packaged": "2026-11-23 15:08:43 UTC; root",
         "Author": "Mark Tucker [aut, cre],\n  Matt Urbina [aut],\n  Tim Margheim [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Mark Tucker <mark.tucker@posit.co>",
-        "Built": "R 4.5.3; ; 2026-10-15 16:57:51 UTC; unix"
+        "Built": "R 4.5.3; ; 2026-11-23 15:08:44 UTC; unix"
       }
     },
     "cli": {
@@ -552,7 +552,7 @@
         "Type": "Package",
         "Package": "connectapi",
         "Title": "Utilities for Interacting with the 'Posit Connect' Server API",
-        "Version": "0.12.1",
+        "Version": "0.13.0",
         "Authors@R": "c(\n    person(given = \"Kara\",\n           family = \"Woo\",\n           role = c(\"aut\", \"cre\"),\n           email = \"kara.woo@posit.co\"),\n    person(given = \"Toph\",\n           family = \"Allen\",\n           role = c(\"aut\"),\n           email = \"toph@posit.co\"),\n    person(given = \"Neal\",\n           family = \"Richardson\",\n           role = c(\"aut\")),\n    person(given = \"Sean\",\n           family = \"Lopp\",\n           role = c(\"aut\")),\n    person(given = \"Cole\",\n           family = \"Arendt\",\n           role = c(\"aut\")),\n    person(given = \"Posit, PBC\",\n           role = c(\"cph\", \"fnd\")))",
         "Description": "Provides a helpful 'R6' class and methods for interacting with\n    the 'Posit Connect' Server API along with some meaningful utility functions\n    for regular tasks. API documentation varies by 'Posit Connect' installation\n    and version, but the latest documentation is also hosted publicly at\n    <https://docs.posit.co/connect/api/>.",
         "License": "MIT + file LICENSE",
@@ -563,16 +563,16 @@
         "VignetteBuilder": "knitr",
         "Encoding": "UTF-8",
         "Language": "en-US",
-        "RoxygenNote": "7.3.3",
         "Config/testthat/edition": "3",
-        "Collate": "'audits.R' 'browse.R' 'connect.R' 'connectapi-package.R'\n'connectapi.R' 'content.R' 'deploy.R' 'get.R' 'git.R'\n'groups.R' 'integrations.R' 'lazy.R' 'page.R' 'parse.R'\n'promote.R' 'ptype.R' 'remote.R' 'runtime-caches.R'\n'schedule.R' 'tags.R' 'utils.R' 'thumbnail.R' 'user.R'\n'utils-pipe.R' 'variant.R'",
+        "Collate": "'audits.R' 'browse.R' 'connect.R' 'connectapi-package.R'\n'connectapi.R' 'content.R' 'deploy.R' 'get.R' 'git.R'\n'groups.R' 'integrations.R' 'lazy.R' 'page.R' 'parse.R'\n'processes.R' 'promote.R' 'remote.R' 'runtime-caches.R'\n'schedule.R' 'tags.R' 'utils.R' 'thumbnail.R' 'user.R'\n'utils-pipe.R' 'variant.R'",
+        "Config/roxygen2/version": "8.1.1",
         "NeedsCompilation": "no",
-        "Packaged": "2026-04-29 19:15:15 UTC; kara",
+        "Packaged": "2026-11-10 20:54:50 UTC; kara",
         "Author": "Kara Woo [aut, cre],\n  Toph Allen [aut],\n  Neal Richardson [aut],\n  Sean Lopp [aut],\n  Cole Arendt [aut],\n  Posit, PBC [cph, fnd]",
         "Maintainer": "Kara Woo <kara.woo@posit.co>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-04-29 20:00:03 UTC",
-        "Built": "R 4.5.0; ; 2026-04-30 05:31:07 UTC; unix"
+        "Date/Publication": "2026-11-10 21:10:10 UTC",
+        "Built": "R 4.5.0; ; 2026-11-11 04:09:00 UTC; unix"
       }
     },
     "cpp11": {
@@ -920,7 +920,7 @@
       "description": {
         "Package": "ggplot2",
         "Title": "Create Elegant Data Visualisations Using the Grammar of Graphics",
-        "Version": "4.0.3",
+        "Version": "4.0.4",
         "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\",\n           comment = c(ORCID = \"0000-0003-4757-117X\")),\n    person(\"Winston\", \"Chang\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-1576-2126\")),\n    person(\"Lionel\", \"Henry\", role = \"aut\"),\n    person(\"Thomas Lin\", \"Pedersen\", , \"thomas.pedersen@posit.co\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-5147-4711\")),\n    person(\"Kohske\", \"Takahashi\", role = \"aut\"),\n    person(\"Claus\", \"Wilke\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-7470-9261\")),\n    person(\"Kara\", \"Woo\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-5125-4188\")),\n    person(\"Hiroaki\", \"Yutani\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-3385-7233\")),\n    person(\"Dewey\", \"Dunnington\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-9415-4582\")),\n    person(\"Teun\", \"van den Brand\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-9335-7468\")),\n    person(\"Posit, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "A system for 'declaratively' creating graphics, based on \"The\n    Grammar of Graphics\". You provide the data, tell 'ggplot2' how to map\n    variables to aesthetics, what graphical primitives to use, and it\n    takes care of the details.",
         "License": "MIT + file LICENSE",
@@ -939,12 +939,12 @@
         "RoxygenNote": "7.3.3",
         "Collate": "'ggproto.R' 'ggplot-global.R' 'aaa-.R'\n'aes-colour-fill-alpha.R' 'aes-evaluation.R'\n'aes-group-order.R' 'aes-linetype-size-shape.R'\n'aes-position.R' 'all-classes.R' 'compat-plyr.R' 'utilities.R'\n'aes.R' 'annotation-borders.R' 'utilities-checks.R'\n'legend-draw.R' 'geom-.R' 'annotation-custom.R'\n'annotation-logticks.R' 'scale-type.R' 'layer.R'\n'make-constructor.R' 'geom-polygon.R' 'geom-map.R'\n'annotation-map.R' 'geom-raster.R' 'annotation-raster.R'\n'annotation.R' 'autolayer.R' 'autoplot.R' 'axis-secondary.R'\n'backports.R' 'bench.R' 'bin.R' 'coord-.R' 'coord-cartesian-.R'\n'coord-fixed.R' 'coord-flip.R' 'coord-map.R' 'coord-munch.R'\n'coord-polar.R' 'coord-quickmap.R' 'coord-radial.R'\n'coord-sf.R' 'coord-transform.R' 'data.R' 'docs_layer.R'\n'facet-.R' 'facet-grid-.R' 'facet-null.R' 'facet-wrap.R'\n'fortify-map.R' 'fortify-models.R' 'fortify-spatial.R'\n'fortify.R' 'stat-.R' 'geom-abline.R' 'geom-rect.R'\n'geom-bar.R' 'geom-tile.R' 'geom-bin2d.R' 'geom-blank.R'\n'geom-boxplot.R' 'geom-col.R' 'geom-path.R' 'geom-contour.R'\n'geom-point.R' 'geom-count.R' 'geom-crossbar.R'\n'geom-segment.R' 'geom-curve.R' 'geom-defaults.R'\n'geom-ribbon.R' 'geom-density.R' 'geom-density2d.R'\n'geom-dotplot.R' 'geom-errorbar.R' 'geom-freqpoly.R'\n'geom-function.R' 'geom-hex.R' 'geom-histogram.R'\n'geom-hline.R' 'geom-jitter.R' 'geom-label.R'\n'geom-linerange.R' 'geom-pointrange.R' 'geom-quantile.R'\n'geom-rug.R' 'geom-sf.R' 'geom-smooth.R' 'geom-spoke.R'\n'geom-text.R' 'geom-violin.R' 'geom-vline.R'\n'ggplot2-package.R' 'grob-absolute.R' 'grob-dotstack.R'\n'grob-null.R' 'grouping.R' 'properties.R' 'margins.R'\n'theme-elements.R' 'guide-.R' 'guide-axis.R'\n'guide-axis-logticks.R' 'guide-axis-stack.R'\n'guide-axis-theta.R' 'guide-legend.R' 'guide-bins.R'\n'guide-colorbar.R' 'guide-colorsteps.R' 'guide-custom.R'\n'guide-none.R' 'guide-old.R' 'guides-.R' 'guides-grid.R'\n'hexbin.R' 'import-standalone-obj-type.R'\n'import-standalone-types-check.R' 'labeller.R' 'labels.R'\n'layer-sf.R' 'layout.R' 'limits.R' 'performance.R'\n'plot-build.R' 'plot-construction.R' 'plot-last.R' 'plot.R'\n'position-.R' 'position-collide.R' 'position-dodge.R'\n'position-dodge2.R' 'position-identity.R' 'position-jitter.R'\n'position-jitterdodge.R' 'position-nudge.R' 'position-stack.R'\n'quick-plot.R' 'reshape-add-margins.R' 'save.R' 'scale-.R'\n'scale-alpha.R' 'scale-binned.R' 'scale-brewer.R'\n'scale-colour.R' 'scale-continuous.R' 'scale-date.R'\n'scale-discrete-.R' 'scale-expansion.R' 'scale-gradient.R'\n'scale-grey.R' 'scale-hue.R' 'scale-identity.R'\n'scale-linetype.R' 'scale-linewidth.R' 'scale-manual.R'\n'scale-shape.R' 'scale-size.R' 'scale-steps.R' 'scale-view.R'\n'scale-viridis.R' 'scales-.R' 'stat-align.R' 'stat-bin.R'\n'stat-summary-2d.R' 'stat-bin2d.R' 'stat-bindot.R'\n'stat-binhex.R' 'stat-boxplot.R' 'stat-connect.R'\n'stat-contour.R' 'stat-count.R' 'stat-density-2d.R'\n'stat-density.R' 'stat-ecdf.R' 'stat-ellipse.R'\n'stat-function.R' 'stat-identity.R' 'stat-manual.R'\n'stat-qq-line.R' 'stat-qq.R' 'stat-quantilemethods.R'\n'stat-sf-coordinates.R' 'stat-sf.R' 'stat-smooth-methods.R'\n'stat-smooth.R' 'stat-sum.R' 'stat-summary-bin.R'\n'stat-summary-hex.R' 'stat-summary.R' 'stat-unique.R'\n'stat-ydensity.R' 'summarise-plot.R' 'summary.R' 'theme.R'\n'theme-defaults.R' 'theme-current.R' 'theme-sub.R'\n'utilities-break.R' 'utilities-grid.R' 'utilities-help.R'\n'utilities-patterns.R' 'utilities-resolution.R'\n'utilities-tidy-eval.R' 'zxx.R' 'zzz.R'",
         "NeedsCompilation": "no",
-        "Packaged": "2026-04-21 12:47:29 UTC; thomas",
+        "Packaged": "2026-11-11 10:47:46 UTC; thomas",
         "Author": "Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>),\n  Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Lionel Henry [aut],\n  Thomas Lin Pedersen [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-5147-4711>),\n  Kohske Takahashi [aut],\n  Claus Wilke [aut] (ORCID: <https://orcid.org/0000-0002-7470-9261>),\n  Kara Woo [aut] (ORCID: <https://orcid.org/0000-0002-5125-4188>),\n  Hiroaki Yutani [aut] (ORCID: <https://orcid.org/0000-0002-3385-7233>),\n  Dewey Dunnington [aut] (ORCID: <https://orcid.org/0000-0002-9415-4582>),\n  Teun van den Brand [aut] (ORCID:\n    <https://orcid.org/0000-0002-9335-7468>),\n  Posit, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-04-22 09:10:03 UTC",
-        "Built": "R 4.5.0; ; 2026-08-12 19:48:12 UTC; unix"
+        "Date/Publication": "2026-11-14 00:20:15 UTC",
+        "Built": "R 4.5.0; ; 2026-11-14 04:05:27 UTC; unix"
       }
     },
     "glue": {
@@ -1498,7 +1498,7 @@
         "Package": "openssl",
         "Type": "Package",
         "Title": "Toolkit for Encryption, Signatures and Certificates Based on\nOpenSSL",
-        "Version": "2.4.2",
+        "Version": "2.6.0",
         "Authors@R": "c(person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\",\n    comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Oliver\", \"Keyes\", role = \"ctb\"))",
         "Description": "Bindings to OpenSSL libssl and libcrypto, plus custom SSH key parsers.\n    Supports RSA, DSA and EC curves P-256, P-384, P-521, and curve25519. Cryptographic\n    signatures can either be created and verified manually or via x509 certificates. \n    AES can be used in cbc, ctr or gcm mode for symmetric encryption; RSA for asymmetric\n    (public key) encryption or EC for Diffie Hellman. High-level envelope functions \n    combine RSA and AES for encrypting arbitrary sized data. Other utilities include key\n    generators, hash functions (md5, sha1, sha256, etc), base64 encoder, a secure random\n    number generator, and 'bignum' math methods for manually performing crypto \n    calculations on large multibyte integers.",
         "License": "MIT + file LICENSE",
@@ -1511,12 +1511,12 @@
         "Encoding": "UTF-8",
         "Config/roxygen2/version": "8.0.0",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-06-09 10:51:42 UTC; jeroen",
+        "Packaged": "2026-11-16 17:49:35 UTC; jeroen",
         "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Oliver Keyes [ctb]",
         "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-06-09 13:30:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-08-12 19:43:15 UTC; unix"
+        "Date/Publication": "2026-11-17 07:50:17 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-11-18 04:11:28 UTC; unix"
       }
     },
     "otel": {
@@ -1525,26 +1525,25 @@
       "description": {
         "Package": "otel",
         "Title": "OpenTelemetry R API",
-        "Version": "0.2.0",
+        "Version": "0.3.0",
         "Authors@R": "\n    person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = c(\"aut\", \"cre\"))",
         "Description": "High-quality, ubiquitous, and portable telemetry to enable\n    effective observability. OpenTelemetry is a collection of tools,\n    APIs, and SDKs used to instrument, generate, collect, and export\n    telemetry data (metrics, logs, and traces) for analysis in order to\n    understand your software's performance and behavior.\n    This package implements the OpenTelemetry API:\n    <https://opentelemetry.io/docs/specs/otel/>.\n    Use this package as a dependency if you want to instrument your R\n    package for OpenTelemetry.",
         "License": "MIT + file LICENSE",
         "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.2.9000",
         "Depends": "R (>= 3.6.0)",
-        "Suggests": "callr, cli, glue, jsonlite, otelsdk, processx, shiny,\nspelling, testthat (>= 3.0.0), utils, withr",
+        "Suggests": "callr, cli, glue, jsonlite, otelsdk (>= 0.2.4), processx,\nshiny, spelling, testthat (>= 3.0.0), utils, withr",
         "Config/Needs/website": "tidyverse/tidytemplate",
         "Config/testthat/edition": "3",
         "URL": "https://otel.r-lib.org, https://github.com/r-lib/otel",
-        "Additional_repositories": "https://github.com/r-lib/otelsdk/releases/download/devel",
         "BugReports": "https://github.com/r-lib/otel/issues",
+        "Config/roxygen2/version": "8.1.1",
         "NeedsCompilation": "no",
-        "Packaged": "2025-08-29 12:46:28 UTC; gaborcsardi",
+        "Packaged": "2026-11-07 14:37:49 UTC; gaborcsardi",
         "Author": "Gábor Csárdi [aut, cre]",
         "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
         "Repository": "RSPM",
-        "Date/Publication": "2025-08-29 13:30:07 UTC",
-        "Built": "R 4.5.0; ; 2026-08-12 19:39:38 UTC; unix"
+        "Date/Publication": "2026-11-07 15:20:02 UTC",
+        "Built": "R 4.5.0; ; 2026-11-08 03:59:38 UTC; unix"
       }
     },
     "pillar": {
@@ -1827,27 +1826,27 @@
       "description": {
         "Type": "Package",
         "Package": "sass",
-        "Version": "0.4.10",
         "Title": "Syntactically Awesome Style Sheets ('Sass')",
-        "Description": "An 'SCSS' compiler, powered by the 'LibSass' library. With this,\n    R developers can use variables, inheritance, and functions to generate\n    dynamic style sheets. The package uses the 'Sass CSS' extension language,\n    which is stable, powerful, and CSS compatible.",
-        "Authors@R": "c(\n    person(\"Joe\", \"Cheng\", , \"joe@rstudio.com\", \"aut\"),\n    person(\"Timothy\", \"Mastny\", , \"tim.mastny@gmail.com\", \"aut\"),\n    person(\"Richard\", \"Iannone\", , \"rich@rstudio.com\", \"aut\",\n       comment = c(ORCID = \"0000-0003-3925-190X\")),\n    person(\"Barret\", \"Schloerke\", , \"barret@rstudio.com\", \"aut\",\n           comment = c(ORCID = \"0000-0001-9986-114X\")),\n    person(\"Carson\", \"Sievert\", , \"carson@rstudio.com\", c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Christophe\", \"Dervieux\", , \"cderv@rstudio.com\", c(\"ctb\"),\n           comment = c(ORCID = \"0000-0003-4474-2498\")),\n    person(family = \"RStudio\", role = c(\"cph\", \"fnd\")),\n    person(family = \"Sass Open Source Foundation\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Greter\", \"Marcel\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Mifsud\", \"Michael\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Hampton\", \"Catlin\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Natalie\", \"Weizenbaum\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Chris\", \"Eppstein\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Adams\", \"Joseph\", role = c(\"ctb\", \"cph\"),\n           comment = \"json.cpp\"),\n    person(\"Trifunovic\", \"Nemanja\", role = c(\"ctb\", \"cph\"),\n           comment = \"utf8.h\")\n    )",
+        "Version": "0.5.0",
+        "Authors@R": "c(\n    person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = \"aut\"),\n    person(\"Timothy\", \"Mastny\", , \"tim.mastny@gmail.com\", role = \"aut\"),\n    person(\"Richard\", \"Iannone\", , \"rich@posit.co\", role = \"aut\",\n           comment = c(ORCID = \"0000-0003-3925-190X\")),\n    person(\"Barret\", \"Schloerke\", , \"barret@posit.co\", role = \"aut\",\n           comment = c(ORCID = \"0000-0001-9986-114X\")),\n    person(\"Carson\", \"Sievert\", , \"carson@posit.co\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Christophe\", \"Dervieux\", , \"cderv@posit.co\", role = \"ctb\",\n           comment = c(ORCID = \"0000-0003-4474-2498\")),\n    person(, \"RStudio\", role = c(\"cph\", \"fnd\")),\n    person(, \"Sass Open Source Foundation\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Greter\", \"Marcel\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Mifsud\", \"Michael\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Hampton\", \"Catlin\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Natalie\", \"Weizenbaum\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Chris\", \"Eppstein\", role = c(\"ctb\", \"cph\"),\n           comment = \"LibSass library\"),\n    person(\"Adams\", \"Joseph\", role = c(\"ctb\", \"cph\"),\n           comment = \"json.cpp\"),\n    person(\"Trifunovic\", \"Nemanja\", role = c(\"ctb\", \"cph\"),\n           comment = \"utf8.h\")\n  )",
+        "Description": "An 'SCSS' compiler, powered by the 'LibSass' library. With\n    this, R developers can use variables, inheritance, and functions to\n    generate dynamic style sheets. The package uses the 'Sass CSS'\n    extension language, which is stable, powerful, and CSS compatible.",
         "License": "MIT + file LICENSE",
         "URL": "https://rstudio.github.io/sass/, https://github.com/rstudio/sass",
         "BugReports": "https://github.com/rstudio/sass/issues",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.2",
-        "SystemRequirements": "GNU make",
-        "Imports": "fs (>= 1.2.4), rlang (>= 0.4.10), htmltools (>= 0.5.1), R6,\nrappdirs",
-        "Suggests": "testthat, knitr, rmarkdown, withr, shiny, curl",
+        "Imports": "fs (>= 1.2.4), htmltools (>= 0.5.1), R6, rappdirs, rlang (>=\n0.4.10)",
+        "Suggests": "curl, knitr, rmarkdown, shiny, testthat, withr",
         "VignetteBuilder": "knitr",
+        "Config/roxygen2/version": "8.1.1",
         "Config/testthat/edition": "3",
+        "Encoding": "UTF-8",
+        "SystemRequirements": "GNU make",
         "NeedsCompilation": "yes",
-        "Packaged": "2025-04-11 18:34:19 UTC; cpsievert",
-        "Author": "Joe Cheng [aut],\n  Timothy Mastny [aut],\n  Richard Iannone [aut] (<https://orcid.org/0000-0003-3925-190X>),\n  Barret Schloerke [aut] (<https://orcid.org/0000-0001-9986-114X>),\n  Carson Sievert [aut, cre] (<https://orcid.org/0000-0002-4958-2844>),\n  Christophe Dervieux [ctb] (<https://orcid.org/0000-0003-4474-2498>),\n  RStudio [cph, fnd],\n  Sass Open Source Foundation [ctb, cph] (LibSass library),\n  Greter Marcel [ctb, cph] (LibSass library),\n  Mifsud Michael [ctb, cph] (LibSass library),\n  Hampton Catlin [ctb, cph] (LibSass library),\n  Natalie Weizenbaum [ctb, cph] (LibSass library),\n  Chris Eppstein [ctb, cph] (LibSass library),\n  Adams Joseph [ctb, cph] (json.cpp),\n  Trifunovic Nemanja [ctb, cph] (utf8.h)",
-        "Maintainer": "Carson Sievert <carson@rstudio.com>",
+        "Packaged": "2026-11-18 22:44:24 UTC; cpsievert",
+        "Author": "Joe Cheng [aut],\n  Timothy Mastny [aut],\n  Richard Iannone [aut] (ORCID: <https://orcid.org/0000-0003-3925-190X>),\n  Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>),\n  Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Christophe Dervieux [ctb] (ORCID:\n    <https://orcid.org/0000-0003-4474-2498>),\n  RStudio [cph, fnd],\n  Sass Open Source Foundation [ctb, cph] (LibSass library),\n  Greter Marcel [ctb, cph] (LibSass library),\n  Mifsud Michael [ctb, cph] (LibSass library),\n  Hampton Catlin [ctb, cph] (LibSass library),\n  Natalie Weizenbaum [ctb, cph] (LibSass library),\n  Chris Eppstein [ctb, cph] (LibSass library),\n  Adams Joseph [ctb, cph] (json.cpp),\n  Trifunovic Nemanja [ctb, cph] (utf8.h)",
+        "Maintainer": "Carson Sievert <carson@posit.co>",
         "Repository": "RSPM",
-        "Date/Publication": "2025-04-11 19:50:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-08-12 19:45:56 UTC; unix"
+        "Date/Publication": "2026-11-20 08:50:18 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-11-21 04:24:30 UTC; unix"
       }
     },
     "scales": {
@@ -1887,27 +1886,27 @@
         "Type": "Package",
         "Package": "shiny",
         "Title": "Web Application Framework for R",
-        "Version": "1.14.0",
+        "Version": "1.15.0",
         "Authors@R": "c(\n    person(\"Winston\", \"Chang\", , \"winston@posit.co\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-1576-2126\")),\n    person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = \"aut\"),\n    person(\"JJ\", \"Allaire\", , \"jj@posit.co\", role = \"aut\"),\n    person(\"Carson\", \"Sievert\", , \"carson@posit.co\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Barret\", \"Schloerke\", , \"barret@posit.co\", role = \"aut\",\n           comment = c(ORCID = \"0000-0001-9986-114X\")),\n    person(\"Garrick\", \"Aden-Buie\", , \"garrick@adenbuie.com\", role = \"aut\",\n           comment = c(ORCID = \"0000-0002-7111-0077\")),\n    person(\"Yihui\", \"Xie\", , \"yihui@posit.co\", role = \"aut\"),\n    person(\"Jeff\", \"Allen\", role = \"aut\"),\n    person(\"Jonathan\", \"McPherson\", , \"jonathan@posit.co\", role = \"aut\"),\n    person(\"Alan\", \"Dipert\", role = \"aut\"),\n    person(\"Barbara\", \"Borges\", role = \"aut\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\")),\n    person(, \"jQuery Foundation\", role = \"cph\",\n           comment = \"jQuery library and jQuery UI library\"),\n    person(, \"jQuery contributors\", role = c(\"ctb\", \"cph\"),\n           comment = \"jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt\"),\n    person(, \"jQuery UI contributors\", role = c(\"ctb\", \"cph\"),\n           comment = \"jQuery UI library; authors listed in inst/www/shared/jqueryui/AUTHORS.txt\"),\n    person(\"Mark\", \"Otto\", role = \"ctb\",\n           comment = \"Bootstrap library\"),\n    person(\"Jacob\", \"Thornton\", role = \"ctb\",\n           comment = \"Bootstrap library\"),\n    person(, \"Bootstrap contributors\", role = \"ctb\",\n           comment = \"Bootstrap library\"),\n    person(, \"Twitter, Inc\", role = \"cph\",\n           comment = \"Bootstrap library\"),\n    person(\"Prem Nawaz\", \"Khan\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Victor\", \"Tsaran\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Dennis\", \"Lembree\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Srinivasu\", \"Chakravarthula\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Cathy\", \"O'Connor\", role = \"ctb\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(, \"PayPal, Inc\", role = \"cph\",\n           comment = \"Bootstrap accessibility plugin\"),\n    person(\"Stefan\", \"Petre\", role = c(\"ctb\", \"cph\"),\n           comment = \"Bootstrap-datepicker library\"),\n    person(\"Andrew\", \"Rowls\", role = c(\"ctb\", \"cph\"),\n           comment = \"Bootstrap-datepicker library\"),\n    person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"),\n           comment = \"selectize.js library\"),\n    person(\"Salmen\", \"Bejaoui\", role = c(\"ctb\", \"cph\"),\n           comment = \"selectize-plugin-a11y library\"),\n    person(\"Denis\", \"Ineshin\", role = c(\"ctb\", \"cph\"),\n           comment = \"ion.rangeSlider library\"),\n    person(\"Sami\", \"Samhuri\", role = c(\"ctb\", \"cph\"),\n           comment = \"Javascript strftime library\"),\n    person(, \"SpryMedia Limited\", role = c(\"ctb\", \"cph\"),\n           comment = \"DataTables library\"),\n    person(\"Ivan\", \"Sagalaev\", role = c(\"ctb\", \"cph\"),\n           comment = \"highlight.js library\"),\n    person(\"R Core Team\", role = c(\"ctb\", \"cph\"),\n           comment = \"tar implementation from R\")\n  )",
         "Description": "Makes it incredibly easy to build interactive web\n    applications with R. Automatic \"reactive\" binding between inputs and\n    outputs and extensive prebuilt widgets make it possible to build\n    beautiful, responsive, and powerful applications with minimal effort.",
         "License": "MIT + file LICENSE",
         "URL": "https://shiny.posit.co/, https://github.com/rstudio/shiny",
         "BugReports": "https://github.com/rstudio/shiny/issues",
         "Depends": "methods, R (>= 3.1.2)",
-        "Imports": "bslib (>= 0.6.0), cachem (>= 1.1.0), cli, commonmark (>=\n2.0.0), fastmap (>= 1.1.1), fontawesome (>= 0.4.0), glue (>=\n1.3.2), grDevices, htmltools (>= 0.5.4), httpuv (>= 1.5.2),\njsonlite (>= 0.9.16), later (>= 1.0.0), lifecycle (>= 0.2.0),\nmime (>= 0.3), otel, promises (>= 1.5.0), R6 (>= 2.0), rlang\n(>= 0.4.10), sourcetools, tools, utils, withr, xtable",
-        "Suggests": "Cairo (>= 1.5-5), coro (>= 1.1.0), datasets, DT, dygraphs,\nfuture, ggplot2, knitr (>= 1.6), magrittr, markdown, mirai,\notelsdk (>= 0.2.0), ragg, reactlog (>= 1.0.0), rmarkdown, sass,\nshinytest2, showtext, testthat (>= 3.2.1), watcher, yaml",
+        "Imports": "bslib (>= 0.6.0), cachem (>= 1.1.0), cli, commonmark (>=\n2.0.0), fastmap (>= 1.1.1), fontawesome (>= 0.4.0), glue (>=\n1.3.2), grDevices, htmltools (>= 0.5.4), httpuv (>= 1.5.2),\njsonlite (>= 0.9.16), later (>= 1.0.0), lifecycle (>= 0.2.0),\nmime (>= 0.3), otel, promises (>= 1.5.0), R6 (>= 2.0), rlang\n(>= 0.4.10), sourcetools, tools, utils, watcher (>= 0.2.0),\nwithr, xtable",
+        "Suggests": "Cairo (>= 1.5-5), coro (>= 1.1.0), datasets, DT, dygraphs,\nfuture, ggplot2, knitr (>= 1.6), magrittr, markdown, mirai,\notelsdk (>= 0.2.0), ragg, reactlog (>= 1.0.0), rmarkdown, sass,\nshinytest2, showtext, testthat (>= 3.2.1), yaml",
         "Config/Needs/check": "shinyjs",
-        "Config/roxygen2/version": "8.0.0",
+        "Config/roxygen2/version": "8.1.1",
         "Config/testthat/edition": "3",
         "Encoding": "UTF-8",
         "Collate": "'app-handle.R' 'globals.R' 'app-state.R' 'app_template.R'\n'bind-cache.R' 'bind-event.R' 'bookmark-state-local.R'\n'bookmark-state.R' 'bootstrap-deprecated.R'\n'bootstrap-layout.R' 'conditions.R' 'map.R' 'utils.R'\n'bootstrap.R' 'busy-indicators-spinners.R' 'busy-indicators.R'\n'cache-utils.R' 'deprecated.R' 'devmode.R' 'diagnose.R'\n'extended-task.R' 'fileupload.R' 'graph.R' 'reactives.R'\n'reactive-domains.R' 'history.R' 'hooks.R' 'html-deps.R'\n'image-interact-opts.R' 'image-interact.R' 'imageutils.R'\n'input-action.R' 'input-checkbox.R' 'input-checkboxgroup.R'\n'input-date.R' 'input-daterange.R' 'input-file.R'\n'input-numeric.R' 'input-password.R' 'input-radiobuttons.R'\n'input-select.R' 'input-slider.R' 'input-submit.R'\n'input-text.R' 'input-textarea.R' 'input-utils.R'\n'insert-tab.R' 'insert-ui.R' 'jqueryui.R' 'knitr.R'\n'middleware-shiny.R' 'middleware.R' 'timer.R' 'shiny.R'\n'mock-session.R' 'modal.R' 'modules.R' 'notifications.R'\n'otel-attr-srcref.R' 'otel-collect.R' 'otel-enable.R'\n'otel-error.R' 'otel-label.R' 'otel-reactive-update.R'\n'otel-session.R' 'otel-shiny.R' 'otel-with.R' 'priorityqueue.R'\n'progress.R' 'react.R' 'reexports.R' 'render-cached-plot.R'\n'render-plot.R' 'render-table.R' 'run-url.R' 'runapp.R'\n'serializers.R' 'server-input-handlers.R'\n'server-resource-paths.R' 'server.R' 'shiny-options.R'\n'shiny-package.R' 'shinyapp.R' 'shinyui.R' 'shinywrappers.R'\n'showcase.R' 'snapshot.R' 'staticimports.R' 'tar.R'\n'test-export.R' 'test-server.R' 'test.R' 'update-input.R'\n'utils-lang.R' 'utils-tags.R' 'version_bs_date_picker.R'\n'version_ion_range_slider.R' 'version_jquery.R'\n'version_jqueryui.R' 'version_selectize.R' 'version_strftime.R'\n'viewer.R'",
         "NeedsCompilation": "no",
-        "Packaged": "2026-06-18 18:59:37 UTC; cpsievert",
+        "Packaged": "2026-11-19 14:54:12 UTC; barret",
         "Author": "Winston Chang [aut] (ORCID: <https://orcid.org/0000-0002-1576-2126>),\n  Joe Cheng [aut],\n  JJ Allaire [aut],\n  Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>),\n  Garrick Aden-Buie [aut] (ORCID:\n    <https://orcid.org/0000-0002-7111-0077>),\n  Yihui Xie [aut],\n  Jeff Allen [aut],\n  Jonathan McPherson [aut],\n  Alan Dipert [aut],\n  Barbara Borges [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>),\n  jQuery Foundation [cph] (jQuery library and jQuery UI library),\n  jQuery contributors [ctb, cph] (jQuery library; authors listed in\n    inst/www/shared/jquery-AUTHORS.txt),\n  jQuery UI contributors [ctb, cph] (jQuery UI library; authors listed in\n    inst/www/shared/jqueryui/AUTHORS.txt),\n  Mark Otto [ctb] (Bootstrap library),\n  Jacob Thornton [ctb] (Bootstrap library),\n  Bootstrap contributors [ctb] (Bootstrap library),\n  Twitter, Inc [cph] (Bootstrap library),\n  Prem Nawaz Khan [ctb] (Bootstrap accessibility plugin),\n  Victor Tsaran [ctb] (Bootstrap accessibility plugin),\n  Dennis Lembree [ctb] (Bootstrap accessibility plugin),\n  Srinivasu Chakravarthula [ctb] (Bootstrap accessibility plugin),\n  Cathy O'Connor [ctb] (Bootstrap accessibility plugin),\n  PayPal, Inc [cph] (Bootstrap accessibility plugin),\n  Stefan Petre [ctb, cph] (Bootstrap-datepicker library),\n  Andrew Rowls [ctb, cph] (Bootstrap-datepicker library),\n  Brian Reavis [ctb, cph] (selectize.js library),\n  Salmen Bejaoui [ctb, cph] (selectize-plugin-a11y library),\n  Denis Ineshin [ctb, cph] (ion.rangeSlider library),\n  Sami Samhuri [ctb, cph] (Javascript strftime library),\n  SpryMedia Limited [ctb, cph] (DataTables library),\n  Ivan Sagalaev [ctb, cph] (highlight.js library),\n  R Core Team [ctb, cph] (tar implementation from R)",
         "Maintainer": "Carson Sievert <carson@posit.co>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-06-21 14:10:08 UTC",
-        "Built": "R 4.5.0; ; 2026-08-12 19:49:02 UTC; unix"
+        "Date/Publication": "2026-11-20 08:50:02 UTC",
+        "Built": "R 4.5.0; ; 2026-11-21 04:31:26 UTC; unix"
       }
     },
     "shinycssloaders": {
@@ -2087,10 +2086,10 @@
         "GithubRef": "HEAD",
         "GithubSHA1": "e9c3ffbb0c022ef0a311ad17bc56bcc5cd93811d",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-10-15 16:57:03 UTC; root",
+        "Packaged": "2026-11-23 15:07:57 UTC; root",
         "Author": "Kirill Müller [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-1416-3412>),\n  Hadley Wickham [aut],\n  Romain Francois [ctb],\n  Jennifer Bryan [ctb],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Kirill Müller <kirill@cynkra.com>",
-        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-10-15 16:57:03 UTC; unix"
+        "Built": "R 4.5.3; x86_64-pc-linux-gnu; 2026-11-23 15:07:57 UTC; unix"
       }
     },
     "tidyr": {
@@ -2318,6 +2317,39 @@
         "Built": "R 4.5.0; ; 2026-08-12 19:41:30 UTC; unix"
       }
     },
+    "watcher": {
+      "Source": "CRAN",
+      "Repository": "https://p3m.dev/cran/latest",
+      "description": {
+        "Type": "Package",
+        "Package": "watcher",
+        "Title": "Watch the File System for Changes",
+        "Version": "0.2.2",
+        "Authors@R": "c(\n    person(\"Charlie\", \"Gao\", , \"charlie.gao@posit.co\", role = c(\"aut\", \"cre\"),\n           comment = c(ORCID = \"0000-0002-0750-061X\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\")),\n    person(\"Enrico M.\", \"Crisostomo\", role = \"cph\",\n           comment = \"libfswatch library\"),\n    person(\"Alan\", \"Dipert\", role = \"cph\",\n           comment = \"libfswatch library\")\n  )",
+        "Description": "R binding for 'libfswatch', a file system monitoring library.\n    Watch files, or directories recursively, for changes in the\n    background.  Log activity, or call an R function, upon every change\n    event.",
+        "License": "MIT + file LICENSE",
+        "URL": "https://watcher.r-lib.org, https://github.com/r-lib/watcher",
+        "BugReports": "https://github.com/r-lib/watcher/issues",
+        "Depends": "R (>= 3.5)",
+        "Imports": "later, R6, rlang",
+        "Suggests": "testthat (>= 3.0.0)",
+        "Biarch": "true",
+        "Config/Needs/website": "tidyverse/tidytemplate",
+        "Config/roxygen2/markdown": "TRUE",
+        "Config/roxygen2/version": "8.0.0",
+        "Config/testthat/edition": "3",
+        "Config/usethis/last-upkeep": "2025-04-23",
+        "Encoding": "UTF-8",
+        "SystemRequirements": "'libfswatch' (optional, bundled copy compiled\notherwise)",
+        "NeedsCompilation": "yes",
+        "Packaged": "2026-11-07 21:39:11 UTC; cg334",
+        "Author": "Charlie Gao [aut, cre] (ORCID: <https://orcid.org/0000-0002-0750-061X>),\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>),\n  Enrico M. Crisostomo [cph] (libfswatch library),\n  Alan Dipert [cph] (libfswatch library)",
+        "Maintainer": "Charlie Gao <charlie.gao@posit.co>",
+        "Repository": "RSPM",
+        "Date/Publication": "2026-11-07 22:20:02 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-11-08 03:59:47 UTC; unix"
+      }
+    },
     "whisker": {
       "Source": "CRAN",
       "Repository": "https://p3m.dev/cran/latest",
@@ -2379,25 +2411,25 @@
         "Package": "xfun",
         "Type": "Package",
         "Title": "Supporting Functions for Packages Maintained by 'Yihui Xie'",
-        "Version": "0.61",
+        "Version": "0.62",
         "Authors@R": "c(\n  person(\"Yihui\", \"Xie\", role = c(\"aut\", \"cre\", \"cph\"), email = \"xie@yihui.name\", comment = c(ORCID = \"0000-0003-0645-5666\", URL = \"https://yihui.org\")),\n  person(\"Wush\", \"Wu\", role = \"ctb\"),\n  person(\"Daijiang\", \"Li\", role = \"ctb\"),\n  person(\"Xianying\", \"Tan\", role = \"ctb\"),\n  person(\"Salim\", \"Brüggemann\", role = \"ctb\", email = \"salim-b@pm.me\", comment = c(ORCID = \"0000-0002-5329-5987\")),\n  person(\"Christophe\", \"Dervieux\", role = \"ctb\"),\n  person()\n  )",
         "Description": "Miscellaneous functions commonly used in other packages maintained by 'Yihui Xie'.",
         "Depends": "R (>= 3.2.0)",
         "Imports": "grDevices, stats, tools",
-        "Suggests": "testit, parallel, codetools, methods, rstudioapi, tinytex (>=\n0.30), mime, litedown (>= 0.6), commonmark, knitr (>= 1.50),\nremotes, pak, curl, xml2, jsonlite, magick, yaml, data.table,\nqs2",
+        "Suggests": "testit, parallel, codetools, methods, rstudioapi, tinytex (>=\n0.30), mime, litedown (>= 0.6), knitr (>= 1.50), remotes, pak,\ncurl, xml2, jsonlite, magick, yaml, data.table, qs2",
         "License": "MIT + file LICENSE",
         "URL": "https://github.com/yihui/xfun",
         "BugReports": "https://github.com/yihui/xfun/issues",
         "Encoding": "UTF-8",
         "VignetteBuilder": "litedown",
-        "Config/roxygen2/version": "8.1.0",
+        "Config/roxygen2/version": "8.1.1",
         "NeedsCompilation": "yes",
-        "Packaged": "2026-09-16 17:36:20 UTC; yihui",
+        "Packaged": "2026-10-16 01:24:19 UTC; yihui",
         "Author": "Yihui Xie [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0003-0645-5666>, URL: https://yihui.org),\n  Wush Wu [ctb],\n  Daijiang Li [ctb],\n  Xianying Tan [ctb],\n  Salim Brüggemann [ctb] (ORCID: <https://orcid.org/0000-0002-5329-5987>),\n  Christophe Dervieux [ctb]",
         "Maintainer": "Yihui Xie <xie@yihui.name>",
         "Repository": "RSPM",
-        "Date/Publication": "2026-09-16 18:30:02 UTC",
-        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-09-17 04:04:24 UTC; unix"
+        "Date/Publication": "2026-10-16 03:30:02 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2026-10-17 04:20:22 UTC; unix"
       }
     },
     "xtable": {
@@ -2460,7 +2492,7 @@
       "checksum": "38ad153e495fa8b7fac6859ee22a8a48"
     },
     "renv.lock": {
-      "checksum": "28f8972ce60d7ff7d64860449e92c309"
+      "checksum": "431a0792bb2877e30b716e4cc97779e6"
     }
   },
   "users": null

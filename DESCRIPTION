@@ -1,6 +1,6 @@
 Package: chronicle.reports
 Title: Posit Chronicle Reports
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: c(
     person("Mark", "Tucker", , "mark.tucker@posit.co", role = c("aut", "cre")),
     person("Matt", "Urbina", , "matt.urbina@posit.co", role = c("aut")),
@@ -26,6 +26,7 @@ Imports:
     DT,
     ggplot2,
     glue,
+    jsonlite,
     lubridate,
     plotly,
     rlang,
@@ -45,5 +46,4 @@ Remotes:
     r-lib/devtools,
     tidyverse/tibble,
     r-lib/withr
-Config/roxygen2/version: 8.0.0
-RoxygenNote: 7.3.2
+Config/roxygen2/version: 8.1.1

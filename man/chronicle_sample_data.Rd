@@ -28,24 +28,35 @@ exploring package functionality without needing access to real Chronicle
 data. The sample data is created once per R session and cached.
 }
 \details{
-The sample data includes:
+The sample data covers about six months, ending yesterday, and includes:
 \itemize{
-\item Connect user totals (30 days of data ending yesterday)
+\item Connect user totals (daily)
 \item Connect user list (26 sample users)
 \item Connect content list (150 sample content items)
-\item Connect content totals (30 days by type and environment)
-\item Connect content hits totals (30 days of hit counts per content item)
-\item Connect content hits by user (30 days of per-user hit data)
-\item Workbench user totals (30 days of data ending yesterday)
+\item Connect content totals (daily, by content type and environment)
+\item Connect content hits totals (daily hit counts per content item)
+\item Connect content hits by user (daily per-user hit data, including
+anonymous hits)
+\item Workbench user totals (daily)
 \item Workbench user list (21 sample users)
-\item Workbench session start totals (30 days by environment and session type)
-\item Workbench session start totals by user (30 days, 12 sample users)
-\item Raw Connect users data (30 days, 15 users per snapshot)
+\item Workbench session start totals (daily, by environment and session type)
+\item Workbench session start totals by user (12 sample users)
+\item Raw Connect users data (daily, 26 users per snapshot)
+\item Raw Connect content publish events (about 380 deployments, including
+redeploys) and weekly content snapshots, which give each content item
+its type
 }
+
+Every dataset has a \code{product_id}. Connect moves from one product ID to a
+second part way through the period, as when a license is renewed, so exactly
+one Connect product ID is in use on any given day. Workbench uses one
+product ID throughout. Hits and content carry a content type (\code{app_mode},
+such as \code{shiny}, \code{quarto-static} or \code{rmd-static}).
 
 All sample data uses realistic weekday/weekend patterns and maintains
 referential integrity across datasets. Content items are created gradually
-over the 30-day period and persist once created.
+over the period and persist once created. Viewers and Workbench users start
+using the products one after another, so activity grows over the period.
 }
 \examples{
 # Get path to sample data (default temp directory)

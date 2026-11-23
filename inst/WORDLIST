@@ -22,6 +22,7 @@ ggplot
 github
 GUID
 https
+jsonlite
 lintr
 lubridate
 margheim

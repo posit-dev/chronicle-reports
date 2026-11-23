@@ -43,3 +43,10 @@ jobs:
     if: github.event_name == 'push'
     uses: ./.github/workflows/extensions.yml
     secrets: inherit
+
+# Once everything else has finished on main, open a PR merging main back into dev
+  back-merge:
+    needs: [check-r-code, manifests, extensions]
+    if: github.event_name == 'push' && github.ref_name == 'main'
+    uses: ./.github/workflows/back-merge.yml
+    secrets: inherit
