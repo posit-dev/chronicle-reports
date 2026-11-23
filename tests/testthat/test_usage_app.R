@@ -459,3 +459,97 @@ test_that("usage_servers_chart marks the points of a short series", {
   # p1 has a single day, which a line alone does not draw
   expect_equal(modes("Median"), c("lines+markers", "lines"))
 })
+
+# The servers cards only render when there is heartbeat data for the product
+
+servers_rows <- function(products) {
+  dplyr::tibble(
+    date = as.Date("2026-11-01"),
+    product = products,
+    product_id = "p1",
+    servers_min = 1,
+    servers_max = 2,
+    servers_median = 1
+  )
+}
+
+# Export the fixture with its servers table replaced, and return the file
+usage_export_file_with_servers <- function(servers, frame = parent.frame()) {
+  tables <- usage_export_file(frame)$tables
+  tables$servers <- servers
+  file <- withr::local_tempfile(fileext = ".json", .local_envir = frame)
+  chronicle_usage_to_json(tables, file)
+  file
+}
+
+test_that("usage_has_servers is TRUE only for products with servers rows", {
+  env <- source_usage_app()
+  tables <- list(servers = servers_rows("connect"))
+
+  expect_true(env$usage_has_servers(tables, "connect"))
+  expect_false(env$usage_has_servers(tables, "workbench"))
+  expect_false(env$usage_has_servers(
+    list(servers = servers_rows("connect")[0, ]),
+    "connect"
+  ))
+  expect_false(env$usage_has_servers(list(), "connect"))
+  expect_false(env$usage_has_servers(list(servers = NULL), "connect"))
+})
+
+test_that("usage_download_caption mentions servers only when there are some", {
+  env <- source_usage_app()
+
+  expect_equal(
+    env$usage_download_caption(list(servers = servers_rows("workbench"))),
+    "Monthly counts and daily server counts only, with no user or content details."
+  )
+  expect_equal(
+    env$usage_download_caption(list()),
+    "Monthly counts only, with no user or content details."
+  )
+})
+
+test_that("both servers cards render when both products have heartbeats", {
+  env <- source_usage_app()
+  exported <- usage_export_file()
+
+  withr::with_envvar(c(CHRONICLE_USAGE_FILE = exported$file), {
+    shiny::testServer(env$server, {
+      expect_match(
+        as.character(output$connect_servers_card$html),
+        "connect_servers_plot"
+      )
+      expect_match(
+        as.character(output$workbench_servers_card$html),
+        "workbench_servers_plot"
+      )
+    })
+  })
+})
+
+test_that("no servers cards render without heartbeat data", {
+  env <- source_usage_app()
+  file <- usage_export_file_with_servers(servers_rows("connect")[0, ])
+
+  withr::with_envvar(c(CHRONICLE_USAGE_FILE = file), {
+    shiny::testServer(env$server, {
+      expect_null(output$connect_servers_card)
+      expect_null(output$workbench_servers_card)
+    })
+  })
+})
+
+test_that("only the product with heartbeats gets a servers card", {
+  env <- source_usage_app()
+  file <- usage_export_file_with_servers(servers_rows("connect"))
+
+  withr::with_envvar(c(CHRONICLE_USAGE_FILE = file), {
+    shiny::testServer(env$server, {
+      expect_match(
+        as.character(output$connect_servers_card$html),
+        "connect_servers_plot"
+      )
+      expect_null(output$workbench_servers_card)
+    })
+  })
+})
