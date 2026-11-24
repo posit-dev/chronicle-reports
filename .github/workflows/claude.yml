@@ -79,5 +79,5 @@ jobs:
             Stick to the facts and provide actionable advice. 
           claude_args: |
             --model us.anthropic.claude-opus-5-5
-            --fallback-model us.anthropic.claude-haiku-4-5-20251001-v1:0
+            --fallback-model us.anthropic.claude-haiku-5-5
             --allowedTools Bash,mcp__github__create_pull_request,mcp__github__create_issue,mcp__github__search_issues,mcp__github__update_issue,mcp__github__create_pending_pull_request_review,mcp__github__add_comment_to_pending_review,mcp__github__submit_pending_pull_request_review,mcp__github__get_pull_request_diff,mcp__github__add_sub_issue
