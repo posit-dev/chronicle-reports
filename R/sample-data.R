@@ -203,9 +203,11 @@ validate_sample_data_structure <- function(path) {
     return(FALSE)
   }
 
-  # Samples from before product ids and deployments were added lack the raw
-  # publish events, so regenerate them
-  dir.exists(file.path(path, "daily", "v2", "connect_content_published"))
+  # Samples from before product ids, deployments and heartbeats were added lack
+  # the raw publish events or the heartbeats, so regenerate them
+  dir.exists(file.path(path, "daily", "v2", "connect_content_published")) &&
+    dir.exists(file.path(curated_path, "connect", "heartbeats")) &&
+    dir.exists(file.path(curated_path, "workbench", "heartbeats"))
 }
 
 # Internal helper functions for creating sample data
@@ -1491,6 +1493,82 @@ sample_raw_workbench_users_internal <- function(n_days = SAMPLE_DAYS) {
   do.call(rbind, daily_snapshots)
 }
 
+#' Sample heartbeats: every host reports every 5 minutes, with a little jitter.
+#'
+#' Each product runs a steady number of hosts, with one short outage (all hosts
+#' silent for half an hour, which reads as 25 minutes of zero windows), one
+#' extra host that is up for a few hours, and one churn day on which the hosts
+#' are replaced several times. The replacement hosts keep running afterwards.
+#' Workbench also has a four-day stretch with no heartbeats at all.
+#' Days are counted back from the last day of the sample.
+#' @noRd
+sample_heartbeats_internal <- function(
+  product,
+  n_days = SAMPLE_DAYS,
+  n_hosts = 2L
+) {
+  dates <- generate_sample_date_sequence(n_days)
+  ticks_per_day <- 288L
+
+  # (days before the end of the sample) for each event, staggered by product
+  stagger <- if (product == "connect") 0L else 7L
+  outage_day <- dates[max(1L, n_days - 60L - stagger)]
+  extra_day <- dates[max(1L, n_days - 30L - stagger)]
+  churn_day <- dates[max(1L, n_days - 15L - stagger)]
+
+  tick <- seq_len(n_days * ticks_per_day) - 1L
+  day_index <- tick %/% ticks_per_day + 1L
+  minute <- (tick %% ticks_per_day) * 5L
+  date <- dates[day_index]
+
+  # a host is replaced at each of these minutes of the churn day
+  churn_minutes <- c(5, 9, 13, 17) * 60L
+  generation <- cumsum(date == churn_day & minute %in% churn_minutes)
+  generation <- ifelse(date > churn_day, length(churn_minutes), generation)
+  generation <- ifelse(date < churn_day, 0L, generation)
+
+  # a short outage: no host reports for 30 minutes. The 9:55 heartbeats still
+  # cover the 10:00 window, so 25 minutes of windows read 0
+  up <- !(date == outage_day & minute >= 10 * 60 & minute < 10 * 60 + 30)
+
+  # Workbench only: four whole days without a heartbeat, ending 49 days before
+  # the end of the sample (after the license switch)
+  if (product == "workbench") {
+    long_start <- max(1L, n_days - 52L)
+    long_outage <- date >= dates[long_start] &
+      date <= dates[min(n_days, long_start + 3L)]
+    up <- up & !long_outage
+  }
+
+  slots <- lapply(seq_len(n_hosts), function(i) {
+    jitter <- (tick * 7L + i * 13L) %% 45L
+    data.frame(
+      timestamp = as.POSIXct(
+        as.numeric(date[up]) * 86400 + minute[up] * 60 + jitter[up],
+        origin = "1970-01-01",
+        tz = "UTC"
+      ),
+      host_name = sprintf("%s-%d-g%d", product, i, generation[up])
+    )
+  })
+  # one extra host for a few hours
+  extra <- date == extra_day & minute >= 9 * 60 & minute < 15 * 60
+  slots[[n_hosts + 1L]] <- data.frame(
+    timestamp = as.POSIXct(
+      as.numeric(date[extra]) * 86400 + minute[extra] * 60 + 20,
+      origin = "1970-01-01",
+      tz = "UTC"
+    ),
+    host_name = paste0(product, "-extra")
+  )
+
+  beats <- do.call(rbind, slots)
+  beats <- beats[order(beats$timestamp, beats$host_name), ]
+  beats$date <- as.Date(beats$timestamp)
+  beats$environment <- "production"
+  beats[, c("date", "timestamp", "host_name", "environment")]
+}
+
 #' @noRd
 write_sample_parquet_internal <- function(
   data,
@@ -1620,6 +1698,18 @@ create_sample_chronicle_data_internal <- function(
     workbench(sample_wb_session_duration_internal(n_days)),
     base_path,
     "workbench/session_duration"
+  )
+
+  write_sample_parquet_internal(
+    connect(sample_heartbeats_internal("connect", n_days, n_hosts = 2L)),
+    base_path,
+    "connect/heartbeats"
+  )
+
+  write_sample_parquet_internal(
+    workbench(sample_heartbeats_internal("workbench", n_days, n_hosts = 3L)),
+    base_path,
+    "workbench/heartbeats"
   )
 
   # Raw daily users back the GUID -> username lookups used to label content

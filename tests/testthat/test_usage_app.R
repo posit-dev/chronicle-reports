@@ -257,7 +257,9 @@ test_that("the server renders every chart with several product ids", {
         "workbench_active_users",
         "content_hits",
         "content_deployments",
-        "sessions"
+        "sessions",
+        "connect_servers",
+        "workbench_servers"
       )) {
         expect_no_error(output[[id]])
         expect_no_error(output[[paste0(id, "_plot")]])
@@ -308,6 +310,12 @@ test_that("an empty report shows a message, not an error", {
           suppressMessages(output$sessions),
           class = "shiny.silent.error"
         )
+        for (id in c("connect_servers", "workbench_servers")) {
+          expect_error(
+            suppressMessages(output[[id]]),
+            class = "shiny.silent.error"
+          )
+        }
       })
     }
   )
@@ -364,4 +372,90 @@ test_that("groups within the palette are left alone", {
   out <- env$usage_series(data, "hits", months, group = "app_mode")
 
   expect_setequal(out$app_mode, c("shiny", "quarto"))
+})
+
+test_that("usage_servers_series filters by product and adds value", {
+  env <- source_usage_app()
+  data <- dplyr::tibble(
+    date = as.Date(c("2026-11-02", "2026-11-01", "2026-11-01")),
+    product = c("connect", "connect", "workbench"),
+    product_id = c("p2", "p1", "w1"),
+    servers_min = c(1, 1, 2),
+    servers_max = c(3, 2, 4),
+    servers_median = c(2, 1, 3)
+  )
+
+  out <- env$usage_servers_series(data, "connect")
+
+  expect_equal(out$product_id, c("p1", "p2"))
+  expect_equal(out$value, c(2, 3))
+  expect_true(env$usage_has_data(out))
+})
+
+test_that("usage_servers_chart draws a band and a median line per id", {
+  env <- source_usage_app()
+  data <- dplyr::tibble(
+    date = rep(as.Date(c("2026-11-01", "2026-11-02")), 2),
+    product = "connect",
+    product_id = rep(c("p1", "p2"), each = 2),
+    servers_min = 1,
+    servers_max = c(2, 3, 4, 5),
+    servers_median = c(1, 2, 3, 4)
+  )
+  series <- env$usage_servers_series(data, "connect")
+
+  chart <- plotly::plotly_build(env$usage_servers_chart(series))
+  json <- as.character(jsonlite::toJSON(chart$x$data, auto_unbox = TRUE))
+
+  expect_match(json, '"Median"', fixed = TRUE)
+  expect_no_match(json, "Distinct hosts", fixed = TRUE)
+  expect_no_match(json, '"dash":"dash"', fixed = TRUE)
+  expect_match(json, "Min", fixed = TRUE)
+  expect_match(json, "Max", fixed = TRUE)
+})
+
+test_that("usage_servers_chart spans the x_range it is given", {
+  env <- source_usage_app()
+  data <- dplyr::tibble(
+    date = as.Date(c("2026-06-01", "2026-06-02")),
+    product = "connect",
+    product_id = "p1",
+    servers_min = 1,
+    servers_max = 2,
+    servers_median = 1
+  )
+  series <- env$usage_servers_series(data, "connect")
+  chart <- plotly::plotly_build(
+    env$usage_servers_chart(
+      series,
+      x_range = as.Date(c("2025-12-01", "2026-11-05"))
+    )
+  )
+
+  expect_equal(
+    unlist(chart$x$layout$xaxis$range),
+    c("2025-12-01", "2026-11-05")
+  )
+})
+
+test_that("usage_servers_chart marks the points of a short series", {
+  env <- source_usage_app()
+  data <- dplyr::tibble(
+    date = as.Date(c("2026-11-01", paste0("2026-11-0", 1:5))),
+    product = "connect",
+    product_id = c("p1", rep("p2", 5)),
+    servers_min = 1,
+    servers_max = 2,
+    servers_median = 1
+  )
+  series <- env$usage_servers_series(data, "connect")
+
+  chart <- plotly::plotly_build(env$usage_servers_chart(series))
+  modes <- function(name) {
+    traces <- Filter(function(t) identical(t$name, name), chart$x$data)
+    vapply(traces, function(t) t$mode, "")
+  }
+
+  # p1 has a single day, which a line alone does not draw
+  expect_equal(modes("Median"), c("lines+markers", "lines"))
 })

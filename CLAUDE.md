@@ -26,7 +26,7 @@ All reports are now located in [inst/apps/](inst/apps/) and can be run using `ch
    - Entry point: `chronicle_run_app("workbench")`
 
 3. **Usage Report** ([inst/apps/usage/app.R](inst/apps/usage/app.R))
-   - Monthly usage per `product_id` over the last 12 months: active users, content hits, content deployments, sessions started
+   - Monthly usage per `product_id` over the last 12 months: active users, content hits, content deployments, sessions started, plus a daily servers-running chart (min/max band and median) built from heartbeats ([R/usage_servers.R](R/usage_servers.R))
    - Data comes from `chronicle_usage_data()` ([R/usage_data.R](R/usage_data.R)); the app only consumes the table list it returns
    - Download button exports an aggregate-only JSON file ([R/usage_export.R](R/usage_export.R)); `CHRONICLE_USAGE_FILE` rebuilds the report from it
    - Entry point: `chronicle_run_app("usage")`

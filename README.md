@@ -184,10 +184,11 @@ Monthly usage for the last 12 months. Every product ID found in the data is show
 - **Content hits**: Connect hits, split into authenticated and anonymous, or grouped by content type
 - **Content deployments**: Connect deployments by content type, either every deployment (including redeploys) or the number of unique content items deployed
 - **Sessions started**: Workbench sessions by IDE
+- **Servers running**: for Connect and Workbench, a daily chart per product ID of how many servers were running, from Chronicle's heartbeats. A shaded band shows the minimum to maximum over the day, and a line the median. A product ID has points only from its first to its last heartbeat, so one that stops reporting (for example, an old license) simply ends; a gap in between shows as 0. This chart is daily rather than monthly, and runs up to the day before the report's as-of date (the day it was built, also for a report rebuilt from a downloaded file), or to the last day with heartbeats if that is earlier.
 
 Run it: `chronicle_run_app("usage")`
 
-The **Download data (JSON)** button saves a small file of the monthly counts behind the charts. It holds only aggregates keyed by month and product ID (plus content type and IDE where charted), with no user or content identifiers. The report can be rebuilt from that file alone:
+The **Download data (JSON)** button saves a small file of the monthly counts behind the charts. It holds only aggregates keyed by month (or day, for servers) and product ID (plus content type and IDE where charted), with no user, content or host identifiers. The report can be rebuilt from that file alone:
 
 ```r
 # Build the monthly tables from Chronicle data and export them

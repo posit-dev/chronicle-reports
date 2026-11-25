@@ -6,8 +6,9 @@
 # storage backend, provide a function that returns the same list (see
 # `chronicle_usage_from_json()` for a second producer).
 #
-# Counts are calendar-month counts, always keyed by `product_id`, which ties the
-# usage back to the license it was collected for.
+# Counts are calendar-month counts, except for the daily `servers` table, and
+# are always keyed by `product_id`, which ties the usage back to the license it
+# was collected for.
 
 USAGE_UNSPECIFIED_PRODUCT <- "(unspecified)"
 USAGE_UNKNOWN_APP_MODE <- "unknown"
@@ -15,7 +16,8 @@ USAGE_TABLE_NAMES <- c(
   "active_users",
   "content_hits",
   "content_deployments",
-  "sessions"
+  "sessions",
+  "servers"
 )
 
 #' First day of the month containing each date
@@ -51,7 +53,7 @@ usage_label_app_mode <- function(x) {
   ifelse(is.na(x) | x == "", USAGE_UNKNOWN_APP_MODE, x)
 }
 
-#' Empty versions of the four report tables
+#' Empty versions of the five report tables
 #' @noRd
 usage_empty_tables <- function(window = NULL) {
   tables <- list(
@@ -80,6 +82,14 @@ usage_empty_tables <- function(window = NULL) {
       product_id = character(),
       session_type = character(),
       sessions = numeric()
+    ),
+    servers = dplyr::tibble(
+      date = as.Date(character()),
+      product = character(),
+      product_id = character(),
+      servers_min = numeric(),
+      servers_max = numeric(),
+      servers_median = numeric()
     )
   )
   attr(tables, "window") <- window
@@ -309,19 +319,30 @@ usage_read_workbench_sessions <- function(base_path, window) {
 #' - **Content deployments**: Connect publish events, so redeploying an item
 #'   counts each time. `unique_content` counts each item once.
 #' - **Sessions**: started Workbench sessions by IDE (`session_type`).
+#' - **Servers running**: daily, not monthly. Time is cut into 5-minute UTC
+#'   windows and a host is running in a window if it sent a heartbeat in that
+#'   window or the previous one. `servers_min`, `servers_max` and
+#'   `servers_median` are taken over up to 288 windows of the day (fewer on a
+#'   product ID's first day and on the last day with heartbeats). Days run
+#'   through the day before `today`, or through the last day with heartbeats if
+#'   that is earlier; `date` is a UTC day. A product ID has rows only from its
+#'   first to its last heartbeat, so one that stops reporting (an old license)
+#'   has none afterwards; a gap in between reads as 0.
 #'
 #' @param base_path Base path to Chronicle data directory
 #' @param months Number of calendar months to include, ending with the month
 #'   that contains `today`. The current month is therefore usually partial.
 #' @param today The date the window ends on. Defaults to the current date.
 #'
-#' @return A list of four tibbles: `active_users` (`month`, `product`,
+#' @return A list of five tibbles: `active_users` (`month`, `product`,
 #'   `product_id`, `users`), `content_hits` (`month`, `product_id`, `app_mode`,
 #'   `authenticated`, `hits`), `content_deployments` (`month`, `product_id`,
-#'   `app_mode`, `deployments`, `unique_content`) and `sessions` (`month`,
-#'   `product_id`, `session_type`, `sessions`). `month` is the first day of the
-#'   month. The reporting window is stored in the `"window"` attribute and the
-#'   date it was built for in the `"as_of"` attribute.
+#'   `app_mode`, `deployments`, `unique_content`), `sessions` (`month`,
+#'   `product_id`, `session_type`, `sessions`) and `servers` (`date`, `product`,
+#'   `product_id`, `servers_min`, `servers_max`, `servers_median`).
+#'   `month` is the first day of the month and `date` a day.
+#'   The reporting window is stored in the `"window"` attribute and the date it
+#'   was built for in the `"as_of"` attribute.
 #'   A dataset that is not available yields an empty table.
 #' @keywords internal
 #' @export
@@ -348,11 +369,20 @@ chronicle_usage_data <- function(
     ),
     content_hits = connect$content_hits,
     content_deployments = usage_read_connect_deployments(base_path, window),
-    sessions = workbench$sessions
+    sessions = workbench$sessions,
+    servers = dplyr::bind_rows(
+      usage_read_heartbeats("connect", base_path, window, today),
+      usage_read_heartbeats("workbench", base_path, window, today)
+    )
   )
 
   tables <- lapply(tables, function(tbl) {
-    tbl[tbl$month >= window[1] & tbl$month <= window[2], ] |>
+    keep <- if ("date" %in% names(tbl)) {
+      tbl$date >= window[1] & tbl$date <= as.Date(today) - 1
+    } else {
+      tbl$month >= window[1] & tbl$month <= window[2]
+    }
+    tbl[keep, ] |>
       dplyr::arrange(dplyr::across(dplyr::everything()))
   })
   attr(tables, "window") <- window
