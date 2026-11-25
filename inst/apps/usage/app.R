@@ -144,6 +144,27 @@ usage_has_data <- function(series) {
   nrow(series) > 0 && any(series$value > 0)
 }
 
+# TRUE when the servers table has heartbeat data for the product. The servers
+# cards render only then.
+usage_has_servers <- function(tables, product) {
+  !is.null(tables$servers) && any(tables$servers$product == product)
+}
+
+# The note under the download button, which only mentions daily server counts
+# when the export has them.
+usage_download_caption <- function(tables) {
+  has_servers <- usage_has_servers(tables, "connect") ||
+    usage_has_servers(tables, "workbench")
+  paste0(
+    if (has_servers) {
+      "Monthly counts and daily server counts only"
+    } else {
+      "Monthly counts only"
+    },
+    ", with no user or content details."
+  )
+}
+
 # The date the report's data runs up to. A report rebuilt from an export uses
 # the export's date, not the viewer's clock.
 usage_as_of <- function(tables) {
@@ -407,10 +428,7 @@ ui <- bslib::page_fluid(
         "Download data (JSON)",
         class = "btn-outline-primary"
       ),
-      p(
-        class = "text-muted small mt-1 mb-0",
-        "Monthly counts and daily server counts only, with no user or content details."
-      )
+      uiOutput("download_caption")
     )
   ),
   h4("Posit Connect"),
@@ -447,28 +465,14 @@ ui <- bslib::page_fluid(
       )
     )
   ),
-  bslib::layout_columns(
-    col_widths = 6,
-    chart_card(
-      "Servers running",
-      "connect_servers",
-      caption = SERVERS_CAPTION
-    )
-  ),
+  uiOutput("connect_servers_card"),
   h4("Posit Workbench"),
   bslib::layout_columns(
     col_widths = c(6, 6),
     chart_card("Active users", "workbench_active_users"),
     chart_card("Sessions started", "sessions")
   ),
-  bslib::layout_columns(
-    col_widths = 6,
-    chart_card(
-      "Servers running",
-      "workbench_servers",
-      caption = SERVERS_CAPTION
-    )
-  )
+  uiOutput("workbench_servers_card")
 )
 
 # ==============================================
@@ -586,6 +590,18 @@ server <- function(input, output, session) {
   for (product in c("connect", "workbench")) {
     local({
       product <- product
+      output[[paste0(product, "_servers_card")]] <- renderUI({
+        if (usage_has_servers(tables(), product)) {
+          bslib::layout_columns(
+            col_widths = 6,
+            chart_card(
+              "Servers running",
+              paste0(product, "_servers"),
+              caption = SERVERS_CAPTION
+            )
+          )
+        }
+      })
       define_chart(
         paste0(product, "_servers"),
         function() usage_servers_series(tables()$servers, product),
@@ -597,6 +613,13 @@ server <- function(input, output, session) {
       )
     })
   }
+
+  output$download_caption <- renderUI({
+    p(
+      class = "text-muted small mt-1 mb-0",
+      usage_download_caption(tables())
+    )
+  })
 
   # The export is the same list of tables the charts draw from.
   output$download_data <- downloadHandler(
