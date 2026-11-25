@@ -580,7 +580,7 @@
       "RemoteRepo": "chronicle-reports",
       "RemoteUsername": "posit-dev",
       "RemoteRef": "main",
-      "RemoteSha": "70334d3c7076248f995273f65ca5638e85e37506",
+      "RemoteSha": "6f23975b97de8aa41ecf9cbe68769cc3e3394adf",
       "NeedsCompilation": "no",
       "Author": "Mark Tucker [aut, cre], Matt Urbina [aut], Tim Margheim [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Mark Tucker <mark.tucker@posit.co>"
@@ -796,7 +796,7 @@
     },
     "curl": {
       "Package": "curl",
-      "Version": "8.1.0",
+      "Version": "8.2.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A Modern and Flexible Web Client for R",
